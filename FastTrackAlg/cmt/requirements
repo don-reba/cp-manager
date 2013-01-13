@@ -1,0 +1,12 @@
+package FastTrackAlg
+version v1r1
+author  "Alexey Badalov"
+
+library FastTrackAlg *.cpp
+
+branches cmt options src
+
+use GaudiAlg     *
+use FastTrackSvc *
+
+apply_pattern component_library library=FastTrackAlg

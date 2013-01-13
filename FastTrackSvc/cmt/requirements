@@ -1,0 +1,12 @@
+package FastTrackSvc
+version v1r1
+author  "Alexey Badalov"
+
+library FastTrackSvc *.cpp
+
+branches FastTrackSvc cmt src
+
+use GaudiKernel *
+
+apply_pattern component_library library=FastTrackSvc
+apply_pattern install_more_includes more=FastTrackSvc
