@@ -1,15 +1,21 @@
+#include "App.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <syslog.h>
 
 #include <cstdlib>
-#include <exception>
+#include <iostream>
 #include <stdexcept>
+
+#include <boost/program_options.hpp>
 
 using namespace std;
 
-void daemonize()
-{
+namespace po = boost::program_options;
+
+// Run the process as a daemon.
+void daemonize() {
   // fork off the parent process
   pid_t pid(fork());
   if (pid > 0)
@@ -29,31 +35,50 @@ void daemonize()
     throw runtime_error("Failed to change the current working directory.");
 }
 
-// main entry point
+// Parse command line options.
+bool parseCommandLine(int argc, char * argv[], bool & daemonize) {
+  po::options_description desc("Supported options");
+  desc.add_options()
+    ("help",      "display this help message")
+    ("daemonize", "run the process as a daemon")
+    ;
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help")) {
+    desc.print(cout);
+    return false;
+  }
+
+  daemonize = vm.count("daemonize");
+
+  return true;
+}
+
+// Main entry point.
 int main(int argc, char * argv[])
-try
-{
-  daemonize();
+try {
+  bool enableDaemonize(false);
+  if (!parseCommandLine(argc, argv, enableDaemonize))
+    return EXIT_SUCCESS;
 
-  freopen("/dev/null", "r", stdin);
-  freopen("/dev/null", "w", stdout);
-  freopen("/dev/null", "w", stderr);
+  const bool useStdIO = !enableDaemonize;
+  App app(useStdIO);
 
-  openlog("fasttrackd", LOG_CONS, LOG_DAEMON);
+  if (enableDaemonize)
+    daemonize();
 
   // run message loop
 
-  closelog();
-
   return EXIT_SUCCESS;
-}
-catch (const exception & e)
-{
+} catch (const exception & e) {
+  cout << "Unrecoverable error: " << e.what() << '\n';
   syslog(LOG_ERR, "Unrecoverable error: %s", e.what());
   return EXIT_FAILURE;
-}
-catch (...)
-{
+} catch (...) {
+  cout << "Unknown unrecoverable error." << '\n';
   syslog(LOG_ERR, "Unknown unrecoverable error.");
   return EXIT_FAILURE;
 }
