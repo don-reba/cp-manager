@@ -4,9 +4,12 @@ author  "Alexey Badalov"
 
 library FastTrackSvc *.cpp
 
-branches FastTrackSvc cmt src
+branches FastTrackSvc cmt doc src
 
 use GaudiKernel *
 
 apply_pattern component_library library=FastTrackSvc
 apply_pattern install_more_includes more=FastTrackSvc
+
+action doxygen "doxygen Doxyfile"
+macro FastTrackSvc_dependencies "doxygen"

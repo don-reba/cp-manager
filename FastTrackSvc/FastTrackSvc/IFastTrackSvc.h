@@ -2,15 +2,13 @@
 
 #include "GaudiKernel/IInterface.h"
 
+/** @class IFastTrackSvc IFastTrackSvc.h FastTrackSvc/IFastTrackSvc.h
+ * Base interface providing accelerated tracking algorithms.
+ */
 class IFastTrackSvc :
     public virtual IInterface {
   public:
-    static const InterfaceID & interfaceID();
-
     virtual ~IFastTrackSvc() {}
-};
 
-inline const InterfaceID & IFastTrackSvc::interfaceID() {
-  static InterfaceID id("IFastTrackSvc", 1, 0);
-  return id;
-}
+    DeclareInterfaceID(IFastTrackSvc, 1, 0);
+};
