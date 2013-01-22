@@ -7,6 +7,7 @@ add_executable(
     fasttrackd
     main.cpp
     App.cpp
+		MessageQueue.cpp
     )
 
 set_target_properties(
@@ -14,11 +15,11 @@ set_target_properties(
     PROPERTIES COMPILE_FLAGS "-ffor-scope -Werror -Wall -O3 -g"
     )
 
-#find_package(Boost REQUIRED program_options)
+find_package(Boost REQUIRED program_options)
 find_package(Doxygen)
 
-#target_link_libraries(fasttrackd ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(fasttrackd /usr/lib64/libboost_program_options.so)
+target_link_libraries(fasttrackd ${Boost_PROGRAM_OPTIONS_LIBRARY})
+#target_link_libraries(fasttrackd /usr/lib64/libboost_program_options.so)
 
 if (DOXYGEN_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
