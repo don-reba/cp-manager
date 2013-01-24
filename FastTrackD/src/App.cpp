@@ -7,7 +7,7 @@ using namespace std;
 
 App::App(bool useStdIO) :
     m_useStdIO(useStdIO) {
-  if (m_useStdIO) {
+  if (!m_useStdIO) {
     freopen("/dev/null", "r", stdin);
     freopen("/dev/null", "w", stdout);
     freopen("/dev/null", "w", stderr);

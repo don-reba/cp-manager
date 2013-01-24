@@ -1,4 +1,6 @@
 #include "App.h"
+#include "Protocol.h"
+#include "SocketServer.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -70,7 +72,8 @@ try {
   if (enableDaemonize)
     daemonize();
 
-  // run message loop
+  SocketServer server("/tmp/FastTrack");
+  Protocol protocol(server);
 
   return EXIT_SUCCESS;
 } catch (const exception & e) {
