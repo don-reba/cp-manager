@@ -11,5 +11,5 @@ use GaudiKernel *
 apply_pattern component_library library=FastTrackSvc
 apply_pattern install_more_includes more=FastTrackSvc
 
-action doxygen "doxygen Doxyfile"
-macro FastTrackSvc_dependencies "doxygen"
+#action doxygen "doxygen Doxyfile"
+#macro FastTrackSvc_dependencies "doxygen"
