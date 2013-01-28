@@ -1,4 +1,5 @@
 #include "SocketServer.h"
+#include "SystemException.h"
 
 #include <cstring>
 #include <stdexcept>
@@ -8,27 +9,27 @@
 SocketServer::SocketServer(const char * path) :
     m_path   (path),
     m_socket (-1) {
-  const size_t maxPathLength = 14;
+  const size_t maxPathLength = 107;
   if (m_path.size() > maxPathLength)
-    throw std::runtime_error("Socket path can be at most 14 symbols long.");
+    throw std::runtime_error("The socket path is too long.");
 
   m_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
   if (m_socket == -1)
-    throw std::runtime_error("Could not create socket.");
+    throw SystemException("Could not create socket.");
 
   int opt = 1;
   setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
   sockaddr_un address;
   address.sun_family = AF_LOCAL;
-  std::strncpy(address.sun_path, m_path.c_str(), maxPathLength);
+  std::strcpy(address.sun_path, m_path.c_str());
   unlink(m_path.c_str());
 
   if (-1 == bind(m_socket, (sockaddr*)&address, sizeof(address)))
-    throw std::runtime_error("Could not bind to socket.");
+    throw SystemException("Could not bind to socket.");
 
   if (-1 == listen(m_socket, SOMAXCONN))
-    throw std::runtime_error("Could not listen to socket.");
+    throw SystemException("Could not listen to socket.");
 }
 
 SocketServer::~SocketServer() {
@@ -40,7 +41,7 @@ SocketServer::~SocketServer() {
 
 void SocketServer::accept() {
 	if (-1 == ::accept(m_socket, NULL, NULL))
-		throw std::runtime_error("Could not accept incoming connection.");
+		throw SystemException("Could not accept incoming connection.");
 }
 
 void SocketServer::readBytes(char * data, int size) {

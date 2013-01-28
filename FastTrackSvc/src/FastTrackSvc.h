@@ -1,7 +1,10 @@
 #pragma once
 
 #include "FastTrackSvc/IFastTrackSvc.h"
-#include "GaudiKernel/Service.h"
+
+#include <GaudiKernel/Service.h>
+
+class SocketClient;
 
 class FastTrackSvc :
     public         Service,
@@ -11,6 +14,14 @@ class FastTrackSvc :
     virtual ~FastTrackSvc();
 
     // Service implementation
-    StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
-    StatusCode initialize();
+    virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
+    virtual StatusCode initialize();
+    virtual StatusCode finalize();
+
+  private:
+    void cleanup();
+    void initIO();
+
+  private:
+    SocketClient * transport;
 };

@@ -75,6 +75,10 @@ try {
   SocketServer server("/tmp/FastTrack");
   Protocol protocol(server);
 
+  server.accept();
+
+  cout << "accepted\n";
+
   return EXIT_SUCCESS;
 } catch (const exception & e) {
   cout << "Unrecoverable error: " << e.what() << '\n';

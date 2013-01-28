@@ -7,9 +7,10 @@ set(LIB_INPUT_PATH ${PROJECT_SOURCE_DIR}/../lib)
 add_executable(
     fasttrackd
     App.cpp
+    Main.cpp
     Protocol.cpp
     SocketServer.cpp
-    Main.cpp
+    SystemException.cpp
     )
 
 set_target_properties(
@@ -23,7 +24,6 @@ find_package(Doxygen)
 include_directories(/usr/include/glib-2.0)
 
 target_link_libraries(fasttrackd ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(fasttrackd ${LIB_INPUT_PATH}/libthrift_c_glib.a)
 
 if (DOXYGEN_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
