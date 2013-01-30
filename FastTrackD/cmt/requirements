@@ -1,0 +1,18 @@
+package FastTrackD
+version v1r1
+author  "Alexey Badalov"
+
+# structure
+branches cmt doc src
+
+# dependencies
+use IpcLib * FastTrack
+use Boost  * LCG_Interfaces -no_auto_imports
+
+# application constituent
+application fasttrackd *.cpp -import=Boost
+
+private
+macro application_suffix ""
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
+end_private

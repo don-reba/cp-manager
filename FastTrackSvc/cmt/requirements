@@ -2,14 +2,19 @@ package FastTrackSvc
 version v1r1
 author  "Alexey Badalov"
 
-library FastTrackSvc *.cpp
-
+# structure
 branches FastTrackSvc cmt doc src
 
+# dependencies
 use GaudiKernel *
+use IpcLib      * FastTrack
 
-apply_pattern component_library library=FastTrackSvc
+# exported includes
 apply_pattern install_more_includes more=FastTrackSvc
+
+# FastTrackSvc library constituent
+library FastTrackSvc *.cpp
+apply_pattern component_library library=FastTrackSvc
 
 #action doxygen "doxygen Doxyfile"
 #macro FastTrackSvc_dependencies "doxygen"

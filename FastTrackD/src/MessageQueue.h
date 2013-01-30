@@ -1,7 +1,8 @@
 #pragma once
 
 #include "App.h"
-#include "IProtocol.h"
+
+#include "IpcLib/IProtocol.h"
 
 #include <map>
 

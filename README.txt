@@ -1,32 +1,44 @@
 FastTrack
 
-The project consists of three packages: FastTrackAlg, FastTrackSvc, and FastTrackD.
+The project consists of four packages: FastTrackAlg, FastTrackSvc, FastTrackD, and IpcLib. To use the project, copy its contents to a folder named  FastTrack in your DaVinci folder. A sample folder structure might look like this:
+
+cmtuser
+  DaVinci_v33r1p1
+    FastTrack
+      FastTrackAlg
+      FastTrackD
+      FastTrackSvc
+      README.txt
+
+All of the projects are built using CMT.
+
+To run the server daemon, execute:
+cd FastTrackD/cmt
+cmt config
+source setup.sh
+fasttrackd
+
+To run the test algorithm, execute:
+gaudirun.py FastTrackAlg/options.test.py
 
 
 FastTrackAlg
 
 This is a test Gaudi algorithm making use of FastTrackSvc.
 
-To build, go to FastTrackAlg/cmt and execute 'cmt make'.
-
-To run, execute 'gaudirun.py FastTrackAlg/options/test.py'.
-
 
 FastTrackSvc
 
 This is a Gaudi service wrapping a FastTrackD client.
-
-To build, go to FastTrackSvc/cmt and execute 'cmt make'
 
 
 FastTrackD
 
 The central server daemon interfacing with the GPU.
 
-To build, go to FastTrackSvc and execute:
-  mkdir tmp
-  cd tmp
-  cmake ../src
-  make
 
-To run, execute 'FastTrackD/bin/fasttrackd'.
+IpcLib
+
+A shared inter-process communication library for FastTrackSvc and FastTrackD.
+
+

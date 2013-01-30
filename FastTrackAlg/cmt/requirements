@@ -2,11 +2,13 @@ package FastTrackAlg
 version v1r1
 author  "Alexey Badalov"
 
-library FastTrackAlg *.cpp
-
+# structure
 branches cmt options src
 
+# dependencies
 use GaudiAlg     *
 use FastTrackSvc *
 
+# FastTrack library constituent
+library FastTrackAlg *.cpp
 apply_pattern component_library library=FastTrackAlg
