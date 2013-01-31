@@ -6,8 +6,8 @@ author  "Alexey Badalov"
 branches FastTrackSvc cmt doc src
 
 # dependencies
-use GaudiKernel *
-use IpcLib      *
+use GaudiKernel  *
+use FastTrackIpc *
 
 # exported includes
 apply_pattern install_more_includes more=FastTrackSvc

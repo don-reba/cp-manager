@@ -1,0 +1,7 @@
+package FastTrackSvc
+version v1r1
+author  "Alexey Badalov"
+
+use FastTrackD
+use FastTrackSvc
+use FastTrackAlg

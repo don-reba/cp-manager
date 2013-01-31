@@ -1,7 +1,7 @@
 #include "App.h"
 
-#include "IpcLib/Protocol.h"
-#include "IpcLib/SocketServer.h"
+#include "FastTrackIpc/Protocol.h"
+#include "FastTrackIpc/SocketServer.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>

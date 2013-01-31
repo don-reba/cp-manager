@@ -1,45 +1,23 @@
 FastTrack
 
-The project consists of four packages: FastTrackAlg, FastTrackSvc, FastTrackD, and IpcLib. To use the project, place it in your 'cmtuser' directory. A sample folder structure might look like this:
+The FastTrack project provides GPU-accelerated routines for Gaudi algorithms. The routines run on a central daemon process, called FastTrackD. This process communicates with Gaudi clients via the FastTrackSvc Gaudi service. There is a sample algorithm called FastTrackAlg demonstrating the use of this service.
 
-cmtuser
-  gaudi-gpu-manager
-    cmt
-    FastTrackAlg
-    FastTrackD
-    FastTrackSvc
-    IncLib
-    README.txt
+To build the project, go to FastTrackRelease/cmt and run 'cmt broadcast make'.
 
-All of the projects are built using CMT.
+To run the server daemon:
+  cd FastTrackD/cmt
+  cmt config
+  source setup.sh
+  fasttrackd
 
-To run the server daemon, do:
-cd FastTrackD/cmt
-cmt config
-source setup.sh
-fasttrackd
-
-To run the test algorithm, do:
-gaudirun.py FastTrackAlg/options.test.py
+To run the test algorithm:
+  gaudirun.py FastTrackAlg/options.test.py
 
 
-FastTrackAlg
+Package Descriptions
 
-This is a test Gaudi algorithm making use of FastTrackSvc.
-
-
-FastTrackSvc
-
-This is a Gaudi service wrapping a FastTrackD client.
-
-
-FastTrackD
-
-The central server daemon interfacing with the GPU.
-
-
-IpcLib
-
-A shared inter-process communication library for FastTrackSvc and FastTrackD.
-
-
+FastTrackAlg - This is a test Gaudi algorithm making use of FastTrackSvc.
+FastTrackD - The central server daemon handling the GPU.
+FastTrackIpc - A shared interprocess communication library for FastTrackSvc and FastTrackD.
+FastTrackRelease - A release package for building the whole project.
+FastTrackSvc - This is a Gaudi service wrapping a FastTrackD client.

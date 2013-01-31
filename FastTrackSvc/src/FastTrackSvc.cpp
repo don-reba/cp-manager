@@ -1,5 +1,6 @@
 #include "FastTrackSvc.h"
-#include "IpcLib/SocketClient.h"
+
+#include "FastTrackIpc/SocketClient.h"
 
 #include <GaudiKernel/SvcFactory.h>
 

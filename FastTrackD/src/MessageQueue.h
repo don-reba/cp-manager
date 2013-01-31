@@ -2,7 +2,7 @@
 
 #include "App.h"
 
-#include "IpcLib/IProtocol.h"
+#include "FastTrackIpc/IProtocol.h"
 
 #include <map>
 
