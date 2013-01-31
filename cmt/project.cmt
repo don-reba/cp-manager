@@ -1,0 +1,6 @@
+project FastTrack
+
+use GAUDI *
+
+build_strategy with_installarea
+structure_strategy without_version_directory

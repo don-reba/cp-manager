@@ -1,24 +1,25 @@
 FastTrack
 
-The project consists of four packages: FastTrackAlg, FastTrackSvc, FastTrackD, and IpcLib. To use the project, copy its contents to a folder named  FastTrack in your DaVinci folder. A sample folder structure might look like this:
+The project consists of four packages: FastTrackAlg, FastTrackSvc, FastTrackD, and IpcLib. To use the project, place it in your 'cmtuser' directory. A sample folder structure might look like this:
 
 cmtuser
-  DaVinci_v33r1p1
-    FastTrack
-      FastTrackAlg
-      FastTrackD
-      FastTrackSvc
-      README.txt
+  gaudi-gpu-manager
+    cmt
+    FastTrackAlg
+    FastTrackD
+    FastTrackSvc
+    IncLib
+    README.txt
 
 All of the projects are built using CMT.
 
-To run the server daemon, execute:
+To run the server daemon, do:
 cd FastTrackD/cmt
 cmt config
 source setup.sh
 fasttrackd
 
-To run the test algorithm, execute:
+To run the test algorithm, do:
 gaudirun.py FastTrackAlg/options.test.py
 
 
