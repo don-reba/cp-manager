@@ -1,0 +1,115 @@
+using Nemerle.Collections;
+using Nemerle.Peg;
+using Nemerle.Utility;
+using System.Collections.Generic;
+using System.IO;
+using System;
+
+[ PegGrammar
+	( Options = ()
+	, Top
+	, grammar
+	{
+		space = [Zs] / '\t' / '\r' / '\n';
+
+		s : void = space*;
+
+		Name   : string = ([Lu, Ll, Nd] / '_')+;
+		Number : double = '-'? (['0'..'9']* '.')? ['0'..'9']+;
+
+		Definition : string * list[double]
+			= Name s '=' s (Number s)+;
+
+		DefinitionList : Map[string, list[double]]
+			=  (Definition s ';' s)*;
+
+		Template : CnnTemplate = s Name s '{' s DefinitionList '}' s;
+
+		Top : list[CnnTemplate] = s (Template s)*;
+	}
+	)
+]
+public class Parser
+{
+	private Definition
+		( name  : string
+		, _     : NToken
+		, value : List[double]
+		) : string * list[double]
+	{
+		(name, NList.ToList(value));
+	}
+
+	private DefinitionList
+		( definitions : List[(string * list[double]) * NToken]
+		) : Map[string, list[double]]
+	{
+		Map(definitions.Map(((name, value), _) => (name, value)))
+	}
+
+	private Name(name : NToken) : string
+	{
+		GetText(name);
+	}
+
+	private Number
+		( sign           : NToken
+		, _              : option[NToken * NToken]
+		, fractionalPart : NToken
+		) : double
+	{
+		def s = sign.StartPos;
+		def e = fractionalPart.EndPos;
+		double.Parse(ParsingSource.OriginalText.Substring(s, e - s));
+	}
+
+	private Template
+		( name        : string
+		, _           : NToken
+		, definitions : Map[string, list[double]]
+		, _           : NToken
+		) : CnnTemplate
+	{
+		def GetRequiredValue(memberName : string)
+		{
+			match (definitions.Find(memberName))
+			{
+			| Some(value) => (value, memberName)
+			| None => throw Exception($"Template $name is missing $memberName.")
+			}
+		}
+		def GetOptionalValue(memberName, default)
+		{
+			match (definitions.Find(memberName))
+			{
+			| Some(value) => (value,   memberName)
+			| None        => (default, memberName)
+			}
+		}
+		def AsMatrix((memberValue, memberName), rowCount, colCount)
+		{
+			when (memberValue.Length != rowCount * colCount)
+				throw Exception($"Member $memberName of template $name must be a $(rowCount)x$(colCount) matrix.");
+			memberValue.ToArray();
+		}
+		def AsNumber(memberValue, memberName)
+		{
+			when (memberValue.Length != 1)
+				throw Exception($"Member $memberName of template $name must be a number.");
+			memberValue.Head;
+		}
+		CnnTemplate
+			( a              = AsMatrix(GetRequiredValue("a"), 3, 3)
+			, b              = AsMatrix(GetRequiredValue("b"), 3, 3)
+			, c              = AsNumber(GetRequiredValue("z"))
+			, name           = name
+			, iterationCount = AsNumber(GetOptionalValue("iteration_count", [100.0])) :> int
+			);
+	}
+
+	private Top(templates : List[CnnTemplate]) : list[CnnTemplate]
+	{
+		NList.ToList(templates);
+	}
+}
+
