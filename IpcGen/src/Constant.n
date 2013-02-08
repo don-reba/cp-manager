@@ -1,0 +1,15 @@
+namespace AST
+{
+	public variant Constant
+	{
+	| Int { x : int }
+
+		public override ToString() : string
+		{
+			match (this)
+			{
+			| Int(x) => x.ToString()
+			}
+		}
+	}
+}

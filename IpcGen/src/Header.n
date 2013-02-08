@@ -1,0 +1,17 @@
+namespace AST
+{
+	public variant Header
+	{
+	| Include   { path : string }
+	| Namespace { id : string; scope : string }
+
+		public override ToString() : string
+		{
+			match (this)
+			{
+			| Include(path)        => $"include \"$path\""
+			| Namespace(id, scope) => $"namespace $scope $id"
+			}
+		}
+	}
+}

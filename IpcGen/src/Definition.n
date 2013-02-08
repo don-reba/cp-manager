@@ -1,0 +1,47 @@
+using System.Collections.Generic;
+using System.Text;
+
+namespace AST
+{
+	public variant Definition
+	{
+	| Const     { ty : Type; id : string; value : Constant }
+	| Enum      { name : string; members : IEnumerable[EnumMember] }
+	| Exception { name : string; fields : IEnumerable[Field] }
+	| Service   { name : string; baseService : option[string]; functions : IEnumerable[Function] }
+	| Struct    { name : string; fields : IEnumerable[Field] }
+	| Typedef   { ty : Type; name : string }
+
+		public override ToString() : string
+		{
+			def CompoundToString[T]
+				( kind    : string
+				, name    : string
+				, members : IEnumerable[T]
+				)
+			{
+				def text = StringBuilder();
+				_ = text.AppendLine($"$kind $name");
+				_ = text.AppendLine("{");
+				foreach (member in members)
+					_ = text.AppendLine("\t" + member.ToString());
+				_ = text.Append("}");
+				text.ToString();
+			}
+			def MakeServiceName(name, baseService)
+			{
+			| (name, Some(baseService)) => $"$name extends $baseService"
+			| (name, None)              => name
+			}
+			match (this)
+			{
+			| Const(ty, id, value)                  => $"const $ty $id = $value"
+			| Enum(name, members)                   => CompoundToString("enum", name, members)
+			| Exception(name, fields)               => CompoundToString("exception", name, fields)
+			| Service(name, baseService, functions) => CompoundToString("service", MakeServiceName(name, baseService), functions)
+			| Struct(name, fields)                  => CompoundToString("struct", name, fields)
+			| Typedef(ty, name)                     => $"typedef $ty $name"
+			}
+		}
+	}
+}

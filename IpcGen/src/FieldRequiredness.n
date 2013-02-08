@@ -1,0 +1,7 @@
+namespace AST
+{
+	public enum FieldRequiredness
+	{
+	| Optional
+	| Required
+	}

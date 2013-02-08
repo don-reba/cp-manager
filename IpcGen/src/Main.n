@@ -1,0 +1,8 @@
+using System.Console;
+using System.IO;
+
+match (Parser().Parse(File.ReadAllText("Tasks.thrift")))
+{
+| Some(x) => Write(x.ToString())
+| None    => WriteLine("parsing failure")
+}

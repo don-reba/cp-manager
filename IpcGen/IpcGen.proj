@@ -12,7 +12,7 @@
 	<!-- source code -->
 		<Source Include = "src\*.n" />
 	<!-- binaries -->
-		<Bin Include="bin\$(MSBuildProjectName).dll" />
+		<Bin Include="bin\$(MSBuildProjectName).exe" />
 	<!-- references -->
 		<References Include = "lib\Nemerle.Peg.dll" />
 		<References Include = "lib\Nemerle.Peg.Macros.dll" />
@@ -41,7 +41,7 @@
 			OutputAssembly       = "@(Bin)"
 			References           = "@(References)"
 			Sources              = "@(Source)"
-			TargetType           = "library"
+			TargetType           = "exe"
 			/>
 		<Copy
 			SourceFiles       = "@(Dependencies -> 'lib\%(Filename)%(Extension)')"

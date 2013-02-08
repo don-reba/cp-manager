@@ -1,0 +1,18 @@
+namespace AST
+{
+	[ Record ]
+	public class EnumMember
+	{
+		public Name  : string;
+		public Value : option[int];
+
+		public override ToString() : string
+		{
+			match (Value)
+			{
+			| Some(num) => $"$Name = $num"
+			| None      => Name
+			}
+		}
+	}
+}
