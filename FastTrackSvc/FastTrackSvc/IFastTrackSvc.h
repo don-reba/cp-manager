@@ -10,5 +10,7 @@ class IFastTrackSvc :
   public:
     virtual ~IFastTrackSvc() {}
 
+    virtual void sayHelloWorld() = 0;
+
     DeclareInterfaceID(IFastTrackSvc, 1, 0);
 };

@@ -16,8 +16,8 @@ To run the test algorithm:
 
 Package Descriptions
 
-FastTrackAlg - This is a test Gaudi algorithm making use of FastTrackSvc.
+FastTrackAlg - A test Gaudi algorithm making use of FastTrackSvc.
 FastTrackD - The central server daemon handling the GPU.
 FastTrackIpc - A shared interprocess communication library for FastTrackSvc and FastTrackD.
 FastTrackRelease - A release package for building the whole project.
-FastTrackSvc - This is a Gaudi service wrapping a FastTrackD client.
+FastTrackSvc - A Gaudi service wrapping a FastTrackD client.

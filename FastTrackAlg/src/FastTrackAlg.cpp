@@ -14,8 +14,10 @@ FastTrackAlg::~FastTrackAlg() {
 StatusCode FastTrackAlg::initialize() {
   info() << "FastTrackAlg::initialize" << endmsg;
 
-	svc<IFastTrackSvc>("FastTrackSvc", true);
+	SmartIF<IFastTrackSvc> fastTrackSvc(svc<IFastTrackSvc>("FastTrackSvc", true));
 	info() << "got FastTrackSvc" << endmsg;
+
+  fastTrackSvc->sayHelloWorld();
 
   return StatusCode::SUCCESS;
 }

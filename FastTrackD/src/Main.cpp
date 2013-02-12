@@ -78,7 +78,7 @@ try {
 
   server.accept();
 
-  cout << "accepted\n";
+  cout << "msg: " << protocol.readString() << endl;
 
   return EXIT_SUCCESS;
 } catch (const exception & e) {

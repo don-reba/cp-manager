@@ -6,13 +6,16 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-SocketServer::SocketServer(const char * path) :
-    m_path   (path),
-    m_socket (-1) {
-  const size_t maxPathLength = 107;
-  if (m_path.size() > maxPathLength)
-    throw std::runtime_error("The socket path is too long.");
+#include <sstream>
 
+//-------------
+// construction
+//-------------
+
+SocketServer::SocketServer(const char * path) :
+    m_path     (path),
+    m_socket   (-1),
+    m_accepted (-1){
   m_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
   if (m_socket == -1)
     throw SystemException("Could not create socket.");
@@ -20,12 +23,15 @@ SocketServer::SocketServer(const char * path) :
   int opt = 1;
   setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-  sockaddr_un address;
-  address.sun_family = AF_LOCAL;
-  std::strcpy(address.sun_path, m_path.c_str());
+  sockaddr_un address = { 0 };
+  address.sun_family = AF_UNIX;
+  const size_t maxPathLength = sizeof(address.sun_path) - 1;
+  if (m_path.size() > maxPathLength)
+    throw std::runtime_error("The socket path is too long.");
+  std::strncpy(address.sun_path, m_path.c_str(), maxPathLength);
   unlink(m_path.c_str());
 
-  if (-1 == bind(m_socket, (sockaddr*)&address, sizeof(address)))
+  if (-1 == bind(m_socket, (sockaddr*)&address, SUN_LEN(&address)))
     throw SystemException("Could not bind to socket.");
 
   if (-1 == listen(m_socket, SOMAXCONN))
@@ -33,6 +39,9 @@ SocketServer::SocketServer(const char * path) :
 }
 
 SocketServer::~SocketServer() {
+  if (m_accepted != -1) {
+    close(m_accepted);
+  }
   if (m_socket != -1) {
     unlink(m_path.c_str());
     close(m_socket);
@@ -40,12 +49,39 @@ SocketServer::~SocketServer() {
 }
 
 void SocketServer::accept() {
-	if (-1 == ::accept(m_socket, NULL, NULL))
+  m_accepted = ::accept(m_socket, NULL, NULL);
+	if (-1 == m_accepted)
 		throw SystemException("Could not accept incoming connection.");
 }
 
-void SocketServer::readBytes(char * data, int size) {
+//--------------------------
+// ITransport implementation
+//--------------------------
+
+void SocketServer::readBytes(char * data, size_t size) {
+  if (-1 == m_accepted)
+    throw std::runtime_error("Attempt to before accepting a connection.");
+
+  size_t received = read(m_accepted, data, size);
+  if (received == static_cast<size_t>(-1))
+    throw SystemException("Read error.");
+  if (received != size) {
+    std::stringstream msg;
+    msg << "Asked for " << size << " bytes; received " << received << ".";
+    throw std::runtime_error(msg.str().c_str());
+  }
 }
 
-void SocketServer::writeBytes(const char * data, int size) {
+void SocketServer::writeBytes(const char * data, size_t size) {
+  if (-1 == m_accepted)
+    throw std::runtime_error("Attempt to write before accepting a connection.");
+
+  size_t sent = write(m_accepted, data, size);
+  if (sent == static_cast<size_t>(-1))
+    throw SystemException("Write error.");
+  if (sent != size) {
+    std::stringstream msg;
+    msg << "Asked for " << size << " bytes; sent " << sent << ".";
+    throw std::runtime_error(msg.str().c_str());
+  }
 }

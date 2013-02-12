@@ -1,6 +1,7 @@
 #include "FastTrackSvc.h"
 
 #include "FastTrackIpc/SocketClient.h"
+#include "FastTrackIpc/Protocol.h"
 
 #include <GaudiKernel/SvcFactory.h>
 
@@ -8,13 +9,30 @@
 
 DECLARE_SERVICE_FACTORY(FastTrackSvc)
 
+//-------------
+// construction
+//-------------
+
 FastTrackSvc::FastTrackSvc(const std::string & name, ISvcLocator * sl) :
-    Service(name, sl),
-    transport(NULL) {
+    Service     (name, sl),
+    m_transport (NULL),
+    m_protocol  (NULL) {
 }
 
 FastTrackSvc::~FastTrackSvc() {
 }
+
+//-----------------------------
+// IFastTrackSvc implementation
+//-----------------------------
+
+void FastTrackSvc::sayHelloWorld() {
+  m_protocol->writeString("Hello World!");
+}
+
+//-----------------------
+// Service implementation
+//-----------------------
 
 StatusCode FastTrackSvc::queryInterface(const InterfaceID & riid, void ** ppvIF) {
   if (riid == IFastTrackSvc::interfaceID()) {
@@ -47,10 +65,13 @@ StatusCode FastTrackSvc::finalize() {
 }
 
 void FastTrackSvc::cleanup() {
-  if (transport != NULL)
-    delete transport;
+  if (m_protocol != NULL)
+    delete m_protocol;
+  if (m_transport != NULL)
+    delete m_transport;
 }
 
 void FastTrackSvc::initIO() {
-  transport = new SocketClient("/tmp/FastTrack");
+  m_transport = new SocketClient("/tmp/FastTrack");
+  m_protocol  = new Protocol(*m_transport);
 }
