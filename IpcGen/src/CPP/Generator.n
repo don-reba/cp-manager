@@ -1,0 +1,199 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+
+namespace CPP
+{
+	public class Generator
+	{
+		private indent : string;
+
+		public this(indent : string)
+		{
+			this.indent = indent;
+		}
+
+		public WriteCode(api : AST.Api, name : string, rootDirectory : string) : void
+		{
+			_ = Directory.CreateDirectory(rootDirectory);
+
+			mutable headers     = List();
+			mutable definitions = List();
+			foreach ((definition, ns) in api.Definitions)
+			{
+				match (definition)
+				{
+				| AST.Definition.Enum
+				| AST.Definition.Exception
+				| AST.Definition.Service
+				| AST.Definition.Struct =>
+					headers.Add(CreateDefinitionHeader(definition, ns, rootDirectory))
+				| _ =>
+					definitions.Add(definition, ns)
+				}
+			}
+			headers.Sort();
+			CreateMainHeader(name, headers, definitions, rootDirectory);
+		}
+
+
+		//---------------
+		// implementation
+		//---------------
+
+		private CreateDefinitionHeader
+			( definition    : AST.Definition
+			, ns            : AST.Namespace
+			, rootDirectory : string
+			) : string
+		{
+			def fileName = string.Concat(string.Join("-", ns.Parts), "-", definition.name, ".h");
+			using (writer = CreateFile(Path.Combine(rootDirectory, fileName)))
+			{
+				WriteIncludes(definition, writer);
+				foreach (part in ns.Parts)
+					writer.OpenBlock("namespace {0}", part);
+				WriteDefinition(definition, writer);
+				foreach (_ in ns.Parts)
+					writer.CloseBlock();
+			}
+			fileName;
+		}
+
+		private CreateMainHeader
+			( name          : string
+			, headers       : IEnumerable[string]
+			, definitions   : IEnumerable[AST.Definition * AST.Namespace]
+			, rootDirectory : string
+			) : void
+		{
+			def fileName = string.Concat(name, ".h");
+			using (writer = CreateFile(Path.Combine(rootDirectory, fileName)))
+			{
+				foreach (definitions in GroupByNamespace(definitions))
+				{
+					def ns = definitions.Key;
+					// open namespaces
+					foreach (part in ns.Parts)
+						writer.OpenBlock("namespace {0}", part);
+					// write definitions
+					foreach (definition in definitions)
+						WriteDefinition(definition, writer);
+					// close namespaces
+					foreach (_ in ns.Parts)
+						writer.CloseBlock();
+				}
+				foreach (header in headers)
+					writer.WriteMember("#include \"{0}\"", header);
+			}
+		}
+
+		private GroupByNamespace
+			( definitions : IEnumerable[AST.Definition * AST.Namespace]
+			) : IEnumerable[IGrouping[AST.Namespace, AST.Definition]]
+		{
+			definitions.GroupBy
+				( keySelector     = (_, ns) => ns
+				, elementSelector = (defn, _) => defn
+				)
+		}
+
+		private WriteDefinition
+			( definition  : AST.Definition
+			, writer      : CodeWriter
+			) : void
+		{
+			def name = definition.name;
+
+			match (definition)
+			{
+			| Const(ty, value) =>
+				writer.WriteMember("const {0} {1} = {2};", ToString(ty), name, ToString(value))
+
+			| Enum(members) =>
+				writer.OpenBlock("enum {0}", name);
+				foreach (member in members)
+				{
+					match (member.Value)
+					{
+					| Some(num) => writer.WriteMember("{0} = {1},", member.Name, num)
+					| None      => writer.WriteMember("{0},", member.Name)
+					}
+				}
+				writer.CloseBlock();
+
+			| Exception(fields) =>
+				writer.OpenBlock("class {0} : public std::exception", name);
+				foreach (field in fields)
+					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
+				writer.CloseBlock();
+
+			| Service(@base, functions) =>
+				writer.OpenBlock("class {0}", name);
+				writer.CloseBlock();
+
+			| Struct(fields) =>
+				writer.OpenBlock("class {0}", name);
+				foreach (field in fields)
+					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
+				writer.CloseBlock();
+
+			| Typedef(ty) =>
+				writer.WriteMember("typedef {0} {1};", ToString(ty), name);
+			}
+		}
+
+		private WriteIncludes
+			( definition  : AST.Definition
+			, writer      : CodeWriter
+			) : void
+		{
+			writer.WriteMember("#pragma once");
+			writer.WriteMember("#include <stdint.h>");
+			writer.WriteMember("#include <map>");
+			writer.WriteMember("#include <set>");
+			writer.WriteMember("#include <vector>");
+			match (definition)
+			{
+			| Exception =>
+				writer.WriteMember("#include <exception>");
+			| _ => ()
+			}
+		}
+
+		private ToString(ty : AST.Type) : string
+		{
+			def name = match (ty.Name)
+			{
+			| "binary" => "std::vector"
+			| "bool"   => "bool"
+			| "byte"   => "uint8_t"
+			| "double" => "double"
+			| "i16"    => "int16_t"
+			| "i32"    => "int32_t"
+			| "i64"    => "int64_t"
+			| "list"   => "std::vector"
+			| "map"    => "std::map"
+			| "set"    => "std::set"
+			| "string" => "std::string"
+			| name     => name
+			}
+			if (ty.Parameters == [])
+				name
+			else
+				string.Format("{0}< {1} >", name, string.Join(", ", ty.Parameters.Map(ToString)));
+		}
+
+		private ToString(ty : AST.Constant) : string
+		{
+		| Int(x) => x.ToString();
+		}
+
+		private CreateFile(path : string) : CodeWriter
+		{
+			def writer = CodeWriter(indent, File.CreateText(path));
+			writer.WriteComment("Automatically generated file — do not edit.");
+			writer;
+		}
+	}
+}

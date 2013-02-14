@@ -1,0 +1,64 @@
+using System.IO;
+using System;
+
+namespace CPP
+{
+	// Formatted code output.
+	class CodeWriter : IDisposable
+	{
+		private indent   : string;
+		private writer   : StreamWriter;
+		private disposed : bool;
+
+		private mutable depth : int;
+
+		public this(indent : string, writer : StreamWriter)
+		{
+			this.indent   = indent;
+			this.writer   = writer;
+			this.disposed = false;
+
+			this.depth = 0;
+		}
+
+		public Dispose() : void
+		{
+			unless (disposed)
+				writer.Dispose();
+		}
+
+		public WriteComment(format : string, params args : array[object]) : void
+		{
+			WriteIndent();
+			def text = string.Format(format, args);
+			foreach (line in text.Split(array['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+				writer.WriteLine("// {0}", line);
+		}
+
+		public WriteMember(format : string, params args : array[object]) : void
+		{
+			WriteIndent();
+			writer.WriteLine(format, args);
+		}
+
+		public OpenBlock(format : string, params args : array[object]) : void
+		{
+			WriteIndent();
+			writer.WriteLine("{0} {{", string.Format(format, args));
+			++depth;
+		}
+
+		public CloseBlock() : void
+		{
+			--depth;
+			WriteIndent();
+			writer.WriteLine("}");
+		}
+
+		private WriteIndent() : void
+		{
+			repeat (depth)
+				writer.Write(indent);
+		}
+	}
+}

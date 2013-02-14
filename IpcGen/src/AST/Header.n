@@ -3,14 +3,14 @@ namespace AST
 	public variant Header
 	{
 	| Include   { path : string }
-	| Namespace { id : string; scope : string }
+	| Namespace { id : string; lang : string }
 
 		public override ToString() : string
 		{
 			match (this)
 			{
-			| Include(path)        => $"include \"$path\""
-			| Namespace(id, scope) => $"namespace $scope $id"
+			| Include(path)       => $"include \"$path\""
+			| Namespace(id, lang) => $"namespace $lang $id"
 			}
 		}
 	}

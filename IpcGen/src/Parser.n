@@ -128,7 +128,7 @@ public class Parser
 		, value     : AST.Constant
 		) : AST.Definition
 	{
-		AST.Definition.Const(fieldType, name, value)
+		AST.Definition.Const(name, fieldType, value)
 	}
 
 	private DoubleQuoteLiteral
@@ -175,7 +175,7 @@ public class Parser
 		match (number)
 		{
 		| AST.Constant.Int(num) => num
-		| _ => throw Exception("Enum value has to be an integer.")
+		| _ => throw GeneratorException("Enum value has to be an integer.")
 		}
 	}
 
@@ -208,7 +208,7 @@ public class Parser
 		match (number)
 		{
 		| AST.Constant.Int(num) => num
-		| _ => throw Exception("Field ID has to be an integer.")
+		| _ => throw GeneratorException("Field ID has to be an integer.")
 		}
 	}
 
@@ -218,7 +218,7 @@ public class Parser
 		{
 		| "required" => AST.FieldRequiredness.Required
 		| "optional" => AST.FieldRequiredness.Optional
-		| modifier   => throw Exception($"Unrecognized field modifier: $modifier.");
+		| modifier   => throw GeneratorException($"Unrecognized field modifier: $modifier.");
 		}
 	}
 
@@ -353,7 +353,7 @@ public class Parser
 		, name           : string
 		) : AST.Definition
 	{
-		AST.Definition.Typedef(definitionType, name)
+		AST.Definition.Typedef(name, definitionType)
 	}
 
 	private UserType(name : string) : AST.Type

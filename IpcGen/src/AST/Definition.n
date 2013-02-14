@@ -3,14 +3,17 @@ using System.Text;
 
 namespace AST
 {
+	[ Record ]
 	public variant Definition
 	{
-	| Const     { ty : Type; id : string; value : Constant }
-	| Enum      { name : string; members : IEnumerable[EnumMember] }
-	| Exception { name : string; fields : IEnumerable[Field] }
-	| Service   { name : string; baseService : option[string]; functions : IEnumerable[Function] }
-	| Struct    { name : string; fields : IEnumerable[Field] }
-	| Typedef   { ty : Type; name : string }
+	| Const     { ty : Type; value : Constant }
+	| Enum      { members : IEnumerable[EnumMember] }
+	| Exception { fields : IEnumerable[Field] }
+	| Service   { @base : option[string]; functions : IEnumerable[Function] }
+	| Struct    { fields : IEnumerable[Field] }
+	| Typedef   { ty : Type }
+
+		public name : string;
 
 		public override ToString() : string
 		{
@@ -28,19 +31,19 @@ namespace AST
 				_ = text.Append("}");
 				text.ToString();
 			}
-			def MakeServiceName(name, baseService)
+			def MakeServiceName(name, @base)
 			{
-			| (name, Some(baseService)) => $"$name extends $baseService"
-			| (name, None)              => name
+			| (name, Some(@base)) => $"$name extends $base"
+			| (name, None)        => name
 			}
 			match (this)
 			{
-			| Const(ty, id, value)                  => $"const $ty $id = $value"
-			| Enum(name, members)                   => CompoundToString("enum", name, members)
-			| Exception(name, fields)               => CompoundToString("exception", name, fields)
-			| Service(name, baseService, functions) => CompoundToString("service", MakeServiceName(name, baseService), functions)
-			| Struct(name, fields)                  => CompoundToString("struct", name, fields)
-			| Typedef(ty, name)                     => $"typedef $ty $name"
+			| Const(ty, value)          => $"const $ty $name = $value"
+			| Enum(members)             => CompoundToString("enum", name, members)
+			| Exception(fields)         => CompoundToString("exception", name, fields)
+			| Service(@base, functions) => CompoundToString("service", MakeServiceName(name, @base), functions)
+			| Struct(fields)            => CompoundToString("struct", name, fields)
+			| Typedef(ty)               => $"typedef $ty $name"
 			}
 		}
 	}

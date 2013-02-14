@@ -1,0 +1,76 @@
+using Nemerle.Collections;
+using Nemerle.Utility;
+using System.Collections.Generic;
+using System.Console;
+using System.IO;
+using System;
+
+public module IpcGenerator
+{
+	public GenerateIpcFromThrift
+		( thriftFilePath  : string
+		, targetDirectory : string
+		, targetLanguage  : TargetLanguage
+		) : void
+	{
+		try
+		{
+			match (Parser().Parse(File.ReadAllText(thriftFilePath)))
+			{
+			| Some(x) =>
+				def documentName = Path.GetFileNameWithoutExtension(thriftFilePath);
+				def api = MapDocument(x, targetLanguage, documentName);
+
+				Write(api.ToString());
+
+				match (targetLanguage)
+				{
+				| TargetLanguage.Cpp =>
+					def generator = CPP.Generator("  ");
+					generator.WriteCode(api, documentName, targetDirectory);
+				}
+			| None =>
+				WriteLine("parsing failure")
+			}
+		}
+		catch
+		{
+		| e is GeneratorException => WriteLine(e.Message)
+		| e                       => WriteLine(e.ToString())
+		}
+	}
+
+	private MapDocument
+		( document       : AST.Document
+		, targetLanguage : TargetLanguage
+		, documentName   : string
+		) : AST.Api
+	{
+		def GetNamespace(headers)
+		{
+			def namespaces = Dictionary();
+			foreach (header in headers)
+			{
+				match (header)
+				{
+				| AST.Header.Namespace(id, lang) =>
+					if (namespaces.ContainsKey(lang))
+						throw GeneratorException($"Multiple namespace statements for '$lang' in '$documentName'.");
+					else
+						namespaces[lang] = id.SplitToList(array['.']);
+				| _ => ()
+				}
+			}
+			def lang = match (targetLanguage)
+			{
+			| TargetLanguage.Cpp => "cpp"
+			}
+			if (namespaces.ContainsKey(lang))
+				AST.Namespace(namespaces[lang])
+			else
+				AST.Namespace([])
+		}
+		def ns = GetNamespace(document.Headers);
+		AST.Api(document.Definitions.MapToList(defn => (defn, ns)));
+	}
+}
