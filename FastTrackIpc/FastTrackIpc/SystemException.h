@@ -11,7 +11,6 @@ class SystemException : public std::exception {
     virtual const char * what() const throw();
 
   private:
-    std::string m_usrMessage;
-    std::string m_sysMessage;
+    int         m_errno;
     std::string m_message;
 };

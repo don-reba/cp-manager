@@ -14,11 +14,12 @@ class SocketServer : public ITransport {
 
     // ITransport implementation
 
-    virtual void readBytes(char * data, int size);
+    virtual void readBytes(char * data, size_t size);
 
-    virtual void writeBytes(const char * data, int size);
+    virtual void writeBytes(const char * data, size_t size);
 
   private:
     std::string m_path;
     int         m_socket;
+    int         m_accepted;
 };

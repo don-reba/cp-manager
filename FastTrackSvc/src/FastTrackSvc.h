@@ -4,7 +4,8 @@
 
 #include <GaudiKernel/Service.h>
 
-class SocketClient;
+class ITransport;
+class IProtocol;
 
 class FastTrackSvc :
     public         Service,
@@ -12,6 +13,9 @@ class FastTrackSvc :
   public:
     FastTrackSvc(const std::string & name, ISvcLocator * sl);
     virtual ~FastTrackSvc();
+
+    // IFastTrackSvc implementation
+    virtual void sayHelloWorld();
 
     // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
@@ -23,5 +27,6 @@ class FastTrackSvc :
     void initIO();
 
   private:
-    SocketClient * transport;
+    ITransport * m_transport;
+    IProtocol  * m_protocol;
 };
