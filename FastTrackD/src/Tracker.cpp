@@ -19,9 +19,9 @@ bool Tracker::isPrime(int32_t n) const {
 	return true;
 }
 
-//----------------------------------------
-// automatically generated - do not modify
-//----------------------------------------
+//---------
+// wrappers
+//---------
 
 bool Tracker::process(IProtocol & protocol) const {
 	int id = protocol.readInt32();
