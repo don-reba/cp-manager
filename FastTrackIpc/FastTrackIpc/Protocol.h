@@ -5,22 +5,43 @@
 class ITransport;
 
 class Protocol : public IProtocol {
-	public:
+	public: // public interface
+
     Protocol(ITransport & transport);
 
     virtual ~Protocol();
 
-		/// Reads a 32-bit floating point number.
-		virtual float readFloat();
+  public: // IProtocol implementation
 
-		/// Records a 32-bit floating point number.
-		virtual void writeFloat(float f);
+		/// Reads a boolean value.
+		virtual bool readBool();
+
+		/// Writes a boolean value.
+		virtual void writeBool(bool b);
+
+		/// Reads a double-precision floating point number.
+		virtual double readDouble();
+
+		/// Records a double-precision floating point number.
+		virtual void writeDouble(double f);
+
+		/// Reads a 16-bit integer.
+		virtual int16_t readInt16();
+
+		/// Writes a 16-bit integer.
+		virtual void writeInt16(int16_t n);
 
 		/// Reads a 32-bit integer.
-		virtual int readInt();
+		virtual int32_t readInt32();
 
 		/// Writes a 32-bit integer.
-		virtual void writeInt(int n);
+		virtual void writeInt32(int32_t n);
+
+		/// Reads a 64-bit integer.
+		virtual int64_t readInt64();
+
+		/// Writes a 32-bit integer.
+		virtual void writeInt64(int64_t n);
 
 		/// Reads a standard string.
 		virtual std::string readString();

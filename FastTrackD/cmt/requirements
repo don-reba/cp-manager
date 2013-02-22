@@ -10,7 +10,7 @@ use FastTrackIpc *
 use Boost        * LCG_Interfaces -no_auto_imports
 
 # application constituent
-application fasttrackd *.cpp -import=Boost
+application fasttrackd -import=Boost *.cpp
 
 private
 macro application_suffix ""

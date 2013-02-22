@@ -7,6 +7,7 @@ branches FastTrackIpc cmt doc src
 
 # dependencies
 use GaudiPolicy *
+use Boost       * LCG_Interfaces -no_auto_imports
 #use doxygen     * LCG_Interfaces -no_auto_imports
 
 # exported includes
@@ -16,8 +17,12 @@ include_dirs ../FastTrackIpc
 end_private
 
 # FastTrackIpc library constituent
-library FastTrackIpc -no_static *.cpp
+library FastTrackIpc -no_static -import=Boost *.cpp Api/*.cpp
 apply_pattern linker_library library=FastTrackIpc
 
 #action doxygen "$(doxygen_home)/doxygen doxyfile"
 #macro FastTrackIpc_dependencies "doxygen"
+
+private
+macro_append Boost_linkopts " $(Boost_linkopts_thread) "
+end_private
