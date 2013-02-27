@@ -17,7 +17,10 @@ StatusCode FastTrackAlg::initialize() {
 	SmartIF<IFastTrackSvc> fastTrackSvc(svc<IFastTrackSvc>("FastTrackSvc", true));
 	info() << "got FastTrackSvc" << endmsg;
 
-  fastTrackSvc->sayHelloWorld();
+	for (int i = 0; i != 10; ++i) {
+		bool isPrime = fastTrackSvc->isPrime(i);
+		info() << i << " is " << (isPrime ? "prime" : "composite") << endmsg;
+	}
 
   return StatusCode::SUCCESS;
 }

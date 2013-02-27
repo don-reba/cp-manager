@@ -1,7 +1,9 @@
 #include "App.h"
+#include "Tracker.h"
 
 #include "FastTrackIpc/Protocol.h"
-#include "FastTrackIpc/SocketServer.h"
+#include "FastTrackIpc/SocketServerConnector.h"
+#include "FastTrackIpc/ThreadedServer.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -11,7 +13,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <boost/make_shared.hpp>
 #include <boost/program_options.hpp>
+#include <boost/ref.hpp>
+#include <boost/shared_ptr.hpp>
 
 using namespace std;
 
@@ -39,11 +44,21 @@ void daemonize() {
 }
 
 // Parse command line options.
-bool parseCommandLine(int argc, char * argv[], bool & daemonize) {
+bool parseCommandLine(
+		int      argc,
+		char   * argv[],
+		bool   & daemonize,
+		string & path) {
   po::options_description desc("Supported options");
   desc.add_options()
-    ("help",      "display this help message")
-    ("daemonize", "run the process as a daemon")
+    ("help",
+		 "display this help message")
+    ("daemonize",
+		 po::value<bool>()->default_value(false),
+		 "run the process as a daemon")
+		("path",
+		 po::value<string>()->default_value("/tmp/FastTrack"),
+		 "socket path")
     ;
 
   po::variables_map vm;
@@ -55,16 +70,22 @@ bool parseCommandLine(int argc, char * argv[], bool & daemonize) {
     return false;
   }
 
-  daemonize = vm.count("daemonize");
+  daemonize = vm["daemonize"].as<bool>();
+	path      = vm["path"].as<string>();
 
   return true;
+}
+
+boost::shared_ptr<IProtocol> getProtocol(ITransport & transport) {
+	return boost::make_shared<Protocol>(boost::ref(transport));
 }
 
 // Main entry point.
 int main(int argc, char * argv[])
 try {
   bool enableDaemonize(false);
-  if (!parseCommandLine(argc, argv, enableDaemonize))
+	string path;
+  if (!parseCommandLine(argc, argv, enableDaemonize, path))
     return EXIT_SUCCESS;
 
   const bool useStdIO = !enableDaemonize;
@@ -73,12 +94,10 @@ try {
   if (enableDaemonize)
     daemonize();
 
-  SocketServer server("/tmp/FastTrack");
-  Protocol protocol(server);
+  SocketServerConnector connector(path.c_str());
+	Tracker processor;
 
-  server.accept();
-
-  cout << "msg: " << protocol.readString() << endl;
+	ThreadedServer().serve(connector, &getProtocol, processor);
 
   return EXIT_SUCCESS;
 } catch (const exception & e) {
