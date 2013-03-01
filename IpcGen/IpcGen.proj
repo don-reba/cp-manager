@@ -10,13 +10,16 @@
 
 	<ItemGroup>
 	<!-- source code -->
-		<Source Include = "src\*.n" />
-		<Source Include = "src\AST\*.n" />
+		<Source Include = "src\*.n"      />
+		<Source Include = "src\AST\*.n"  />
+		<Source Include = "src\AST2\*.n" />
+		<Source Include = "src\CPP\*.n"  />
 	<!-- binaries -->
 		<Bin Include="bin\$(MSBuildProjectName).exe" />
 	<!-- references -->
-		<References Include = "lib\Nemerle.Peg.dll" />
+		<References Include = "lib\Nemerle.Peg.dll"        />
 		<References Include = "lib\Nemerle.Peg.Macros.dll" />
+		<References Include = "System.Core.dll"            />
 	<!-- dependencies -->
 		<Dependencies Include = "bin\Nemerle.Peg.dll" />
 	<!-- all output -->

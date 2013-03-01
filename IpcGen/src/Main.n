@@ -1,5 +1,5 @@
 IpcGenerator.GenerateIpcFromThrift
-	( thriftFilePath  = "Tasks.thrift"
+	( thriftFilePath  = "Api.thrift"
 	, targetDirectory = "out"
 	, targetLanguage  = TargetLanguage.Cpp
 	);

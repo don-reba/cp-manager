@@ -12,17 +12,16 @@ using System;
 	{
 		// tokens
 
-		any   = ['\u0000'..'\uFFFF'];
 		eol   = '\n' / '\r';
 		space = [Zs] / '\t' / '\n' / '\r';
 
-		lineComment  = "//" (!eol any)* eol;
-		blockComment = "/*" (!"*/" any)* "*/";
+		lineComment  = "//" (!eol [Any])* eol;
+		blockComment = "/*" (!"*/" [Any])* "*/";
 
 		s : void = (lineComment / blockComment / space)*;
 
-		DoubleQuoteLiteralText = (!'"' any)*;
-		SingleQuoteLiteralText = (!"'" any)*;
+		DoubleQuoteLiteralText = (!'"' [Any])*;
+		SingleQuoteLiteralText = (!"'" [Any])*;
 		DoubleQuoteLiteral : string = '"' DoubleQuoteLiteralText '"';
 		SingleQuoteLiteral : string = "'" SingleQuoteLiteralText "'";
 		Literal : string = DoubleQuoteLiteral / SingleQuoteLiteral;
@@ -85,7 +84,7 @@ using System;
 
 		// top level
 
-		Document : AST.Document = Header* Definition*;
+		Document : AST.Document = Header* Definition* ![Any];
 
 		// headers
 

@@ -13,7 +13,6 @@ public module IpcGenerator
 		, targetLanguage  : TargetLanguage
 		) : void
 	{
-		try
 		{
 			match (Parser().Parse(File.ReadAllText(thriftFilePath)))
 			{
@@ -32,11 +31,6 @@ public module IpcGenerator
 			| None =>
 				WriteLine("parsing failure")
 			}
-		}
-		catch
-		{
-		| e is GeneratorException => WriteLine(e.Message)
-		| e                       => WriteLine(e.ToString())
 		}
 	}
 
