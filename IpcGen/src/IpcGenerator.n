@@ -34,6 +34,7 @@ public module IpcGenerator
 		}
 	}
 
+	// transform the AST to simplify code gen
 	private MapDocument
 		( document       : AST.Document
 		, targetLanguage : TargetLanguage
