@@ -17,8 +17,8 @@ public module IpcGenerator
 			match (Parser().Parse(File.ReadAllText(thriftFilePath)))
 			{
 			| Some(x) =>
-				def documentName = Path.GetFileNameWithoutExtension(thriftFilePath);
-				def api = MapDocument(x, targetLanguage, documentName);
+				def srcName = Path.GetFileNameWithoutExtension(thriftFilePath);
+				def api = MapDocument(x, targetLanguage, srcName);
 
 				Write(api.ToString());
 
@@ -26,7 +26,7 @@ public module IpcGenerator
 				{
 				| TargetLanguage.Cpp =>
 					def generator = CPP.Generator("  ");
-					generator.WriteCode(api, documentName, targetDirectory);
+					generator.WriteCode(api, targetDirectory);
 				}
 			| None =>
 				WriteLine("parsing failure")
@@ -38,7 +38,7 @@ public module IpcGenerator
 	private MapDocument
 		( document       : AST.Document
 		, targetLanguage : TargetLanguage
-		, documentName   : string
+		, srcName        : string
 		) : AST.Api
 	{
 		def GetNamespace(headers)
@@ -50,7 +50,7 @@ public module IpcGenerator
 				{
 				| AST.Header.Namespace(id, lang) =>
 					if (namespaces.ContainsKey(lang))
-						throw GeneratorException($"Multiple namespace statements for '$lang' in '$documentName'.");
+						throw GeneratorException($"Multiple namespace statements for '$lang' in '$srcName'.");
 					else
 						namespaces[lang] = id.SplitToList(array['.']);
 				| _ => ()

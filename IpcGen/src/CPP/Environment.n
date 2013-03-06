@@ -1,0 +1,25 @@
+using System.Collections.Generic;
+using Nemerle.Utility;
+
+namespace CPP
+{
+	public class Environment
+	{
+		private symbols : Dictionary.[string, AST.Definition] = Dictionary();
+
+		[ Accessor]
+		private mainHeaderName : string;
+
+		public this(api : AST.Api, mainHeaderName : string)
+		{
+			foreach ((definition, _) in api.Definitions)
+				symbols[definition.name : string] = definition : AST.Definition;
+			this.mainHeaderName = mainHeaderName;
+		}
+
+		public GetDefinition(name : string) : AST.Definition
+		{
+			symbols[name]
+		}
+	}
+}
