@@ -57,11 +57,11 @@ namespace CPP
 			++depth;
 		}
 
-		public CloseBlock() : void
+		public CloseBlock(addSemicolon : bool = true) : void
 		{
 			--depth;
 			WriteIndent();
-			writer.WriteLine("}");
+			writer.WriteLine(if (addSemicolon) "};" else "}");
 		}
 
 		private WriteIndent() : void

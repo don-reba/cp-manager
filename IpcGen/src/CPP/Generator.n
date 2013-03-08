@@ -47,7 +47,7 @@ namespace CPP
 
 					CreateServerServiceHeader(env, service, ns, serverDir);
 					CreateServerServiceImplementation(env, service, ns, serverDir);
-					CreateServerServiceWrapper(service, ns, serverDir);
+					CreateServerServiceStubs(service, ns, serverDir);
 				| _ =>
 					definitions.Add(definition, ns);
 				}
@@ -120,6 +120,7 @@ namespace CPP
 				writer.WriteMember("#pragma once");
 				writer.WriteMember("#include \"FastTrackIpc/Api/{0}.h\"", env.MainHeaderName);
 				WriteIncludes(writer);
+				writer.WriteMember("class IProtocol;");
 
 				foreach (part in ns.Parts)
 					writer.OpenBlock("namespace {0}", part);
@@ -134,16 +135,16 @@ namespace CPP
 				writer.WriteComment("interface");
 				writer.WriteMember("{0}(IProtocol & protocol);", service.name);
 
-				writer.WriteLabel("private");
+				writer.WriteLabel("public");
 				writer.WriteComment("service function wrappers");
 				foreach (function in service.functions)
-					WriteFunctionDefinition(function, writer);
+					WriteFunctionDefinition(function, false, writer);
 
 				writer.WriteLabel("private");
 				writer.WriteComment("data");
-				writer.WriteMember("IProtocol & m_protocol");
+				writer.WriteMember("IProtocol & protocol;");
 
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 				foreach (_ in ns.Parts)
 					writer.CloseBlock();
@@ -169,6 +170,16 @@ namespace CPP
 			}
 			def nsPrefix = MakeNamespacePrefix();
 
+			def WriteConstructor(writer)
+			{
+				writer.OpenBlock
+					( "{0}{1}::{1}(IProtocol & protocol) : protocol(protocol)"
+					, nsPrefix
+					, service.name
+					);
+				writer.CloseBlock();
+			}
+
 			def WriteWrapper(function, writer)
 			{
 				def FieldToString(f)
@@ -183,6 +194,7 @@ namespace CPP
 					, function.Name
 					, string.Join(", ", function.Fields.Select(FieldToString))
 					);
+				writer.WriteMember("protocol.writeInt32({0}ID_{1});", service.name, function.Name);
 				foreach (field in function.Fields)
 					WriteWriteStatement(env, field.Name, field.Type, writer);
 				WriteReadStatement(env, "result", function.ReturnType, true, writer);
@@ -194,6 +206,9 @@ namespace CPP
 			{
 				writer.WriteMember("#include \"{0}.h\"", service.name);
 				writer.WriteMember("#include \"{0}ID.h\"", service.name);
+				writer.WriteMember("#include \"FastTrackIpc/IProtocol.h\"");
+
+				WriteConstructor(writer);
 
 				writer.WriteComment("service function wrappers");
 				foreach (function in service.functions)
@@ -214,6 +229,7 @@ namespace CPP
 				WriteIncludes(writer);
 				writer.WriteMember("#include \"FastTrackIpc/Api/{0}.h\"", env.MainHeaderName);
 				writer.WriteMember("#include \"FastTrackIpc/IProcessor.h\"");
+				writer.WriteMember("class IProtocol;");
 
 				foreach (part in ns.Parts)
 					writer.OpenBlock("namespace {0}", part);
@@ -231,7 +247,7 @@ namespace CPP
 				writer.WriteLabel("private");
 				writer.WriteComment("service functions for the user to implement");
 				foreach (function in service.functions)
-					WriteFunctionDefinition(function, writer);
+					WriteFunctionDefinition(function, true, writer);
 
 				writer.WriteLabel("private");
 				writer.WriteComment("generated wrappers");
@@ -243,7 +259,7 @@ namespace CPP
 						);
 				}
 
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 				foreach (_ in ns.Parts)
 					writer.CloseBlock();
@@ -269,7 +285,7 @@ namespace CPP
 				writer.CloseBlock();
 
 				foreach (_ in ns.Parts)
-					writer.CloseBlock();
+					writer.CloseBlock(addSemicolon = true);
 			}
 		}
 
@@ -299,12 +315,12 @@ namespace CPP
 				writer.OpenBlock("switch (id)");
 				foreach (function in service.functions)
 				{
-					writer.WriteLabel("case {0}", MakeServiceFunctionId(service, function));
+					writer.WriteLabel("case {0}ID_{1}", service.name, function.Name);
 					writer.WriteMember("process_{0}(protocol);", function.Name);
 					writer.WriteMember("break;");
 				}
 				writer.WriteLabel("default");
-				writer.WriteMember("throw exception(\"{0}{1}::process: unknown ID\")", nsPrefix, service.name);
+				writer.WriteMember("throw std::runtime_error(\"{0}{1}::process: unknown ID\");", nsPrefix, service.name);
 				writer.CloseBlock();
 				writer.WriteMember("return true;");
 				writer.CloseBlock();
@@ -337,6 +353,7 @@ namespace CPP
 			{
 				writer.WriteMember("#include \"{0}.h\"", service.name);
 				writer.WriteMember("#include \"{0}ID.h\"", service.name);
+				writer.WriteMember("#include \"FastTrackIpc/IProtocol.h\"");
 
 				writer.WriteComment("IProcess implementation");
 				WriteSwitch(writer);
@@ -347,7 +364,7 @@ namespace CPP
 			}
 		}
 
-		private CreateServerServiceWrapper
+		private CreateServerServiceStubs
 			( service   : AST.Definition.Service
 			, ns        : AST.Namespace
 			, directory : string
@@ -365,14 +382,14 @@ namespace CPP
 			}
 			def nsPrefix = MakeNamespacePrefix();
 
-			def WriteFunctionImplementation(function, writer)
+			def WriteStub(function, writer)
 			{
 				def FieldToString(f)
 				{
 					string.Format("{0} {1}", ToString(f.Type), f.Name)
 				}
 				writer.OpenBlock
-					( "{0} {1}{2}::{3}({4})"
+					( "{0} {1}{2}::{3}({4}) const"
 					, ToString(function.ReturnType)
 					, nsPrefix
 					, service.name
@@ -387,7 +404,7 @@ namespace CPP
 
 				writer.WriteComment("service functions for the user to implement");
 				foreach (function in service.functions)
-					WriteFunctionImplementation(function, writer);
+					WriteStub(function, writer);
 			}
 		}
 
@@ -427,14 +444,6 @@ namespace CPP
 			Path.Combine(directory, fileName + extension)
 		}
 
-		private MakeServiceFunctionId
-			( service  : AST.Definition.Service
-			, function : AST.Function
-			) : string
-		{
-			service.name + "Id_" + function.Name
-		}
-
 		private WriteDefinition
 			( definition  : AST.Definition
 			, writer      : CodeWriter
@@ -457,13 +466,13 @@ namespace CPP
 					| None      => writer.WriteMember("{0},", member.Name)
 					}
 				}
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 			| Exception(fields) =>
 				writer.OpenBlock("class {0} : public std::exception", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 			| Service => ()
 
@@ -471,7 +480,7 @@ namespace CPP
 				writer.OpenBlock("class {0}", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 			| Typedef(ty) =>
 				writer.WriteMember("typedef {0} {1};", ToString(ty), name);
@@ -480,6 +489,7 @@ namespace CPP
 
 		private WriteFunctionDefinition
 			( function : AST.Function
+			, isConst  : bool
 			, writer   : CodeWriter
 			) : void
 		{
@@ -489,16 +499,17 @@ namespace CPP
 			}
 
 			writer.WriteMember
-				( "{0} {1}({2});"
+				( "{0} {1}({2}){3};"
 				, ToString(function.ReturnType)
 				, function.Name
 				, string.Join(", ", function.Fields.Select(FieldToString))
+				, if (isConst) " const" else ""
 				);
 		}
 
 		private WriteIncludes(writer : CodeWriter) : void
 		{
-			def includes = [ "exception", "map", "set", "stdint.h", "vector" ];
+			def includes = [ "map", "set", "stdexcept", "stdint.h", "vector" ];
 			foreach (entry in includes)
 				writer.WriteMember("#include <{0}>", entry);
 		}
@@ -537,7 +548,7 @@ namespace CPP
 				// assume no nested collections
 				writer.WriteMember("{0} {1}(protocol.readInt32());", ToString(ty), name);
 				writer.OpenBlock("for (int i = 0, size = {0}.size(); i != size; ++i)", name);
-				WriteReadStatement(env, "$name[i]", ty.Parameters.Head, false, writer);
+				WriteReadStatement(env, $"$name[i]", ty.Parameters.Head, false, writer);
 				writer.CloseBlock();
 			| "map"    => ()
 			| "set"    => ()
@@ -548,7 +559,7 @@ namespace CPP
 				match (env.GetDefinition(tyName))
 				{
 				| Enum =>
-					writer.WriteMember("{0}{1} = protocol.readInt32();", Decl(tyName), name);
+					writer.WriteMember("{0}{1} = static_cast<{2}>(protocol.readInt32());", Decl(tyName), name, tyName);
 				| Struct =>
 					when (declareLhs)
 						writer.WriteMember("{0} {1};", ToString(ty), name);
@@ -586,7 +597,7 @@ namespace CPP
 			| "i64" =>
 				writer.WriteMember("protocol.writeInt64({0});", name);
 			| "list" =>
-				writer.WriteMember("protocol.WriteInt32({0}.size());", name);
+				writer.WriteMember("protocol.writeInt32({0}.size());", name);
 				writer.OpenBlock("for (int i = 0, size = {0}.size(); i != size; ++i)", name);
 				WriteWriteStatement(env, $"$name[i]", ty.Parameters.Head, writer);
 				writer.CloseBlock();
@@ -599,7 +610,7 @@ namespace CPP
 				match (env.GetDefinition(tyName))
 				{
 				| Enum =>
-					writer.WriteMember("{0} = protocol.writeInt32({1});", ToString(ty), name);
+					writer.WriteMember("protocol.writeInt32({0});", name);
 				| Struct =>
 					writer.WriteMember("{0}.write(protocol);", name);
 				| Typedef(ty) =>
