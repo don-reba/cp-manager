@@ -3,7 +3,7 @@
 class FastTrackAlg : public GaudiAlgorithm {
   public:
     FastTrackAlg(std::string name, ISvcLocator * pSL);
-		virtual ~FastTrackAlg();
+    virtual ~FastTrackAlg();
 
     // IAlgorithm implementation
     virtual StatusCode initialize();

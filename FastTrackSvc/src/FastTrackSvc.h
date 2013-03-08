@@ -16,7 +16,7 @@ class FastTrackSvc :
     virtual ~FastTrackSvc();
 
     // IFastTrackSvc implementation
-		virtual bool isPrime(int n);
+    virtual bool isPrime(int n);
 
     // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
@@ -30,5 +30,5 @@ class FastTrackSvc :
   private:
     ITransport * m_transport;
     IProtocol  * m_protocol;
-		Tracker    * m_tracker;
+    Tracker    * m_tracker;
 };

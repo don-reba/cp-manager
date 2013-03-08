@@ -19,7 +19,7 @@ FastTrackSvc::FastTrackSvc(const std::string & name, ISvcLocator * sl) :
     Service     (name, sl),
     m_transport (NULL),
     m_protocol  (NULL),
-		m_tracker   (NULL) {
+    m_tracker   (NULL) {
 }
 
 FastTrackSvc::~FastTrackSvc() {
@@ -30,7 +30,7 @@ FastTrackSvc::~FastTrackSvc() {
 //-----------------------------
 
 bool FastTrackSvc::isPrime(int n) {
-	return m_tracker->isPrime(n);
+  return m_tracker->isPrime(n);
 }
 
 //-----------------------
@@ -68,8 +68,8 @@ StatusCode FastTrackSvc::finalize() {
 }
 
 void FastTrackSvc::cleanup() {
-	if (m_tracker != NULL)
-		delete m_tracker;
+  if (m_tracker != NULL)
+    delete m_tracker;
   if (m_protocol != NULL)
     delete m_protocol;
   if (m_transport != NULL)
@@ -79,5 +79,5 @@ void FastTrackSvc::cleanup() {
 void FastTrackSvc::initIO() {
   m_transport = new SocketClient("/tmp/FastTrackDR");
   m_protocol  = new Protocol(*m_transport);
-	m_tracker   = new Tracker(*m_protocol);
+  m_tracker   = new Tracker(*m_protocol);
 }

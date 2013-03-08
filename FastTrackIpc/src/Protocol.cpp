@@ -22,13 +22,13 @@ Protocol::~Protocol() {
 //-------------------------
 
 bool Protocol::readBool() {
-	bool b = false;
-	m_transport.readBytes(reinterpret_cast<char*>(&b), 1);
-	return b;
+  bool b = false;
+  m_transport.readBytes(reinterpret_cast<char*>(&b), 1);
+  return b;
 }
 
 void Protocol::writeBool(bool b) {
-	m_transport.writeBytes(reinterpret_cast<char*>(&b), 1);
+  m_transport.writeBytes(reinterpret_cast<char*>(&b), 1);
 }
 
 double Protocol::readDouble() {

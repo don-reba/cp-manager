@@ -45,20 +45,20 @@ void daemonize() {
 
 // Parse command line options.
 bool parseCommandLine(
-		int      argc,
-		char   * argv[],
-		bool   & daemonize,
-		string & path) {
+    int      argc,
+    char   * argv[],
+    bool   & daemonize,
+    string & path) {
   po::options_description desc("Supported options");
   desc.add_options()
     ("help",
-		 "display this help message")
+     "display this help message")
     ("daemonize",
-		 po::value<bool>()->default_value(false),
-		 "run the process as a daemon")
-		("path",
-		 po::value<string>()->default_value("/tmp/FastTrack"),
-		 "socket path")
+     po::value<bool>()->default_value(false),
+     "run the process as a daemon")
+    ("path",
+     po::value<string>()->default_value("/tmp/FastTrack"),
+     "socket path")
     ;
 
   po::variables_map vm;
@@ -71,20 +71,20 @@ bool parseCommandLine(
   }
 
   daemonize = vm["daemonize"].as<bool>();
-	path      = vm["path"].as<string>();
+  path      = vm["path"].as<string>();
 
   return true;
 }
 
 boost::shared_ptr<IProtocol> getProtocol(ITransport & transport) {
-	return boost::make_shared<Protocol>(boost::ref(transport));
+  return boost::make_shared<Protocol>(boost::ref(transport));
 }
 
 // Main entry point.
 int main(int argc, char * argv[])
 try {
   bool enableDaemonize(false);
-	string path;
+  string path;
   if (!parseCommandLine(argc, argv, enableDaemonize, path))
     return EXIT_SUCCESS;
 
@@ -95,9 +95,9 @@ try {
     daemonize();
 
   SocketServerConnector connector(path.c_str());
-	Tracker processor;
+  Tracker processor;
 
-	ThreadedServer().serve(connector, &getProtocol, processor);
+  ThreadedServer().serve(connector, &getProtocol, processor);
 
   return EXIT_SUCCESS;
 } catch (const exception & e) {

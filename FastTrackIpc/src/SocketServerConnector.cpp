@@ -50,7 +50,7 @@ SocketServerConnector::~SocketServerConnector() {
 
 boost::shared_ptr<ITransport> SocketServerConnector::accept() {
   int accepted = ::accept(m_socket, NULL, NULL);
-	if (-1 == accepted)
-		throw SystemException("Could not accept incoming connection.");
+  if (-1 == accepted)
+    throw SystemException("Could not accept incoming connection.");
   return boost::make_shared<SocketServer>(accepted);
 }
