@@ -12,6 +12,9 @@ bool Tracker::process(IProtocol & protocol) const {
   case TrackerID_factor:
     process_factor(protocol);
     break;
+  case TrackerID_searchByPair:
+    process_searchByPair(protocol);
+    break;
   default:
     throw std::runtime_error("Tracker::process: unknown ID");
   };
@@ -30,5 +33,16 @@ void Tracker::process_factor(IProtocol & protocol) const {
   protocol.writeInt32(result.size());
   for (int i = 0, size = result.size(); i != size; ++i) {
     protocol.writeInt32(result[i]);
+  };
+};
+void Tracker::process_searchByPair(IProtocol & protocol) const {
+  std::vector<uint8_t> data(protocol.readInt32());
+  for (int i = 0, size = data.size(); i != size; ++i) {
+    data[i] = protocol.readByte();
+  };
+  std::vector result = this->searchByPair(data);
+  protocol.writeInt32(result.size());
+  for (int i = 0, size = result.size(); i != size; ++i) {
+    protocol.writeByte(result[i]);
   };
 };

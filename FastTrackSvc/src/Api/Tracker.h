@@ -15,6 +15,7 @@ public:
   // service function wrappers
   bool isPrime(int32_t n);
   std::vector<int32_t> factor(int32_t n, FactorizationMethod method);
+  std::vector searchByPair(std::vector data);
 private:
   // data
   IProtocol & protocol;

@@ -13,3 +13,5 @@ bool Tracker::isPrime(int32_t n) const {
 std::vector<int32_t> Tracker::factor(int32_t n, FactorizationMethod method) const {
   return vector<int32_t>();
 };
+std::vector Tracker::searchByPair(std::vector data) const {
+};

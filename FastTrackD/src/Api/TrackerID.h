@@ -3,4 +3,5 @@
 enum TrackerID {
   TrackerID_isPrime,
   TrackerID_factor,
+  TrackerID_searchByPair,
 };
