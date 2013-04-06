@@ -5,7 +5,7 @@
 
 class SystemException : public std::exception {
   public:
-    explicit SystemException(const char * message);
+    explicit SystemException(const std::string & message);
     virtual ~SystemException() throw();
 
     virtual const char * what() const throw();

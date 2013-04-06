@@ -1,8 +1,9 @@
 #include "SocketServer.h"
+
+#include "IOException.h"
 #include "SystemException.h"
 
 #include <cstring>
-#include <stdexcept>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -32,7 +33,7 @@ void SocketServer::readBytes(char * data, size_t size) {
   if (received != size) {
     std::stringstream msg;
     msg << "Asked for " << size << " bytes; received " << received << ".";
-    throw std::runtime_error(msg.str().c_str());
+    throw IOException(msg.str());
   }
 }
 
@@ -43,6 +44,6 @@ void SocketServer::writeBytes(const char * data, size_t size) {
   if (sent != size) {
     std::stringstream msg;
     msg << "Asked for " << size << " bytes; sent " << sent << ".";
-    throw std::runtime_error(msg.str().c_str());
+    throw IOException(msg.str());
   }
 }

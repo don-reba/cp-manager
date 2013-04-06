@@ -10,6 +10,6 @@ bool Tracker::isPrime(int32_t n) const {
   }
   return true;
 };
-std::vector<int32_t> Tracker::factor(int32_t n, FactorizationMethod method) const {
-  return vector<int32_t>();
+std::vector<int32_t> Tracker::factor(int32_t, FactorizationMethod) const {
+  return std::vector<int32_t>();
 };

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-SystemException::SystemException(const char * message) :
+SystemException::SystemException(const std::string & message) :
     m_errno (errno) {
   stringstream msg;
   msg << message << " (" << m_errno << ") " << strerror(m_errno);
