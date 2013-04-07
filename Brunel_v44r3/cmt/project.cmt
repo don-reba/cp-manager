@@ -1,6 +1,6 @@
-project FastTrack
+project Brunel_v44r3
 
-use GAUDI *
+use BRUNEL BRUNEL_v44r3 
 
 build_strategy with_installarea
 structure_strategy without_version_directory

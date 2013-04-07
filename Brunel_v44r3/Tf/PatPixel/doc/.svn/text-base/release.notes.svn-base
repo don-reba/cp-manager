@@ -1,0 +1,39 @@
+!-----------------------------------------------------------------------------
+! Package     : Tf/PatPixel
+! Responsible : Olivier Callot
+! Purpose     : Pattern recogintion for the Pixel detector of the upgraded LHCb
+!-----------------------------------------------------------------------------
+
+!========================= PatPixel v1r0 2013-02-14 =========================
+! 2013-02-08 - Diego Martinez Santos
+ - Added correction to the bias in cluster positions, as well as a slope dependent correction
+for two pixel culsters. This might cause for the moment a loss of speed.
+
+! 2013-02-08 - Marco Clemencic
+ - Fixed compilation with CMake.
+
+! 2013-02-01 - Sascha Stahl
+ - Added CMake file
+
+! 2013-01-30 - Olivier Callot
+ - Add option "ClearHits" to clear the hits, for rerunning the VP pattern twice.
+
+! 2012-12-09 - Pawel Jalocha
+ - debug histograms added (activate with DEBUG_HISTO)
+ - added comments, as I understand the code works
+
+! 2012-01-17 - Olivier Callot
+ - Re-implementation of the algorithm, based on finding a pair of consecutive hits
+   and extrapolating in both directions.
+   Tested on 900 events: 0.9% ghosts, 99.7% efficient, 0.5% clones, 1.35 ms/event
+   Improvements are possible, but a better clustering is probably the most 
+   important one
+
+! 2012-01-10 - Olivier Callot
+ - First version. The overall structure is taken form FastVelo.
+   New logic to make the search: Find enough hits in a seed region before 
+   extrapolating. This seed region can extend acroos the half detector boundary.
+
+   Initial performance is great:  <2% ghosts, >99.5% efficiency for long > 5 GeV,
+                                  <0.5% clones, and only < 1.5 ms per event. 
+      This is obtained on a limited sample.
