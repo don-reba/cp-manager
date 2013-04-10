@@ -15,6 +15,25 @@
 
 #include "PatPixelSensor.h"
 
+#include <vector>
+#include <map>
+
+using namespace std;
+
+// map<int, PatPixelHit*> patPixelHitsIndex;
+
+struct pixelEvent {
+  int noSensors;
+  int noHits;
+  vector<int> sensorZs;
+  vector<int> sensorHitStarts;
+  vector<int> sensorHitsNums;
+  vector<int> hitIDs;
+  vector<double> hitXs;
+  vector<double> hitYs;
+  vector<int> hitZs;
+};
+
 static const InterfaceID IID_PatPixelHitManager ( "PatPixelHitManager", 1, 0 );
 
 /** @class PatPixelHitManager PatPixelHitManager.h
@@ -25,6 +44,9 @@ static const InterfaceID IID_PatPixelHitManager ( "PatPixelHitManager", 1, 0 );
  */
 class PatPixelHitManager : public GaudiTool, public IIncidentListener {
 public: 
+
+  // dcampora
+  pixelEvent* event;
 
   // Return the interface ID
   static const InterfaceID& interfaceID() { return IID_PatPixelHitManager; }

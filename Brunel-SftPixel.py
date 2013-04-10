@@ -13,11 +13,12 @@ Brunel().DataType  = "2011"
 Brunel().Simulation = True
 Brunel().EvtMax = 1000
 
-from Configurables import DDDBConf, CondDB
+from Configurables import DDDBConf, CondDB, LHCbApp 
 
 CondDB().Upgrade = True
-CondDB().AllLocalTagsByDataType=["VP+UT","FT"] 
-Brunel().DDDBtag   = "dddb-20121018"
+CondDB().AllLocalTagsByDataType=["VP_Compact_MicroChannel+UT","FT"] 
+LHCbApp().DDDBtag    = "dddb-20130320"
+LHCbApp().CondDBtag  = "simcond-20121001-vc-md100"
 
 from Configurables import GaudiSequencer, RecMoniConf, TrackSys, PrDebugTrackingLosses, FastVeloTracking, PatPixelTracking
 from Configurables import PrForwardTracking, PrForwardTool, PrForwardFromPointTool, ToolSvc, PrFTHitManager

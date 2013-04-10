@@ -89,6 +89,9 @@ public:
   double meanY() const { return m_uy/m_u0; }
   double meanZ() const { return m_sz/m_s0; }
 
+  // TODO
+  void createTrackFromData(){};
+
 protected:
 
 private:

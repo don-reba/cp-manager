@@ -19,6 +19,14 @@
 #include "PatPixelHitManager.h"
 #include "PatPixelTrack.h"
 
+// dcampora
+#include <iostream>
+#include <fstream>
+#include "FastTrackSvc/IFastTrackSvc.h"
+#include "GPUPixelDataSequencer.h"
+
+using namespace std;
+
 /** @class PatPixelTracking PatPixelTracking.h
  *  This is the main tracking fo rthe Velo Pixel upgrade
  *
@@ -47,6 +55,7 @@ protected:
 
   void makeLHCbTracks( LHCb::Tracks* tracks );    // produce LHCb::Track list understable to other LHCb applications
 
+  void saveTracksToFile();
   //== Debugging methods
   bool matchKey( const PatPixelHit* hit ) {
     if ( m_debugTool ) {
@@ -63,6 +72,9 @@ protected:
   void printHitOnTrack ( PatPixelHit* hit, bool ifMatch=true );
 
 private:
+  // dcampora
+  SmartIF<IFastTrackSvc> fastTrackSvc;
+
   std::string m_outputLocation;
   PatPixelHitManager* m_hitManager;
 
@@ -98,6 +110,17 @@ private:
   int   m_timePrepare;
   int   m_timePairs;
   int   m_timeFinal;
+
+template <class T>
+     static std::string toString(T t){
+                std::stringstream ss;
+                std::string s;
+                ss << t;
+                ss >> s;
+                return s;
+     }
+
+   int m_event_number;
 
 };
 #endif // PATPIXELTRACKING_H

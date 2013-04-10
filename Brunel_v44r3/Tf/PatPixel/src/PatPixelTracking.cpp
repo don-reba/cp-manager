@@ -78,6 +78,14 @@ StatusCode PatPixelTracking::initialize() {
 #ifdef DEBUG_HISTO
   setHistoTopDir("VP/");
 #endif
+
+  // dcampora
+  fastTrackSvc = svc<IFastTrackSvc>("FastTrackSvc", true);
+
+  cout << " GPU - FastTrackSvc correctly sync." << endl;
+
+  m_event_number = 0;
+
   return StatusCode::SUCCESS;
 }
 
@@ -87,6 +95,7 @@ StatusCode PatPixelTracking::initialize() {
 StatusCode PatPixelTracking::execute() {
 
   // printf("PatPixelTracking::execute() =>\n");
+  cout << "-- Event " << m_event_number << endl;
 
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Execute" << endmsg;
   m_isDebug   = msgLevel( MSG::DEBUG );
@@ -145,6 +154,25 @@ StatusCode PatPixelTracking::execute() {
     m_timerTool->stop( m_timeFinal );
     m_timerTool->stop( m_timeTotal );
   }
+
+  // dcampora
+  vector<char> dataPointer;
+
+  cout << "Sequencing GPU data" << endl;
+  GPUPixelDataSequencer* pds = new GPUPixelDataSequencer(m_hitManager);
+  pds->get(dataPointer);
+
+  std::string cont_folder = "dumps/";
+  std::ofstream outfile;
+  std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
+  outfile.open(filename.c_str());
+  outfile.write((char*) &dataPointer[0], dataPointer.size());
+  outfile.close();
+
+  m_event_number ++;
+
+  fastTrackSvc->searchByPair(dataPointer);
+
   return StatusCode::SUCCESS;
 }
 
@@ -154,6 +182,9 @@ StatusCode PatPixelTracking::execute() {
 StatusCode PatPixelTracking::finalize() {
 
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Finalize" << endmsg;
+
+  // dcampora
+  delete fastTrackSvc;
 
   return GaudiAlgorithm::finalize();  // must be called after all other actions
 }
@@ -231,6 +262,7 @@ void PatPixelTracking::searchByPair() {
           if ( extra->z() < (lastZ - 100.0) )                           // double the tolerances if sensor more than 100 mm away
           { tol     = 2 * tol;
             maxChi2 = 2 * maxChi2; }
+
           bool added = addHitsOnSensor( extra, tol, maxChi2 );          // attempt to add new hits from this sensor
           if ( added ) { nbMissed = 0; lastZ = extra->z(); }            // if some hits added: 
                   else { nbMissed += extraStep; extraStep = 1; }        // if none added: count missed sensors
@@ -319,6 +351,7 @@ void PatPixelTracking::searchByPair() {
     } // itH0
   } // sens0
 
+  saveTracksToFile();
   // printf("PatPixelTracking::searchByPair() => %3d tracks\n", m_tracks.size());
 }
 
@@ -344,6 +377,7 @@ void PatPixelTracking::makeLHCbTracks( LHCb::Tracks* outputTracks ) {
 
     double zMax = -1.e9;
 
+    // TODO
     for ( PatPixelHits::iterator itR = (*itT).hits().begin();
           (*itT).hits().end() != itR; ++itR ) {               // loop over hits
       newTrack->addToLhcbIDs( (*itR)->id() );
@@ -353,6 +387,8 @@ void PatPixelTracking::makeLHCbTracks( LHCb::Tracks* outputTracks ) {
     LHCb::State state;
 
     //== Define backward as z closest to beam downstream of hits
+
+    // TODO
     double zBeam = (*itT).zBeam();                            // Z where the track passes closest to the beam
     bool backward = zBeam > zMax;                             // decide: forward or backward track
     newTrack->setFlag( LHCb::Track::Backward, backward );
@@ -417,6 +453,28 @@ void PatPixelTracking::makeLHCbTracks( LHCb::Tracks* outputTracks ) {
   m_tracks.clear();
 }
 
+
+// Prints tracks to a file, for a later study
+void PatPixelTracking::saveTracksToFile (){
+        std::string track_filename = "tracks//tracks_" + toString<int>(m_event_number) + ".txt";
+        std::ofstream track_file(track_filename.c_str());
+        track_file << std::setprecision(3);
+
+        int t_no = 0;
+        for (PatPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
+                // info() << format( "Dist%8.3f chi%7.3f ", track.distance( *itH ), track.chi2( *itH ) );
+                track_file << "track " << t_no++ << std::endl;
+                for (PatPixelHits::iterator ith = (*it).hits().begin(); ith != (*it).hits().end(); ith++){
+                        track_file << "hit " << (*ith)->m_realid << " s " << (*ith)->sensor() << " ("
+                                           << (*ith)->x() << ", " << (*ith)->y() << ", " << (*ith)->z() << ")" << std::endl;
+                }
+                track_file << std::endl;
+        }
+
+        track_file.close();
+}
+
+
 //=========================================================================
 //  Remove the worst hit until all chi2 are good.
 //=========================================================================
@@ -452,6 +510,7 @@ bool PatPixelTracking::addHitsOnSensor( PatPixelSensor* sensor, double xTol, dou
                                                                    // hits on a sensor are already sorted in X to speed up the search
 
   PatPixelHits::const_iterator itStart = sensor->hits().begin();
+
   unsigned int step = sensor->hits().size();
   while ( 2 < step )                                               // quick skip of hits that are above the X-limit
   { step = step/2;
@@ -475,11 +534,14 @@ bool PatPixelTracking::addHitsOnSensor( PatPixelSensor* sensor, double xTol, dou
         "TrackChi2forNewHit", "PatPixelTracking: Chi2 of a new candidate hit for a track",
         0.0, 60.0, 120);
 #endif
+
     if ( m_track.chi2( *itH ) < maxChi2 )
     { if ( m_debug ) printHitOnTrack( *itH, false );
+
       m_track.addHit( *itH );
       added = true; }
   }
+
   return added;
 }
 //=========================================================================

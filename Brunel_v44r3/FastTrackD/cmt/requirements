@@ -1,18 +1,26 @@
 package FastTrackD
 version v1r1
-author  "Alexey Badalov"
+author  "Alexey Badalov / Daniel Campora"
 
 # structure
 branches cmt doc src
 
 # dependencies
-use FastTrackIpc *
-use Boost        * LCG_Interfaces -no_auto_imports
+use FastTrackIpc v*
+use Boost        v* LCG_Interfaces -no_auto_imports
+use tbb          v* LCG_Interfaces
 
 # application constituent
 application fasttrackd -import=Boost *.cpp Api/*.cpp
 
 private
+macro_prepend tbb_linkopts " -Wl,--no-as-needed " \
+	             target-darwin "" \
+	             target-winxp  ""
+macro_append tbb_linkopts " -Wl,--as-needed " \
+	            target-darwin "" \
+	            target-winxp  "" \
+	            target-icc    ""
 macro application_suffix ""
-macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) $(Boost_linkopts_threads) -lpixeltbb "
 end_private

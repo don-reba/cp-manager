@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <vector>
+#include <iostream>
 class IProtocol;
 class Tracker {
 public:
@@ -15,7 +16,7 @@ public:
   // service function wrappers
   bool isPrime(int32_t n);
   std::vector<int32_t> factor(int32_t n, FactorizationMethod method);
-  std::vector searchByPair(std::vector data);
+  std::vector<char> searchByPair(std::vector<char> data);
 private:
   // data
   IProtocol & protocol;

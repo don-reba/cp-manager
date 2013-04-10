@@ -62,6 +62,8 @@ StatusCode PatPixelHitManager::initialize() {
   m_maxSize = 0;
   m_eventReady = false;
 
+  event = new pixelEvent;
+
   return StatusCode::SUCCESS;
 }
 
@@ -73,6 +75,10 @@ StatusCode PatPixelHitManager::finalize ( ) {
   for ( std::vector<PatPixelSensor*>::iterator itS = m_sensors.begin(); m_sensors.end() != itS; ++itS ) {
     if ( NULL != *itS ) delete *itS;
   }
+
+  delete event;
+  // patPixelHitsIndex.clear();
+
   return GaudiTool::finalize();
 }
 //=========================================================================
@@ -149,8 +155,22 @@ void PatPixelHitManager::clearHits( ) {
 //  Convert the LiteClusters to PatPixelHit
 //=========================================================================
 void PatPixelHitManager::buildHits ( )
-{ if ( m_eventReady ) return;
+{
+if ( m_eventReady ) return;
   m_eventReady = true;
+
+  delete event;
+  event = new pixelEvent;
+
+  // TODO: Assume 48 sensors
+  event->noSensors = 48;
+  event->noHits = 0;
+
+  for (int i=0; i<event->noSensors; i++){
+      event->sensorZs.push_back( 0 );
+      event->sensorHitStarts.push_back( 0 );
+      event->sensorHitsNums.push_back( 0 );
+  }
 
   LHCb::VPLiteCluster::VPLiteClusters * liteClusters =
     GaudiTool::get<LHCb::VPLiteCluster::VPLiteClusters>(LHCb::VPLiteClusterLocation::Default);
@@ -159,26 +179,40 @@ void PatPixelHitManager::buildHits ( )
     m_pool.resize( liteClusters->size() + 100 );
     m_nextInPool = m_pool.begin();
   }
-  
+
   LHCb::VPLiteCluster::VPLiteClusters::iterator iClus;
   unsigned int lastSensor = 9999;
   PatPixelSensor* mySensor = NULL;
 
   double dx = 0.055 / sqrt(12.0);                           // assume sigma on hit position (55x55 um square pixel)
-  
+
   for ( iClus = liteClusters->begin(); liteClusters->end() != iClus; ++iClus ) { // loop over Lite Clusters
     unsigned int sensor = iClus->channelID().sensor();      // sensor number in Gaudi
     if ( sensor > m_sensors.size() ) break;
-    if ( sensor != lastSensor )                             // if a new Gaudi sensor
-    { lastSensor = sensor;                                  // switch HitManager sensor
-       mySensor = m_sensors[sensor]; }                      // sensor number in HitManager
+    if ( sensor != lastSensor ){                             // if a new Gaudi sensor
+       lastSensor = sensor;                                  // switch HitManager sensor
+       mySensor = m_sensors[sensor];
+
+       event->sensorHitStarts[mySensor->number()] = event->noHits;
+       event->sensorZs[mySensor->number()] = mySensor->z();
+    }                      // sensor number in HitManager
     PatPixelHit* hit = &(*(m_nextInPool++));  // get the next object in the pool => here we store the new hit
 
     Gaudi::XYZPoint point = mySensor->position( (*iClus).channelID(),            // calc. 3-D position for this LiteCluster
-                                                (*iClus).interPixelFractionX(), 
+                                                (*iClus).interPixelFractionX(),
                                                 (*iClus).interPixelFractionY() );
-    hit->setHit( LHCb::LHCbID( (*iClus).channelID() ), point, dx, dx, sensor );  // set our hit data
+
+    hit->setHit( LHCb::LHCbID( (*iClus).channelID() ), point, dx, dx, sensor, (*iClus).channelID());
     mySensor->addHit( hit );
+
+    // patPixelHitsIndex[(int) (*iClus).channelID()] = hit;
+
+    event->sensorHitsNums[mySensor->number()]++;
+    event->hitIDs.push_back( (*iClus).channelID() );
+    event->hitXs.push_back( point.x() );
+    event->hitYs.push_back( point.y() );
+    event->hitZs.push_back( mySensor->z() );
+    event->noHits++;
   }
 }
 

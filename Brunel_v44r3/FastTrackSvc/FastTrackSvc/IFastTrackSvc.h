@@ -11,6 +11,7 @@ class IFastTrackSvc :
     virtual ~IFastTrackSvc() {}
 
     virtual bool isPrime(int n) = 0;
+    virtual void searchByPair(std::vector<char> dataPointer) = 0;
 
     DeclareInterfaceID(IFastTrackSvc, 1, 0);
 };

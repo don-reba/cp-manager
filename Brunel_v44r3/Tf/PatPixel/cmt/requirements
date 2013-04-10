@@ -18,6 +18,7 @@ use     DigiEvent       v*      Event
 use     TrackEvent      v*      Event
 use     GaudiAlg        v*
 use     GaudiKernel     v*
+use     FastTrackSvc    v*
 
 include_path      none
 #============================================================================
