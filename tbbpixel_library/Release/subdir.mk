@@ -24,7 +24,7 @@ ADD_RULES = -L/usr/share/tbb/lib/intel64/cc4.1.0_libc2.4_kernel2.6.16.21 -ltbb
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++ $(ADD_RULES) -O2 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<"
+	g++ -O2 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o "$@" "$<" $(ADD_RULES)
 	@echo 'Finished building: $<'
 	@echo ' '
 

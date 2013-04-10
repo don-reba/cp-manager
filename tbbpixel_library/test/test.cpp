@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -23,8 +24,6 @@ int* hit_sensorNums;
 
 int num_events, sens_num, hits_num;
 
-extern vector<vector<track> > parallel_tracks_vector;
-
 
 
 template <class T>
@@ -38,11 +37,15 @@ static std::string toString(T t){
 
 void readFile(string filename, char*& input, bool do_malloc);
 void printResultTracks(vector<track> tracks, int event_no, string track_folder_container);
+void fill_hit_sensorNums();
 
 int main(void){
 	
 	char* input;
 	readFile("pixel-sft-event-0.dump", input, 1);
+
+	// Optional, needed to print
+	fill_hit_sensorNums();
 
 
 	/* Expected format:
@@ -70,7 +73,9 @@ int main(void){
 	hits_num = no_hits[0];
 
 
-
+	// Call the .so function definition with the input file
+	// (This will be done by the daemon)
+	// Results are written in global parallel_tracks_vector variable.
 	pixel_tbb(input);
 
 	printResultTracks(parallel_tracks_vector[0], 0, "tracks");
@@ -114,4 +119,16 @@ void printResultTracks(vector<track> tracks, int event_no, string track_folder_c
 	}
 
 	track_file.close();
+}
+
+void fill_hit_sensorNums(){
+	hit_sensorNums = (int*) malloc(hits_num * sizeof(int));
+
+	int sensor_id = 0;
+	for (int i=0; i<hits_num; i++){
+		if ((sensor_id != sens_num - 1) && 
+		    (sensor_hitStarts[sensor_id+1] == i))
+			sensor_id++;
+		hit_sensorNums[i] = sensor_id;
+	}
 }
