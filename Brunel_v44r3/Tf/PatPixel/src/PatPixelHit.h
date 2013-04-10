@@ -23,7 +23,8 @@ public:
     m_wx(0.),
     m_wy(0.),
     m_sensor(0),
-    m_isUsed( false )
+    m_isUsed( false ),
+    m_realid(0)
   {
   };
 
@@ -33,7 +34,8 @@ public:
                const Gaudi::XYZPoint& point,
                const double dx,
                const double dy,
-               const unsigned int sensor ) {
+               const unsigned int sensor,
+               const int realid) {
     m_id        = id;
     m_x         = point.x();
     m_y         = point.y();
@@ -42,6 +44,7 @@ public:
     m_wy        = 1./dy/dy;
     m_sensor    = sensor;
     m_isUsed    = false;
+    m_realid    = realid;
   }
 
   LHCb::LHCbID id()     const { return m_id;     }
@@ -79,6 +82,8 @@ public:
   struct LowerByY  {
     bool operator() (const PatPixelHit* lhs, const PatPixelHit* rhs) const { return lhs->y() < rhs->y(); }
   };
+
+  int m_realid;
 
 protected:
 
