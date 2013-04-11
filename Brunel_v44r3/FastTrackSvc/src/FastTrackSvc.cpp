@@ -81,7 +81,7 @@ void FastTrackSvc::cleanup() {
 }
 
 void FastTrackSvc::initIO() {
-  m_transport = new SocketClient("/tmp/FastTrack");
+  m_transport = new SocketClient("/tmp/FastTrackDR2");
   m_protocol  = new Protocol(*m_transport);
   m_tracker   = new Tracker(*m_protocol);
 }
