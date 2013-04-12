@@ -5,3 +5,4 @@ author  "Alexey Badalov"
 use FastTrackD
 use FastTrackSvc
 use FastTrackAlg
+use PatPixel
