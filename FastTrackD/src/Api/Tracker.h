@@ -1,46 +1,25 @@
-
+// Automatically generated file
+#pragma once
+#include <map>
+#include <set>
+#include <stdexcept>
+#include <stdint.h>
 #include <vector>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
-#include <stdlib.h>
-
-#include "../pixeltbb/pixel_tbb.h"
-
-template <class T>
-static std::string toString(T t){
-  std::stringstream ss;
-  std::string s;
-  ss << t;
-  ss >> s;
-  return s;
-}
-
-class Tracker {
-private:
-	// Typecast
-	int* no_sensors;
-	int* no_hits;
-	int* sensor_Zs;
-	int* sensor_hitStarts;
-	int* sensor_hitNums;
-	int* hit_IDs;
-	double* hit_Xs;
-	double* hit_Ys;
-	int* hit_Zs;
-	int* hit_sensorNums;
-	int num_events, sens_num, hits_num;
-
-	void fill_hit_sensorNums();
-	void buildTypestruct(char* dataPointer);
-	void printResultTracks(std::vector<track> tracks, int event_no, std::string track_folder_container) const;
-
+#include "FastTrackIpc/Api/Api.h"
+#include "FastTrackIpc/IProcessor.h"
+class IProtocol;
+class Tracker : public IProcessor {
 public:
-	int event_no;
-	Tracker();
-
-	std::vector<char> searchByPair(std::vector<char> data);
-
+  // IProcess implementation
+  virtual bool process(IProtocol & protocol) const;
+private:
+  // service functions for the user to implement
+  bool isPrime(int32_t n) const;
+  std::vector<int32_t> factor(int32_t n, FactorizationMethod method) const;
+  std::vector<uint8_t> searchByPair(std::vector<uint8_t> data) const;
+private:
+  // generated wrappers
+  void process_isPrime(IProtocol & protocol) const;
+  void process_factor(IProtocol & protocol) const;
+  void process_searchByPair(IProtocol & protocol) const;
 };

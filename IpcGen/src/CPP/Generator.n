@@ -624,7 +624,7 @@ namespace CPP
 		{
 			def name = match (ty.Name)
 			{
-			| "binary" => "std::vector"
+			| "binary" => "std::vector<uint8_t>"
 			| "bool"   => "bool"
 			| "byte"   => "uint8_t"
 			| "double" => "double"
