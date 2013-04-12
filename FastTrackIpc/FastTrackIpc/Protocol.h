@@ -19,17 +19,17 @@ class Protocol : public IProtocol {
     /// Writes a boolean value.
     virtual void writeBool(bool b);
 
-    /// Reads a boolean value.
-    virtual char readChar();
-
-    /// Writes a boolean value.
-    virtual void writeChar(char c);
-
     /// Reads a double-precision floating point number.
     virtual double readDouble();
 
     /// Records a double-precision floating point number.
     virtual void writeDouble(double f);
+
+    /// Reads an 8-bit integer.
+    virtual int8_t readInt8();
+
+    /// Writes an 8-bit integer.
+    virtual void writeInt8(int8_t n);
 
     /// Reads a 16-bit integer.
     virtual int16_t readInt16();
@@ -54,12 +54,6 @@ class Protocol : public IProtocol {
 
     /// Writes a standard string.
     virtual void writeString(const std::string & str);
-
-    /// Writes a char* of arbitrary size
-    virtual void write(char* dataPointer, int size);
-
-    /// Reads a char* of arbitrary size
-    virtual void read(char*& dataPointer, int size);
 
 
   private:

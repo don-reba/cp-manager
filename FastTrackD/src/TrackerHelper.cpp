@@ -71,8 +71,11 @@ void TrackerHelper::printResultTracks(std::vector<track> tracks, int event_no, s
 // searchByPair
 //-------------------------------
 
-std::vector<char> TrackerHelper::searchByPair(std::vector<char> data){
+std::vector<int8_t> TrackerHelper::searchByPair(std::vector<int8_t> data){
   std::cout << "Hey there! I'm about to process data of size: " << data.size() << std::endl;
+
+  if (data.empty())
+    return std::vector<int8_t>();
 
   // searchByPair algorithm
   // Call pixel implementation defined in .so
@@ -86,7 +89,7 @@ std::vector<char> TrackerHelper::searchByPair(std::vector<char> data){
 
   event_no ++;
 
-  std::vector<char> result;
+  std::vector<int8_t> result;
   result.push_back(0);
 
   return result;

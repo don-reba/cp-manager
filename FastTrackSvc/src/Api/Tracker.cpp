@@ -21,15 +21,15 @@ std::vector<int32_t> Tracker::factor(int32_t n, FactorizationMethod method) {
   };
   return result;
 };
-std::vector<uint8_t> Tracker::searchByPair(std::vector<uint8_t> data) {
+std::vector<int8_t> Tracker::searchByPair(std::vector<int8_t> data) {
   protocol.writeInt32(TrackerID_searchByPair);
   protocol.writeInt32(data.size());
   for (int i = 0, size = data.size(); i != size; ++i) {
-    protocol.writeByte(data[i]);
+    protocol.writeInt8(data[i]);
   };
-  std::vector<uint8_t> result(protocol.readInt32());
+  std::vector<int8_t> result(protocol.readInt32());
   for (int i = 0, size = result.size(); i != size; ++i) {
-    result[i] = protocol.readByte();
+    result[i] = protocol.readInt8();
   };
   return result;
 };

@@ -16,7 +16,7 @@ private:
   // service functions for the user to implement
   bool isPrime(int32_t n) const;
   std::vector<int32_t> factor(int32_t n, FactorizationMethod method) const;
-  std::vector<uint8_t> searchByPair(std::vector<uint8_t> data) const;
+  std::vector<int8_t> searchByPair(std::vector<int8_t> data) const;
 private:
   // generated wrappers
   void process_isPrime(IProtocol & protocol) const;

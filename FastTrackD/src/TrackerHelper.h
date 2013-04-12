@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <stdlib.h>
 
-#include "../pixeltbb/pixel_tbb.h"
+#include "pixeltbb/pixel_tbb.h"
 
 template <class T>
 static std::string toString(T t){
@@ -41,6 +41,6 @@ public:
   int event_no;
   TrackerHelper();
 
-  std::vector<char> searchByPair(std::vector<char> data);
+  std::vector<int8_t> searchByPair(std::vector<int8_t> data);
 
 };

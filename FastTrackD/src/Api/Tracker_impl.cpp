@@ -1,6 +1,6 @@
 #include "Tracker.h"
 
-#include "TrackerHelper.h"
+#include "../TrackerHelper.h"
 
 //--------------------------------------------
 // service functions for the user to implement
@@ -18,10 +18,10 @@ bool Tracker::isPrime(int32_t n) const {
   return true;
 };
 
-std::vector<int32_t> Tracker::factor(int32_t n, FactorizationMethod method) const {
+std::vector<int32_t> Tracker::factor(int32_t, FactorizationMethod) const {
    return std::vector<int32_t>();
 };
 
-std::vector<uint8_t> Tracker::searchByPair(std::vector<uint8_t> data) const {
-  helper.searchByPair(data);
+std::vector<int8_t> Tracker::searchByPair(std::vector<int8_t> data) const {
+  return helper.searchByPair(data);
 };

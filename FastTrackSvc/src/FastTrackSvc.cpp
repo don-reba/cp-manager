@@ -33,8 +33,9 @@ bool FastTrackSvc::isPrime(int n) {
   return m_tracker->isPrime(n);
 }
 
-void FastTrackSvc::searchByPair(std::vector<char> dataPointer) {
-    m_tracker->searchByPair(dataPointer);
+void FastTrackSvc::searchByPair(const std::vector<char> & tracks) {
+  const std::vector<int8_t> converted(tracks.begin(), tracks.end());
+  m_tracker->searchByPair(converted);
 }
 
 //-----------------------
@@ -81,7 +82,7 @@ void FastTrackSvc::cleanup() {
 }
 
 void FastTrackSvc::initIO() {
-  m_transport = new SocketClient("/tmp/FastTrack");
+  m_transport = new SocketClient("/tmp/FastTrackDR2");
   m_protocol  = new Protocol(*m_transport);
   m_tracker   = new Tracker(*m_protocol);
 }

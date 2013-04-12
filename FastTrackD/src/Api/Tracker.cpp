@@ -36,13 +36,13 @@ void Tracker::process_factor(IProtocol & protocol) const {
   };
 };
 void Tracker::process_searchByPair(IProtocol & protocol) const {
-  std::vector<uint8_t> data(protocol.readInt32());
+  std::vector<int8_t> data(protocol.readInt32());
   for (int i = 0, size = data.size(); i != size; ++i) {
-    data[i] = protocol.readByte();
+    data[i] = protocol.readInt8();
   };
-  std::vector<uint8_t> result = this->searchByPair(data);
+  std::vector<int8_t> result = this->searchByPair(data);
   protocol.writeInt32(result.size());
   for (int i = 0, size = result.size(); i != size; ++i) {
-    protocol.writeByte(result[i]);
+    protocol.writeInt8(result[i]);
   };
 };

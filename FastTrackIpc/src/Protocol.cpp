@@ -31,16 +31,6 @@ void Protocol::writeBool(bool b) {
   m_transport.writeBytes(reinterpret_cast<char*>(&b), 1);
 }
 
-char Protocol::readChar() {
-  char c = 0;
-  m_transport.readBytes(reinterpret_cast<char*>(&c), 1);
-  return c;
-}
-
-void Protocol::writeChar(char c) {
-  m_transport.writeBytes(reinterpret_cast<char*>(&c), 1);
-}
-
 double Protocol::readDouble() {
   double f = 0.0f;
   m_transport.readBytes(reinterpret_cast<char*>(&f), 8);
@@ -49,6 +39,16 @@ double Protocol::readDouble() {
 
 void Protocol::writeDouble(double f) {
   m_transport.writeBytes(reinterpret_cast<char*>(&f), 8);
+}
+
+int8_t Protocol::readInt8() {
+  int8_t n = 0;
+  m_transport.readBytes(reinterpret_cast<char*>(&n), 1);
+  return n;
+}
+
+void Protocol::writeInt8(int8_t n) {
+  m_transport.writeBytes(reinterpret_cast<char*>(&n), 1);
 }
 
 int16_t Protocol::readInt16() {
@@ -91,12 +91,4 @@ string Protocol::readString() {
 void Protocol::writeString(const string & str) {
   writeInt32(str.size());
   m_transport.writeBytes(str.c_str(), str.size());
-}
-
-void Protocol::read(char*& dataPointer, int size){
-    m_transport.readBytes(dataPointer, size);
-}
-
-void Protocol::write(char* dataPointer, int size){
-    m_transport.writeBytes(dataPointer, size);
 }

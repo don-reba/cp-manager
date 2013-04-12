@@ -17,7 +17,7 @@ class FastTrackSvc :
 
     // IFastTrackSvc implementation
     virtual bool isPrime(int n);
-    virtual void searchByPair(std::vector<char> dataPointer);
+    virtual void searchByPair(const std::vector<char> & tracks);
 
     // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
