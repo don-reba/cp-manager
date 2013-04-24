@@ -39,7 +39,7 @@ public module IpcGenerator
 		( document       : AST.Document
 		, targetLanguage : TargetLanguage
 		, srcName        : string
-		) : AST.Api
+		) : AST2.Api
 	{
 		def GetNamespace(headers)
 		{
@@ -61,11 +61,52 @@ public module IpcGenerator
 			| TargetLanguage.Cpp => "cpp"
 			}
 			if (namespaces.ContainsKey(lang))
-				AST.Namespace(namespaces[lang])
+				AST2.Namespace(namespaces[lang])
 			else
-				AST.Namespace([])
+				AST2.Namespace([])
 		}
 		def ns = GetNamespace(document.Headers);
-		AST.Api(document.Definitions.MapToList(defn => (defn, ns)));
+
+		def MapConstant(c)
+		{
+		| AST.Constant.Int(x) => AST2.Constant.Int(x)
+		}
+		and MapDefinition(d)
+		{
+		| AST.Definition.Const(ty, value)   => AST2.Definition.Const     (d.name, ns, MapType(ty), MapConstant(value))
+		| AST.Definition.Enum(members)      => AST2.Definition.Enum      (d.name, ns, members.Map(MapEnumMember))
+		| AST.Definition.Exception(fields)  => AST2.Definition.Exception (d.name, ns, fields.Map(MapField))
+		| AST.Definition.Service(@base, fs) => AST2.Definition.Service   (d.name, ns, @base, fs.Map(MapFunction))
+		| AST.Definition.Struct(fields)     => AST2.Definition.Struct    (d.name, ns, fields.Map(MapField))
+		| AST.Definition.Typedef(ty)        => AST2.Definition.Typedef   (d.name, ns, MapType(ty))
+		}
+		and MapEnumMember(m)
+		{
+			AST2.EnumMember(m.Name, m.Value)
+		}
+		and MapField(f)
+		{
+			AST2.Field(f.ID, f.Requiredness.Map(MapFieldRequiredness), MapType(f.Type), f.Name)
+		}
+		and MapFieldRequiredness(fr : AST.FieldRequiredness)
+		{
+			fr :> AST2.FieldRequiredness
+		}
+		and MapFunction(f)
+		{
+			AST2.Function
+				( name       = f.Name
+				, returnType = MapType(f.ReturnType)
+				, fields     = f.Fields.Map(MapField)
+				, throws     = f.Throws.Map(MapField)
+				, isOneWay   = f.IsOneWay
+				);
+		}
+		and MapType(ty)
+		{
+			AST2.Type(ty.Name, ty.Parameters.Map(MapType))
+		}
+
+		AST2.Api(document.Definitions.MapToList(MapDefinition));
 	}
 }

@@ -1,17 +1,17 @@
 using System.Text;
 
-namespace AST
+namespace AST2
 {
 	[ Record ]
 	public class Api
 	{
-		public Definitions : list[Definition * Namespace];
+		public Definitions : list[Definition];
 
 		public override ToString() : string
 		{
 			def text = StringBuilder();
 
-			foreach ((definition, _) in Definitions)
+			foreach (definition in Definitions)
 				_ = text.AppendLine(definition.ToString());
 
 			text.ToString();

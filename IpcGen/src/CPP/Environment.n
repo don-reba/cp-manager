@@ -5,19 +5,19 @@ namespace CPP
 {
 	public class Environment
 	{
-		private symbols : Dictionary.[string, AST.Definition] = Dictionary();
+		private symbols : Dictionary.[string, AST2.Definition] = Dictionary();
 
 		[ Accessor]
 		private mainHeaderName : string;
 
-		public this(api : AST.Api, mainHeaderName : string)
+		public this(api : AST2.Api, mainHeaderName : string)
 		{
-			foreach ((definition, _) in api.Definitions)
-				symbols[definition.name : string] = definition : AST.Definition;
+			foreach (definition in api.Definitions)
+				symbols[definition.name : string] = definition : AST2.Definition;
 			this.mainHeaderName = mainHeaderName;
 		}
 
-		public GetDefinition(name : string) : AST.Definition
+		public GetDefinition(name : string) : AST2.Definition
 		{
 			symbols[name]
 		}

@@ -1,0 +1,17 @@
+namespace AST2
+{
+	[ Record ]
+	public class Type
+	{
+		public Name       : string;
+		public Parameters : list[Type];
+
+		public override ToString() : string
+		{
+			if (Parameters == [])
+				Name
+			else
+				$"$Name<..$Parameters>"
+		}
+	}
+}

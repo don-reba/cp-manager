@@ -57,7 +57,7 @@ namespace CPP
 			++depth;
 		}
 
-		public CloseBlock(addSemicolon : bool = true) : void
+		public CloseBlock(addSemicolon : bool = false) : void
 		{
 			--depth;
 			WriteIndent();
