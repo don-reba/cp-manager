@@ -34,6 +34,11 @@ public module IpcGenerator
 		}
 	}
 
+	private GetLanguageName(_ : TargetLanguage) : string
+	{
+	| TargetLanguage.Cpp => "cpp"
+	}
+
 	// transform the AST to simplify code gen
 	private MapDocument
 		( document       : AST.Document
@@ -41,44 +46,53 @@ public module IpcGenerator
 		, srcName        : string
 		) : AST2.Api
 	{
-		def GetNamespace(headers)
+		//--------------
+		// get namespace
+		//--------------
+
+		def GetVerifiedNamespaces(headers)
 		{
-			def namespaces = Dictionary();
+			def namespaces = Hashtable();
 			foreach (header in headers)
 			{
 				match (header)
 				{
 				| AST.Header.Namespace(id, lang) =>
-					if (namespaces.ContainsKey(lang))
+					if (namespaces.Contains(lang))
 						throw GeneratorException($"Multiple namespace statements for '$lang' in '$srcName'.");
 					else
 						namespaces[lang] = id.SplitToList(array['.']);
 				| _ => ()
 				}
 			}
-			def lang = match (targetLanguage)
-			{
-			| TargetLanguage.Cpp => "cpp"
-			}
-			if (namespaces.ContainsKey(lang))
-				AST2.Namespace(namespaces[lang])
-			else
-				AST2.Namespace([])
+			namespaces;
 		}
-		def ns = GetNamespace(document.Headers);
+		def ns = AST2.Namespace
+			( parts = GetVerifiedNamespaces(document.Headers).GetValueOrDefault
+				( key          = GetLanguageName(targetLanguage)
+				, defaultValue = []
+				)
+			);
+		def globalNS = AST2.Namespace([]);
+
+		//----------------
+		// map definitions
+		//----------------
+
+		def unresolvedTypes = List();
 
 		def MapConstant(c)
 		{
 		| AST.Constant.Int(x) => AST2.Constant.Int(x)
 		}
-		and MapDefinition(d)
+		and MapDefinition(d : AST.Definition)
 		{
-		| AST.Definition.Const(ty, value)   => AST2.Definition.Const     (d.name, ns, MapType(ty), MapConstant(value))
-		| AST.Definition.Enum(members)      => AST2.Definition.Enum      (d.name, ns, members.Map(MapEnumMember))
-		| AST.Definition.Exception(fields)  => AST2.Definition.Exception (d.name, ns, fields.Map(MapField))
-		| AST.Definition.Service(@base, fs) => AST2.Definition.Service   (d.name, ns, @base, fs.Map(MapFunction))
-		| AST.Definition.Struct(fields)     => AST2.Definition.Struct    (d.name, ns, fields.Map(MapField))
-		| AST.Definition.Typedef(ty)        => AST2.Definition.Typedef   (d.name, ns, MapType(ty))
+		| Const(ty, value)   => AST2.Definition.Const     (d.name, ns, MapType(ty), MapConstant(value))
+		| Enum(members)      => AST2.Definition.Enum      (d.name, ns, members.Map(MapEnumMember))
+		| Exception(fields)  => AST2.Definition.Exception (d.name, ns, fields.Map(MapField))
+		| Service(@base, fs) => AST2.Definition.Service   (d.name, ns, @base, fs.Map(MapFunction))
+		| Struct(fields)     => AST2.Definition.Struct    (d.name, ns, fields.Map(MapField))
+		| Typedef(ty)        => AST2.Definition.Typedef   (d.name, ns, MapType(ty))
 		}
 		and MapEnumMember(m)
 		{
@@ -104,9 +118,32 @@ public module IpcGenerator
 		}
 		and MapType(ty)
 		{
-			AST2.Type(ty.Name, ty.Parameters.Map(MapType))
+			def newTy = AST2.Type(null, ty.Parameters.Map(MapType));
+			unresolvedTypes.Add(newTy, ty);
+			newTy;
 		}
 
-		AST2.Api(document.Definitions.MapToList(MapDefinition));
+		def definitions = Hashtable();
+		foreach (d in document.Definitions)
+			definitions.Add(d.name, MapDefinition(d));
+		definitions.Add("void", AST2.Definition.Void("void", globalNS));
+		foreach (name in [ "bool", "byte", "double", "i16", "i32", "i64" ])
+			definitions.Add(name, AST2.Definition.Primitive(name, globalNS));
+		foreach (name in [ "binary", "list", "map", "set", "string" ])
+			definitions.Add(name, AST2.Definition.Collection(name, globalNS));
+
+		//--------------
+		// resolve types
+		//--------------
+
+		foreach ((newTy, oldTy) in unresolvedTypes)
+		{
+			if (definitions.Contains(oldTy.Name))
+				newTy.Definition = definitions[oldTy.Name];
+			else
+				throw GeneratorException($"Undefined type '$(oldTy.Name)' in '$srcName'.");
+		}
+
+		AST2.Api(definitions);
 	}
 }

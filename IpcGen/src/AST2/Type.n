@@ -3,15 +3,16 @@ namespace AST2
 	[ Record ]
 	public class Type
 	{
-		public Name       : string;
+		public mutable Definition : Definition;
+
 		public Parameters : list[Type];
 
 		public override ToString() : string
 		{
 			if (Parameters == [])
-				Name
+				Definition.name
 			else
-				$"$Name<..$Parameters>"
+				$"$(Definition.name)<..$Parameters>"
 		}
 	}
 }
