@@ -129,7 +129,7 @@ public module IpcGenerator
 		definitions.Add("void", AST2.Definition.Void("void", globalNS));
 		foreach (name in [ "bool", "byte", "double", "i16", "i32", "i64" ])
 			definitions.Add(name, AST2.Definition.Primitive(name, globalNS));
-		foreach (name in [ "binary", "list", "map", "set", "string" ])
+		foreach (name in [ "binary", "list", /*"map", "set",*/ "string" ])
 			definitions.Add(name, AST2.Definition.Collection(name, globalNS));
 
 		//--------------

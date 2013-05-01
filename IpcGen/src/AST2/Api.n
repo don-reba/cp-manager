@@ -12,7 +12,7 @@ namespace AST2
 		{
 			def text = StringBuilder();
 
-			foreach (definition in Definitions)
+			foreach (definition in Definitions.Values)
 				_ = text.AppendLine(definition.ToString());
 
 			text.ToString();
