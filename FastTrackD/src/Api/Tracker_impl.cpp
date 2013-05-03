@@ -9,7 +9,9 @@ bool Tracker::isPrime(int32_t n) const {
       return false;
   }
   return true;
-};
-std::vector<int32_t> Tracker::factor(int32_t, FactorizationMethod) const {
-  return std::vector<int32_t>();
-};
+}
+void Tracker::factor(int32_t n, FactorizationMethod method, std::vector<int32_t> & result) const {
+  // add function implementation here
+}
+void Tracker::searchByPair(const std::vector<int8_t> & data, std::vector<int8_t> & result) const {
+}
