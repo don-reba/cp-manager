@@ -80,9 +80,9 @@ StatusCode PatPixelTracking::initialize() {
 #endif
 
   // dcampora
-  fastTrackSvc = svc<IFastTrackSvc>("FastTrackSvc", true);
+  gpuService = svc<IGpuService>("GpuService", true);
 
-  cout << " GPU - FastTrackSvc correctly sync." << endl;
+  cout << " GPU - GpuService correctly sync." << endl;
 
   m_event_number = 0;
 
@@ -171,7 +171,7 @@ StatusCode PatPixelTracking::execute() {
 
   m_event_number ++;
 
-  fastTrackSvc->searchByPair(dataPointer);
+  gpuService->searchByPair(dataPointer);
 
   return StatusCode::SUCCESS;
 }
@@ -184,7 +184,7 @@ StatusCode PatPixelTracking::finalize() {
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Finalize" << endmsg;
 
   // dcampora
-  delete fastTrackSvc;
+  delete gpuService;
 
   return GaudiAlgorithm::finalize();  // must be called after all other actions
 }

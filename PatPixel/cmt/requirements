@@ -13,12 +13,12 @@ branches          cmt doc src
 # Used packages. Specify the version, * at the end specifies 'any revision'
 #    Put as many lines as needed, with all packages, without the '#'
 #============================================================================
-use     VPDet           v*      Det
-use     DigiEvent       v*      Event
-use     TrackEvent      v*      Event
-use     GaudiAlg        v*
-use     GaudiKernel     v*
-use     FastTrackSvc    v*
+use VPDet       v* Det
+use DigiEvent   v* Event
+use TrackEvent  v* Event
+use GaudiAlg    v*
+use GaudiKernel v*
+use GpuService  v* GpuManager
 
 include_path      none
 #============================================================================

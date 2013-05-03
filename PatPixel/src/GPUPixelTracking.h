@@ -3,7 +3,7 @@
 // Include files
 // from Gaudi
 #include "GaudiAlg/GaudiAlgorithm.h"
-#include "FastTrackSvc/IFastTrackSvc.h"
+#include "GpuService/IGpuService.h"
 #include "GPUPixelDataSequencer.h"
 #include <vector>
 
@@ -37,7 +37,7 @@ public:
 
 protected:
 private:
-  SmartIF<IFastTrackSvc> fastTrackSvc;
+  SmartIF<IGpuService> gpuService;
   pixelEvent event;
 
 };

@@ -1,4 +1,4 @@
-project FastTrack
+project GPU
 
 use BRUNEL BRUNEL_v44r3 
 use GAUDI  *

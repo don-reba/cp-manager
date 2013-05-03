@@ -1,0 +1,20 @@
+package GpuService
+version v1r1
+author  "Alexey Badalov"
+
+# structure
+branches GpuService cmt doc src
+
+# dependencies
+use GaudiKernel *
+use GpuIpc      * GpuManager
+
+# exported includes
+apply_pattern install_more_includes more=GpuService
+
+# GpuService library constituent
+library GpuService *.cpp Api/*.cpp
+apply_pattern component_library library=GpuService
+
+#action doxygen "doxygen Doxyfile"
+#macro GpuService_dependencies "doxygen"

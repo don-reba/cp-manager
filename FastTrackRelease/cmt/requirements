@@ -1,8 +1,0 @@
-package FastTrackRelease
-version v1r1
-author  "Alexey Badalov"
-
-use FastTrackD
-use FastTrackSvc
-use FastTrackAlg
-use PatPixel

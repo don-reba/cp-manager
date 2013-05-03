@@ -22,7 +22,7 @@
 // dcampora
 #include <iostream>
 #include <fstream>
-#include "FastTrackSvc/IFastTrackSvc.h"
+#include "GpuService/IGpuService.h"
 #include "GPUPixelDataSequencer.h"
 
 using namespace std;
@@ -73,7 +73,7 @@ protected:
 
 private:
   // dcampora
-  SmartIF<IFastTrackSvc> fastTrackSvc;
+  SmartIF<IGpuService> gpuService;
 
   std::string m_outputLocation;
   PatPixelHitManager* m_hitManager;
