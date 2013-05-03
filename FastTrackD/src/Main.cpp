@@ -1,5 +1,5 @@
 #include "App.h"
-#include "Api/Tracker.h"
+#include "api/Tracker.h"
 
 #include "FastTrackIpc/Protocol.h"
 #include "FastTrackIpc/SocketServerConnector.h"

@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <vector>
-#include "FastTrackIpc/Api/api.h"
+#include "FastTrackIpc/api/api.h"
 #include "FastTrackIpc/IProcessor.h"
 class IProtocol;
 class Tracker : public IProcessor {

@@ -25,6 +25,12 @@ class Protocol : public IProtocol {
     /// Records a double-precision floating point number.
     virtual void writeDouble(double f);
 
+    /// Reads an 8-bit integer.
+    virtual int8_t readInt8();
+
+    /// Writes an 8-bit integer.
+    virtual void writeInt8(int8_t n);
+
     /// Reads a 16-bit integer.
     virtual int16_t readInt16();
 
@@ -49,6 +55,8 @@ class Protocol : public IProtocol {
     /// Writes a standard string.
     virtual void writeString(const std::string & str);
 
+
   private:
     ITransport & m_transport;
 };
+

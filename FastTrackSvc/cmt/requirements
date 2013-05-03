@@ -13,7 +13,7 @@ use FastTrackIpc *
 apply_pattern install_more_includes more=FastTrackSvc
 
 # FastTrackSvc library constituent
-library FastTrackSvc *.cpp Api/*.cpp
+library FastTrackSvc *.cpp api/*.cpp
 apply_pattern component_library library=FastTrackSvc
 
 #action doxygen "doxygen Doxyfile"

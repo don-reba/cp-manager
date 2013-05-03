@@ -1,6 +1,6 @@
 // Automatically generated file
 #pragma once
-#include "FastTrackIpc/Api/api.h"
+#include "FastTrackIpc/api/api.h"
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -15,7 +15,7 @@ public:
   // service function wrappers
   bool isPrime(int32_t n);
   void factor(int32_t n, FactorizationMethod method, std::vector<int32_t> & result);
-  void searchByPair(std::vector<int8_t> data, std::vector<int8_t> & result);
+  void searchByPair(const std::vector<int8_t> & data, std::vector<int8_t> & result);
 private:
   // data
   IProtocol & protocol;

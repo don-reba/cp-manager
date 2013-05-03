@@ -17,7 +17,7 @@ include_dirs ../FastTrackIpc
 end_private
 
 # FastTrackIpc library constituent
-library FastTrackIpc -no_static -import=Boost *.cpp Api/*.cpp
+library FastTrackIpc -no_static -import=Boost *.cpp api/*.cpp
 apply_pattern linker_library library=FastTrackIpc
 
 #action doxygen "$(doxygen_home)/doxygen doxyfile"
