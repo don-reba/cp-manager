@@ -36,8 +36,13 @@ namespace CPP
 					()
 				| Const | Typedef =>
 					definitions.Add(definition, ns);
-				| Enum | Exception | Struct =>
+				| Enum =>
 					headers.Add(CreateDefinitionHeader(definition, ns, libDir));
+				| Exception =>
+					headers.Add(CreateDefinitionHeader(definition, ns, libDir));
+				| Struct as @struct =>
+					headers.Add(CreateDefinitionHeader(@struct, ns, libDir));
+					CreateStructImplementation(api, @struct, ns, libDir);
 				| Service as service =>
 					CreateServerServiceIDs(service, ns, clientDir);
 					CreateServerServiceIDs(service, ns, serverDir);
@@ -78,6 +83,38 @@ namespace CPP
 			fileName;
 		}
 
+private CreateStructImplementation
+	( api       : AST2.Api
+	, @struct   : AST2.Definition.Struct
+	, ns        : AST2.Namespace
+	, directory : string
+	) : void
+{
+	def className = MakeClassName(ns, @struct.name);
+
+	def WriteReadMethod(writer)
+	{
+		writer.OpenBlock("void {0}::read(IProtocol & protocol)", className);
+		foreach (field in @struct.fields)
+			WriteReadStatement(api, field.Name, field.Type, false, writer);
+		writer.CloseBlock();
+	}
+	def WriteWriteMethod(writer)
+	{
+		writer.OpenBlock("void {0}::write(IProtocol & protocol)", className);
+		foreach (field in @struct.fields)
+			WriteWriteStatement(api, field.Name, field.Type, writer);
+		writer.CloseBlock();
+	}
+
+	using (writer = CreateFile(Path.Combine(directory, MakeApiFileName(ns, @struct.name, ".cpp"))))
+	{
+		writer.WriteMember("#include \"{0}\"", MakeApiFileName(ns, @struct.name, ".h"));
+		WriteReadMethod(writer);
+		WriteWriteMethod(writer);
+	}
+}
+
 		private CreateMainHeader
 			( headers     : IEnumerable[string]
 			, definitions : IEnumerable[AST2.Definition * AST2.Namespace]
@@ -114,7 +151,7 @@ namespace CPP
 			using (writer = CreateFile(MakeFilePath(directory, service.name, ".h")))
 			{
 				writer.WriteMember("#pragma once");
-				writer.WriteMember("#include \"FastTrackIpc/Api/{0}.h\"", mainHeaderName);
+				writer.WriteMember("#include \"FastTrackIpc/api/{0}.h\"", mainHeaderName);
 				WriteIncludes(writer);
 				writer.WriteMember("class IProtocol;");
 
@@ -154,18 +191,7 @@ namespace CPP
 			, directory : string
 			) : void
 		{
-			def MakeClassName()
-			{
-				def name = StringBuilder();
-				foreach (part in ns.Parts)
-				{
-					_ = name.Append(part);
-					_ = name.Append("::");
-				}
-				_ = name.Append(service.name);
-				name.ToString();
-			}
-			def className = MakeClassName();
+			def className = MakeClassName(ns, service.name);
 
 			def WriteConstructor(writer)
 			{
@@ -219,7 +245,7 @@ namespace CPP
 			{
 				writer.WriteMember("#pragma once");
 				WriteIncludes(writer);
-				writer.WriteMember("#include \"FastTrackIpc/Api/{0}.h\"", mainHeaderName);
+				writer.WriteMember("#include \"FastTrackIpc/api/{0}.h\"", mainHeaderName);
 				writer.WriteMember("#include \"FastTrackIpc/IProcessor.h\"");
 				writer.WriteMember("class IProtocol;");
 
@@ -274,7 +300,7 @@ namespace CPP
 				writer.OpenBlock("enum {0}ID", service.name);
 				foreach (function in service.functions)
 					writer.WriteMember("{0}ID_{1},", service.name, function.Name);
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 				foreach (_ in ns.Parts)
 					writer.CloseBlock(addSemicolon = true);
@@ -288,18 +314,7 @@ namespace CPP
 			, directory : string
 			) : void
 		{
-			def MakeClassName()
-			{
-				def name = StringBuilder();
-				foreach (part in ns.Parts)
-				{
-					_ = name.Append(part);
-					_ = name.Append("::");
-				}
-				_ = name.Append(service.name);
-				name.ToString();
-			}
-			def className = MakeClassName();
+			def className = MakeClassName(ns, service.name);
 
 			def WriteSwitch(writer)
 			{
@@ -380,18 +395,7 @@ namespace CPP
 			, directory : string
 			) : void
 		{
-			def MakeClassName()
-			{
-				def name = StringBuilder();
-				foreach (part in ns.Parts)
-				{
-					_ = name.Append(part);
-					_ = name.Append("::");
-				}
-				_ = name.Append(service.name);
-				name.ToString();
-			}
-			def className = MakeClassName();
+			def className = MakeClassName(ns, service.name);
 
 			def WriteStub(function, writer)
 			{
@@ -434,6 +438,18 @@ namespace CPP
 			_ = fileName.Append(name);
 			_ = fileName.Append(extension);
 			fileName.ToString();
+		}
+
+		private MakeClassName(ns : AST2.Namespace, name : string) : string
+		{
+			def result = StringBuilder();
+			foreach (part in ns.Parts)
+			{
+				_ = result.Append(part);
+				_ = result.Append("::");
+			}
+			_ = result.Append(name);
+			result.ToString();
 		}
 
 		private MakeFilePath
@@ -485,9 +501,11 @@ namespace CPP
 				writer.CloseBlock(addSemicolon = true);
 
 			| Exception(fields) =>
-				writer.OpenBlock("class {0} : public std::exception", name);
+				writer.OpenBlock("struct {0} : std::exception", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
+				writer.WriteMember("void read(IProtocol & protocol);");
+				writer.WriteMember("void write(IProtocol & protocol);");
 				writer.CloseBlock(addSemicolon = true);
 
 			| Primitive =>
@@ -496,9 +514,11 @@ namespace CPP
 			| Service => ()
 
 			| Struct(fields) =>
-				writer.OpenBlock("class {0}", name);
+				writer.OpenBlock("struct {0}", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
+				writer.WriteMember("void read(IProtocol & protocol);");
+				writer.WriteMember("void write(IProtocol & protocol);");
 				writer.CloseBlock(addSemicolon = true);
 
 			| Typedef(ty) =>

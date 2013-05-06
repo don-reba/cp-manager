@@ -17,7 +17,7 @@ public module IpcGenerator
 			match (Parser().Parse(File.ReadAllText(thriftFilePath)))
 			{
 			| Some(x) =>
-				def srcName = Path.GetFileNameWithoutExtension(thriftFilePath);
+				def srcName = Path.GetFileName(thriftFilePath);
 				def api = MapDocument(x, targetLanguage, srcName);
 
 				Write(api.ToString());

@@ -13,9 +13,7 @@ public:
   Tracker(IProtocol & protocol);
 public:
   // service function wrappers
-  bool isPrime(int32_t n);
-  void factor(int32_t n, FactorizationMethod method, std::vector<int32_t> & result);
-  void searchByPair(const std::vector<int8_t> & data, std::vector<int8_t> & result);
+  void searchByPair(std::vector<Track> data, std::vector<int8_t> & result);
 private:
   // data
   IProtocol & protocol;
