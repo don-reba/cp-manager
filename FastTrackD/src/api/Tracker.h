@@ -14,7 +14,7 @@ public:
   virtual bool process(IProtocol & protocol) const;
 private:
   // service functions for the user to implement
-  void searchByPair(std::vector<Track> data, std::vector<int8_t> & result) const;
+  void searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result) const;
 private:
   // generated wrappers
   void process_searchByPair(IProtocol & protocol) const;

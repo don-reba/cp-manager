@@ -13,7 +13,7 @@ public:
   Tracker(IProtocol & protocol);
 public:
   // service function wrappers
-  void searchByPair(std::vector<Track> data, std::vector<int8_t> & result);
+  void searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result);
 private:
   // data
   IProtocol & protocol;

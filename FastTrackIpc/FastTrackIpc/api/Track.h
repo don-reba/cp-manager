@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <vector>
+class IProtocol;
 struct Track {
   double X0;
   double Tx;
@@ -23,5 +24,5 @@ struct Track {
   int32_t TrackHitsNum;
   std::vector<int32_t> Hits;
   void read(IProtocol & protocol);
-  void write(IProtocol & protocol);
+  void write(IProtocol & protocol) const;
 };

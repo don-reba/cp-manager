@@ -1,6 +1,8 @@
 #pragma once
 
-#include "GaudiKernel/IInterface.h"
+#include <GaudiKernel/IInterface.h>
+
+#include "FastTrackIpc/api/api.h"
 
 /** @class IFastTrackSvc IFastTrackSvc.h FastTrackSvc/IFastTrackSvc.h
  * Base interface providing accelerated tracking algorithms.
@@ -10,7 +12,7 @@ class IFastTrackSvc :
   public:
     virtual ~IFastTrackSvc() {}
 
-    virtual bool isPrime(int n) = 0;
+    virtual void searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result) = 0;
 
     DeclareInterfaceID(IFastTrackSvc, 1, 0);
 };

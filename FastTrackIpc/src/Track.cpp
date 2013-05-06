@@ -1,5 +1,6 @@
 // Automatically generated file
-#include "Track.h"
+#include "api/Track.h"
+#include "IProtocol.h"
 void Track::read(IProtocol & protocol) {
   X0 = protocol.readDouble();
   Tx = protocol.readDouble();
@@ -21,7 +22,7 @@ void Track::read(IProtocol & protocol) {
     Hits[i] = protocol.readInt32();
   }
 }
-void Track::write(IProtocol & protocol) {
+void Track::write(IProtocol & protocol) const {
   protocol.writeDouble(X0);
   protocol.writeDouble(Tx);
   protocol.writeDouble(Y0);
