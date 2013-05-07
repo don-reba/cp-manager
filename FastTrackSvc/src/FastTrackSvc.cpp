@@ -29,7 +29,7 @@ FastTrackSvc::~FastTrackSvc() {
 // IFastTrackSvc implementation
 //-----------------------------
 
-void FastTrackSvc::searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result) {
+void FastTrackSvc::searchByPair(const std::vector<GpuTrack> & data, std::vector<int8_t> & result) {
   m_tracker->searchByPair(data, result);
 }
 

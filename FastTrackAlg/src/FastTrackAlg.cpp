@@ -17,7 +17,7 @@ StatusCode FastTrackAlg::initialize() {
   SmartIF<IFastTrackSvc> fastTrackSvc(svc<IFastTrackSvc>("FastTrackSvc", true));
   info() << "got FastTrackSvc" << endmsg;
 
-  std::vector<Track> tracks(2);
+  std::vector<GpuTrack> tracks(2);
   tracks.at(0).Hits.push_back(2);
   tracks.at(0).Hits.push_back(3);
   tracks.at(1).Hits.push_back(5);

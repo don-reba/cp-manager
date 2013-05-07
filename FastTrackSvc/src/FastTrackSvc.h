@@ -16,7 +16,7 @@ class FastTrackSvc :
     virtual ~FastTrackSvc();
 
     // IFastTrackSvc implementation
-    virtual void searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result);
+    virtual void searchByPair(const std::vector<GpuTrack> & data, std::vector<int8_t> & result);
 
     // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
