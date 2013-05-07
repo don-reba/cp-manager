@@ -29,8 +29,8 @@ FastTrackSvc::~FastTrackSvc() {
 // IFastTrackSvc implementation
 //-----------------------------
 
-bool FastTrackSvc::isPrime(int n) {
-  return m_tracker->isPrime(n);
+void FastTrackSvc::searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result) {
+  m_tracker->searchByPair(data, result);
 }
 
 //-----------------------

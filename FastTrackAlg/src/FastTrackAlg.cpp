@@ -17,10 +17,20 @@ StatusCode FastTrackAlg::initialize() {
   SmartIF<IFastTrackSvc> fastTrackSvc(svc<IFastTrackSvc>("FastTrackSvc", true));
   info() << "got FastTrackSvc" << endmsg;
 
-  for (int i = 0; i != 10; ++i) {
-    bool isPrime = fastTrackSvc->isPrime(i);
-    info() << i << " is " << (isPrime ? "prime" : "composite") << endmsg;
-  }
+  std::vector<Track> tracks(2);
+  tracks.at(0).Hits.push_back(2);
+  tracks.at(0).Hits.push_back(3);
+  tracks.at(1).Hits.push_back(5);
+  tracks.at(1).Hits.push_back(7);
+
+  std::vector<int8_t> result;
+
+  fastTrackSvc->searchByPair(tracks, result);
+
+  info() << "searchByPair result: ";
+  for (size_t i = 0, size = result.size(); i != size; ++i)
+    info() << static_cast<int>(result[i]) << " ";
+  info() << "(expected: 6 35)" << endmsg;
 
   return StatusCode::SUCCESS;
 }
