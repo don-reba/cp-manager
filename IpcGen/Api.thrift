@@ -1,4 +1,4 @@
-struct Track
+struct GpuTrack
 {
 	1:  required double X0;
 	2:  required double Tx;
@@ -24,5 +24,5 @@ struct Track
 
 service Tracker
 {
-	binary searchByPair(1: list<Track> data);
+	binary searchByPair(1: list<GpuTrack> data);
 }

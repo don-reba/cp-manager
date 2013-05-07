@@ -18,11 +18,12 @@ namespace CPP
 
 		public WriteCode(api : AST2.Api, rootDirectory : string) : void
 		{
-			def libDir    = Path.Combine(rootDirectory, "lib");
-			def clientDir = Path.Combine(rootDirectory, "client");
-			def serverDir = Path.Combine(rootDirectory, "server");
+			def libDefDir = $@"$rootDirectory\FastTrackIpc\FastTrackIpc\api";
+			def libImpDir = $@"$rootDirectory\FastTrackIpc\src\api";
+			def clientDir = $@"$rootDirectory\FastTrackSvc\src\api";
+			def serverDir = $@"$rootDirectory\FastTrackD\src\api";
 
-			foreach (dir in [rootDirectory, libDir, clientDir, serverDir])
+			foreach (dir in [libDefDir, libImpDir, clientDir, serverDir])
 				_ = Directory.CreateDirectory(dir);
 
 			mutable headers     = List();
@@ -37,12 +38,12 @@ namespace CPP
 				| Const | Typedef =>
 					definitions.Add(definition, ns);
 				| Enum =>
-					headers.Add(CreateDefinitionHeader(definition, ns, libDir));
+					headers.Add(CreateDefinitionHeader(definition, ns, libDefDir));
 				| Exception =>
-					headers.Add(CreateDefinitionHeader(definition, ns, libDir));
+					headers.Add(CreateDefinitionHeader(definition, ns, libDefDir));
 				| Struct as @struct =>
-					headers.Add(CreateDefinitionHeader(@struct, ns, libDir));
-					CreateStructImplementation(api, @struct, ns, libDir);
+					headers.Add(CreateDefinitionHeader(@struct, ns, libDefDir));
+					CreateStructImplementation(api, @struct, ns, libImpDir);
 				| Service as service =>
 					CreateServerServiceIDs(service, ns, clientDir);
 					CreateServerServiceIDs(service, ns, serverDir);
@@ -56,7 +57,7 @@ namespace CPP
 				}
 			}
 			headers.Sort();
-			CreateMainHeader(headers, definitions, libDir);
+			CreateMainHeader(headers, definitions, libDefDir);
 		}
 
 		//---------------
@@ -83,37 +84,38 @@ namespace CPP
 			fileName;
 		}
 
-private CreateStructImplementation
-	( api       : AST2.Api
-	, @struct   : AST2.Definition.Struct
-	, ns        : AST2.Namespace
-	, directory : string
-	) : void
-{
-	def className = MakeClassName(ns, @struct.name);
+		private CreateStructImplementation
+			( api       : AST2.Api
+			, @struct   : AST2.Definition.Struct
+			, ns        : AST2.Namespace
+			, directory : string
+			) : void
+		{
+			def className = MakeClassName(ns, @struct.name);
 
-	def WriteReadMethod(writer)
-	{
-		writer.OpenBlock("void {0}::read(IProtocol & protocol)", className);
-		foreach (field in @struct.fields)
-			WriteReadStatement(api, field.Name, field.Type, false, writer);
-		writer.CloseBlock();
-	}
-	def WriteWriteMethod(writer)
-	{
-		writer.OpenBlock("void {0}::write(IProtocol & protocol)", className);
-		foreach (field in @struct.fields)
-			WriteWriteStatement(api, field.Name, field.Type, writer);
-		writer.CloseBlock();
-	}
+			def WriteReadMethod(writer)
+			{
+				writer.OpenBlock("void {0}::read(IProtocol & protocol)", className);
+				foreach (field in @struct.fields)
+					WriteReadStatement(api, field.Name, field.Type, false, writer);
+				writer.CloseBlock();
+			}
+			def WriteWriteMethod(writer)
+			{
+				writer.OpenBlock("void {0}::write(IProtocol & protocol) const", className);
+				foreach (field in @struct.fields)
+					WriteWriteStatement(api, field.Name, field.Type, writer);
+				writer.CloseBlock();
+			}
 
-	using (writer = CreateFile(Path.Combine(directory, MakeApiFileName(ns, @struct.name, ".cpp"))))
-	{
-		writer.WriteMember("#include \"{0}\"", MakeApiFileName(ns, @struct.name, ".h"));
-		WriteReadMethod(writer);
-		WriteWriteMethod(writer);
-	}
-}
+			using (writer = CreateFile(Path.Combine(directory, MakeApiFileName(ns, @struct.name, ".cpp"))))
+			{
+				writer.WriteMember("#include \"api/{0}\"", MakeApiFileName(ns, @struct.name, ".h"));
+				writer.WriteMember("#include \"IProtocol.h\"");
+				WriteReadMethod(writer);
+				WriteWriteMethod(writer);
+			}
+		}
 
 		private CreateMainHeader
 			( headers     : IEnumerable[string]
@@ -501,11 +503,12 @@ private CreateStructImplementation
 				writer.CloseBlock(addSemicolon = true);
 
 			| Exception(fields) =>
+				writer.WriteMember("class IProtocol;");
 				writer.OpenBlock("struct {0} : std::exception", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
 				writer.WriteMember("void read(IProtocol & protocol);");
-				writer.WriteMember("void write(IProtocol & protocol);");
+				writer.WriteMember("void write(IProtocol & protocol) const;");
 				writer.CloseBlock(addSemicolon = true);
 
 			| Primitive =>
@@ -514,11 +517,12 @@ private CreateStructImplementation
 			| Service => ()
 
 			| Struct(fields) =>
+				writer.WriteMember("class IProtocol;");
 				writer.OpenBlock("struct {0}", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
 				writer.WriteMember("void read(IProtocol & protocol);");
-				writer.WriteMember("void write(IProtocol & protocol);");
+				writer.WriteMember("void write(IProtocol & protocol) const;");
 				writer.CloseBlock(addSemicolon = true);
 
 			| Typedef(ty) =>
@@ -537,13 +541,6 @@ private CreateStructImplementation
 			, writer    : CodeWriter
 			) : void
 		{
-			def FieldToString(f)
-			{
-				if (PassByValue(f.Type))
-					string.Format("{0} {1}", ToString(f.Type), f.Name)
-				else
-					string.Format("const {0} & {1}", ToString(f.Type), f.Name)
-			}
 			if (PassByValue(function.ReturnType))
 			{
 				writer.OpenBlock
@@ -551,7 +548,7 @@ private CreateStructImplementation
 					, ToString(function.ReturnType)
 					, className
 					, function.Name
-					, string.Join(", ", function.Fields.Select(FieldToString))
+					, string.Join(", ", function.Fields.Select(ToString))
 					, if (isConst) " const" else ""
 					);
 			}
@@ -561,7 +558,7 @@ private CreateStructImplementation
 					( "void {0}::{1}({2}, {3} & result){4}"
 					, className
 					, function.Name
-					, string.Join(", ", function.Fields.Select(FieldToString))
+					, string.Join(", ", function.Fields.Select(ToString))
 					, ToString(function.ReturnType)
 					, if (isConst) " const" else ""
 					);
@@ -574,17 +571,13 @@ private CreateStructImplementation
 			, writer   : CodeWriter
 			) : void
 		{
-			def FieldToString(f)
-			{
-				string.Format("{0} {1}", ToString(f.Type), f.Name)
-			}
 			if (PassByValue(function.ReturnType))
 			{
 				writer.WriteMember
 					( "{0} {1}({2}){3};"
 					, ToString(function.ReturnType)
 					, function.Name
-					, string.Join(", ", function.Fields.Select(FieldToString))
+					, string.Join(", ", function.Fields.Select(ToString))
 					, if (isConst) " const" else ""
 					);
 			}
@@ -593,7 +586,7 @@ private CreateStructImplementation
 				writer.WriteMember
 					( "void {0}({1}, {2} & result){3};"
 					, function.Name
-					, string.Join(", ", function.Fields.Select(FieldToString))
+					, string.Join(", ", function.Fields.Select(ToString))
 					, ToString(function.ReturnType)
 					, if (isConst) " const" else ""
 					);
@@ -712,6 +705,14 @@ private CreateStructImplementation
 				| _ => ()
 				}
 			}
+		}
+
+		private ToString(field : AST2.Field) : string
+		{
+			if (PassByValue(field.Type))
+				string.Format("{0} {1}", ToString(field.Type), field.Name)
+			else
+				string.Format("const {0} & {1}", ToString(field.Type), field.Name)
 		}
 
 		private ToString(ty : AST2.Type) : string
