@@ -1,6 +1,7 @@
 // Automatically generated file
-#include "Track.h"
-void Track::read(IProtocol & protocol) {
+#include "api/GpuTrack.h"
+#include "IProtocol.h"
+void GpuTrack::read(IProtocol & protocol) {
   X0 = protocol.readDouble();
   Tx = protocol.readDouble();
   Y0 = protocol.readDouble();
@@ -21,7 +22,7 @@ void Track::read(IProtocol & protocol) {
     Hits[i] = protocol.readInt32();
   }
 }
-void Track::write(IProtocol & protocol) {
+void GpuTrack::write(IProtocol & protocol) const {
   protocol.writeDouble(X0);
   protocol.writeDouble(Tx);
   protocol.writeDouble(Y0);

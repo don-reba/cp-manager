@@ -5,7 +5,7 @@
 Tracker::Tracker(IProtocol & protocol) : protocol(protocol) {
 }
 // service function wrappers
-void Tracker::searchByPair(const std::vector<Track> & data, std::vector<int8_t> & result) {
+void Tracker::searchByPair(const std::vector<GpuTrack> & data, std::vector<int8_t> & result) {
   protocol.writeInt32(TrackerID_searchByPair);
   protocol.writeInt32(data.size());
   for (int i = 0, size = data.size(); i != size; ++i) {
