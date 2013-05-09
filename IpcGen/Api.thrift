@@ -24,5 +24,5 @@ struct GpuTrack
 
 service Tracker
 {
-	binary searchByPair(1: list<GpuTrack> data);
+	list<GpuTrack> searchByPair(1: binary data);
 }
