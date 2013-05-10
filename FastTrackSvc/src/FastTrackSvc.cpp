@@ -29,7 +29,7 @@ FastTrackSvc::~FastTrackSvc() {
 // IFastTrackSvc implementation
 //-----------------------------
 
-void FastTrackSvc::searchByPair(const std::vector<GpuTrack> & data, std::vector<int8_t> & result) {
+void FastTrackSvc::searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result) {
   m_tracker->searchByPair(data, result);
 }
 
@@ -77,7 +77,7 @@ void FastTrackSvc::cleanup() {
 }
 
 void FastTrackSvc::initIO() {
-  m_transport = new SocketClient("/tmp/FastTrackDR");
+  m_transport = new SocketClient("/tmp/FastTrack");
   m_protocol  = new Protocol(*m_transport);
   m_tracker   = new Tracker(*m_protocol);
 }

@@ -17,20 +17,26 @@ StatusCode FastTrackAlg::initialize() {
   SmartIF<IFastTrackSvc> fastTrackSvc(svc<IFastTrackSvc>("FastTrackSvc", true));
   info() << "got FastTrackSvc" << endmsg;
 
-  std::vector<GpuTrack> tracks(2);
-  tracks.at(0).Hits.push_back(2);
-  tracks.at(0).Hits.push_back(3);
-  tracks.at(1).Hits.push_back(5);
-  tracks.at(1).Hits.push_back(7);
+  std::vector<int8_t> data;
+  data.push_back(2);
+  data.push_back(3);
+  data.push_back(5);
 
-  std::vector<int8_t> result;
+  std::vector<GpuTrack> tracks;
 
-  fastTrackSvc->searchByPair(tracks, result);
+  fastTrackSvc->searchByPair(data, tracks);
 
-  info() << "searchByPair result: ";
-  for (size_t i = 0, size = result.size(); i != size; ++i)
-    info() << static_cast<int>(result[i]) << " ";
-  info() << "(expected: 6 35)" << endmsg;
+  for (size_t i = 0, size = tracks.size(); i != size; ++i) {
+    const GpuTrack & t(tracks[i]);
+    info() << "track " << i << endmsg;
+    info() << "x0: " << t.X0 << "; tx: " << t.Tx << "; y0: " << t.Y0 << "; ty: " << t.Ty << endmsg;
+    info() << "s0: " << t.S0 << "; sx: " << t.S0 << "; sz: " << t.Sz << "; sxz: " << t.Sxz << "; sz2: " << t.Sz2 << endmsg;
+    info() << "u0: " << t.U0 << "; uy: " << t.Uy << "; uz: " << t.Uz << "; uyz: " << t.Uyz << "; uz2: " << t.Uyz << endmsg;
+    info() << "hits:";
+    for (size_t j = 0, size = t.Hits.size(); j != size; ++j)
+      info() << " " << static_cast<int>(t.Hits[j]);
+    info() << endmsg;
+  }
 
   return StatusCode::SUCCESS;
 }

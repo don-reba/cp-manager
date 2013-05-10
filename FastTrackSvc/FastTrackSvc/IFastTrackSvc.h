@@ -12,7 +12,7 @@ class IFastTrackSvc :
   public:
     virtual ~IFastTrackSvc() {}
 
-    virtual void searchByPair(const std::vector<GpuTrack> & data, std::vector<int8_t> & result) = 0;
+    virtual void searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result) = 0;
 
     DeclareInterfaceID(IFastTrackSvc, 1, 0);
 };
