@@ -33,7 +33,7 @@ StatusCode GPUPixelTracking::initialize() {
   if ( sc.isFailure() ) return sc; // error printed already by GaudiAlgorithm
   
   hitManager = tool<PatPixelHitManager>("PatPixelHitManager");
-  // gpuService = svc<IGpuService>("GpuService", true);
+  // fastTrackSvc = svc<IFastTrackSvc>("FastTrackSvc", true);
 
   cout << "Initializing GPUPixelTracking" << endl;
 
@@ -59,8 +59,8 @@ StatusCode GPUPixelTracking::execute() {
 
   cout << "Server: We have a packet of size " << dataPointer.size() << " prepared to be sent." << endl;
 
-  // gpuService->sayHelloWorld();
-  // gpuService->sendData(dataPointer, 4);
+  // fastTrackSvc->sayHelloWorld();
+  // fastTrackSvc->sendData(dataPointer, 4);
 
   return StatusCode::SUCCESS;
 }
@@ -73,7 +73,7 @@ StatusCode GPUPixelTracking::finalize() {
   
   cout << "Finalizing GPUPixelTracking" << endl;
 
-  // delete gpuService;
+  // delete fastTrackSvc;
 
   return GaudiAlgorithm::finalize(); // must be called after all other actions
 }

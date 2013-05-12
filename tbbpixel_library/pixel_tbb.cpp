@@ -47,7 +47,8 @@ int num_events, sens_num, hits_num;
 
 Debug debug;
 
-vector<vector<track> > parallel_tracks_vector;
+std::vector<std::vector<track> > parallel_tracks_vector;
+std::vector<std::vector<int> > hits;
 
 template <class T>
 static std::string toString(T t){
@@ -101,6 +102,7 @@ void pixel_tbb(char*& input)
 	int num_threads = 0; // auto
 	
 	debug.setMode(NO_DEBUG);
+	// debug.setMode(DEBUG);
 
 	debug << "Setup:" << endl
 		 << " Number of threads: " << (num_threads > 0 ? toString<int>(num_threads) : "auto") << endl;
@@ -168,6 +170,17 @@ void pixel_tbb(char*& input)
 		  << experiment_timing["variance"] << " variance, "
 		  << experiment_timing["min"] << " min, "
 		  << experiment_timing["max"] << " max " << endl; */
+
+	debug << "Testing hits (first track): " << endl;
+	bool all_ok = 1;
+	for (int i=0; i<hits[0].size(); i++){
+		if(hits[0][i] != parallel_tracks_vector[0][0].hits[i]){
+			debug << "hit " << i << " differs: " << hits[0][i] << ", " << parallel_tracks_vector[0][0].hits[i] << endl;
+			all_ok = 0;
+		}
+	}
+	if(all_ok)
+		debug << " All hits are correct!";
 
 	debug << "Writing results..." << endl;
 	for (int i=0; i<num_events; i++)

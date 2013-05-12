@@ -45,6 +45,7 @@ typedef struct {
 
 
 extern vector< vector<track> > parallel_tracks_vector;
+extern vector< vector<int> > hits;
 
 class TBBSearchByPair {
 public:
@@ -72,3 +73,4 @@ void addHit ( track *tr, int offset);
 void setTrack(track *tr, int hit0offset, int hit1offset);
 
 void searchByPair(int event_no, vector<track>& vector_tracks);
+void addHitIDs(vector<int>& hitLocalIDs);

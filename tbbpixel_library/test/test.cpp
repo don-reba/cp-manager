@@ -78,6 +78,16 @@ int main(void){
 	// Results are written in global parallel_tracks_vector variable.
 	pixel_tbb(input);
 
+	bool all_ok = 1;
+	if(hits.size() != parallel_tracks_vector[0].size())
+		cout << "Size differs" << endl;
+
+	for(int i=0; i<hits.size(); i++){
+		if(i<=parallel_tracks_vector[0].size())
+			if(hits[i].size() != parallel_tracks_vector[0][i].hits.size())
+				cout << "track " << i << "'s hits differ: " << hits[i].size() << ", " << parallel_tracks_vector[0][i].hits.size() << endl;
+	}
+
 	printResultTracks(parallel_tracks_vector[0], 0, "tracks");
 
 	return 0;
@@ -110,12 +120,21 @@ void printResultTracks(vector<track> tracks, int event_no, string track_folder_c
 	int t_no = 0;
 	for (vector<track>::iterator it = tracks.begin(); it != tracks.end(); it++){
 		// info() << format( "Dist%8.3f chi%7.3f ", track.distance( *itH ), track.chi2( *itH ) );
-		track_file << "track " << t_no++ /*<< " chi2 " << chi2(&(*it))*/ << std::endl;
+		track_file << "track " << t_no /*<< " chi2 " << chi2(&(*it))*/ << std::endl;
 		for (vector<int>::iterator ith = (*it).hits.begin(); ith != (*it).hits.end(); ith++){
 			track_file << "hit " << hit_IDs[(*ith)] << " s " << hit_sensorNums[(*ith)] << " ("
 					   << hit_Xs[(*ith)] << ", " << hit_Ys[(*ith)] << ", " << hit_Zs[(*ith)] << ")" << endl;
 		}
+
+		cout << "size: " << hits.size() << ", " << t_no << endl;
+		for (vector<int>::iterator it2 = hits[t_no].begin(); it2 != hits[t_no].end(); it2++){
+			track_file << (*it2) << ", ";
+		}
 		track_file << endl;
+
+		track_file << endl;
+
+		t_no ++;
 	}
 
 	track_file.close();

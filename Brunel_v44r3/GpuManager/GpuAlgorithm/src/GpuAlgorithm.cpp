@@ -17,10 +17,10 @@ StatusCode GpuAlgorithm::initialize() {
   SmartIF<IGpuService> GpuService(svc<IGpuService>("GpuService", true));
   info() << "got GpuService" << endmsg;
 
-  for (int i = 0; i != 10; ++i) {
-    bool isPrime = GpuService->isPrime(i);
-    info() << i << " is " << (isPrime ? "prime" : "composite") << endmsg;
-  }
+  // for (int i = 0; i != 10; ++i) {
+  //   bool isPrime = GpuService->isPrime(i);
+  //   info() << i << " is " << (isPrime ? "prime" : "composite") << endmsg;
+  // }
 
   return StatusCode::SUCCESS;
 }

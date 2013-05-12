@@ -485,6 +485,7 @@ void searchByPair(int eventId, vector<track>& tracks_vector) {
 
 			// debug << endl << "++ Writing track" << endl;
 			tracks_vector.push_back(m_track);
+			addHitIDs(m_track.hits);
 
 			// Tag used hits IF the track is bigger than 3!!
 			if (m_track.trackHitsNum > 3){
@@ -500,3 +501,10 @@ void searchByPair(int eventId, vector<track>& tracks_vector) {
    free(hit_isUseds);
  }
 
+void addHitIDs(vector<int>& localHitIDs){
+	vector<int> realHitIDs;
+	for (int i=0; i<localHitIDs.size(); i++){
+		realHitIDs.push_back(hit_IDs[localHitIDs[i]]);
+	}
+	hits.push_back(realHitIDs);
+}

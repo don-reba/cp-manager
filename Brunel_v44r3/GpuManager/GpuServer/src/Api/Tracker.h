@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <vector>
+#include <iostream>
 #include "GpuIpc/Api/Api.h"
 #include "GpuIpc/IProcessor.h"
 class IProtocol;
@@ -14,12 +15,8 @@ public:
   virtual bool process(IProtocol & protocol) const;
 private:
   // service functions for the user to implement
-  bool isPrime(int32_t n) const;
-  std::vector<int32_t> factor(int32_t n, FactorizationMethod method) const;
-  std::vector<int8_t> searchByPair(std::vector<int8_t> data) const;
+  void searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result) const;
 private:
   // generated wrappers
-  void process_isPrime(IProtocol & protocol) const;
-  void process_factor(IProtocol & protocol) const;
   void process_searchByPair(IProtocol & protocol) const;
 };

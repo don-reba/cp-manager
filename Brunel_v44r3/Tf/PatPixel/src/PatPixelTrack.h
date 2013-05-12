@@ -6,6 +6,11 @@
 #include "PatPixelHit.h"
 #include "PatPixelSensor.h"
 #include "Event/StateVector.h"
+#include "GpuIpc/Api/Api.h"
+
+#include <map>
+#include <string>
+#include <iostream>
 
 /** @class PatPixelTrack PatPixelTrack.h
  *  Working tracks, used inside the PatPixelTracking
@@ -16,7 +21,11 @@
 class PatPixelTrack {
 public: 
   /// Standard constructor
-  PatPixelTrack(  ); 
+  PatPixelTrack(  );
+  
+  // dcampora: PatPixelTrack gpu-manager creation
+  PatPixelTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int> eventHitIDs);
+  std::string print_info();
 
   virtual ~PatPixelTrack( ){}; ///< Destructor
 
@@ -88,9 +97,6 @@ public:
   double meanX() const { return m_sx/m_s0; }
   double meanY() const { return m_uy/m_u0; }
   double meanZ() const { return m_sz/m_s0; }
-
-  // TODO
-  void createTrackFromData(){};
 
 protected:
 

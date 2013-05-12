@@ -1,27 +1,28 @@
+// Automatically generated file
 #include "Tracker.h"
+#include "../pixeltbb/pixel_tbb.h"
 
-#include "../TrackerHelper.h"
+// Result type 
+extern std::vector<std::vector<GpuTrack> > parallel_tracks_vector;
+extern std::vector<std::vector<int> > hits;
 
-//--------------------------------------------
 // service functions for the user to implement
-//--------------------------------------------
+void Tracker::searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result) const {
+  // add function implementation here
 
-TrackerHelper helper;
+	// TODO: Do everything more "class"y.
+	
+	parallel_tracks_vector.clear();
 
-bool Tracker::isPrime(int32_t n) const {
-  if (n < 2)
-    return false;
-  for (int i = 2; i != n; ++i) {
-    if (n % i == 0)
-      return false;
-  }
-  return true;
-};
+	char* dataPointer = (char*) &data[0];
+	pixel_tbb(dataPointer);
 
-std::vector<int32_t> Tracker::factor(int32_t, FactorizationMethod) const {
-   return std::vector<int32_t>();
-};
+	result = parallel_tracks_vector[0];
 
-std::vector<int8_t> Tracker::searchByPair(std::vector<int8_t> data) const {
-  return helper.searchByPair(data);
-};
+	// Print result
+	/*
+	buildTypestruct(dataPointer);
+	fill_hit_sensorNums();
+	printResultTracks(parallel_tracks_vector[0], event_no, "tracks");
+	*/
+}

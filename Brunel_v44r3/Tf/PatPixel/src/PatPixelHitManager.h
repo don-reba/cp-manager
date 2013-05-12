@@ -47,6 +47,7 @@ public:
 
   // dcampora
   pixelEvent* event;
+  std::map<int, PatPixelHit*> patPixelHitsIndex;
 
   // Return the interface ID
   static const InterfaceID& interfaceID() { return IID_PatPixelHitManager; }

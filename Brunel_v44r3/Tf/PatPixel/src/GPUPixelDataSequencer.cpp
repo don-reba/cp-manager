@@ -26,13 +26,19 @@ void GPUPixelDataSequencer::combineWithVector(vector<char>& combined_vector, vec
 }
 
 void GPUPixelDataSequencer::buildAndCombine(vector<char>& combined_vector){
-    // build
-    hitManager->buildHits();
+    
     pixelEvent* event = hitManager->event;
 
+    cout << "GPUDataSequencer  Packing data..." << endl;
+
     // combine all
+    // TODO: Make this use malloc and memcpy (much more efficient) 
+
+    // Sizes of event->sensor* and event->hit*
     combineWithElement(combined_vector, event->noSensors);
     combineWithElement(combined_vector, event->noHits);
+
+    // Data itself
     combineWithVector(combined_vector, event->sensorZs);
     combineWithVector(combined_vector, event->sensorHitStarts);
     combineWithVector(combined_vector, event->sensorHitsNums);
@@ -41,9 +47,9 @@ void GPUPixelDataSequencer::buildAndCombine(vector<char>& combined_vector){
     combineWithVector(combined_vector, event->hitYs);
     combineWithVector(combined_vector, event->hitZs);
 
-    cout << "-- buildAndCombine --" << endl;
+    // cout << "GPUDataSequencer  Sending to server..." << endl;
 
-    cout << "no sensors " << event->noSensors << endl
+/*    cout << "no sensors " << event->noSensors << endl
          << "no hits " << event->noHits << endl
          << "sizes: " << event->sensorZs.size() << ", " << event->sensorHitStarts.size()
          << ", " << event->sensorHitsNums.size() << endl
@@ -62,5 +68,5 @@ void GPUPixelDataSequencer::buildAndCombine(vector<char>& combined_vector){
 	int* int_vector = (int*) (&combined_vector[0]);
 	for (int i=0; i<100; i++)
 		cout << int_vector[i] << ", ";
-	cout << endl;
+	cout << endl; */
 }

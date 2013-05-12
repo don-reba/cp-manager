@@ -29,13 +29,14 @@ GpuService::~GpuService() {
 // IGpuService implementation
 //-----------------------------
 
-bool GpuService::isPrime(int n) {
-  return m_tracker->isPrime(n);
-}
+std::vector<GpuTrack> GpuService::searchByPair(const std::vector<char> & trackerInputData) {
+  // TODO: Efficient?
+  const std::vector<int8_t> convertedDataPointer(trackerInputData.begin(), trackerInputData.end());
+  
+  std::vector<GpuTrack> result;
+  m_tracker->searchByPair(convertedDataPointer, result);
 
-void GpuService::searchByPair(const std::vector<char> & tracks) {
-  const std::vector<int8_t> converted(tracks.begin(), tracks.end());
-  m_tracker->searchByPair(converted);
+  return result;
 }
 
 //-----------------------

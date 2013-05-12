@@ -29,5 +29,6 @@ struct track {
 void pixel_tbb(char*& input);
 
 extern std::vector<std::vector<track> > parallel_tracks_vector;
+extern std::vector<std::vector<int> > hits;
 
 #endif

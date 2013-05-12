@@ -82,7 +82,7 @@ StatusCode PatPixelTracking::initialize() {
   // dcampora
   gpuService = svc<IGpuService>("GpuService", true);
 
-  cout << " GPU - GpuService correctly sync." << endl;
+  cout << "Created GpuService" << endl;
 
   m_event_number = 0;
 
@@ -94,9 +94,6 @@ StatusCode PatPixelTracking::initialize() {
 //=============================================================================
 StatusCode PatPixelTracking::execute() {
 
-  // printf("PatPixelTracking::execute() =>\n");
-  cout << "-- Event " << m_event_number << endl;
-
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Execute" << endmsg;
   m_isDebug   = msgLevel( MSG::DEBUG );
   // m_isDebug = 1;
@@ -106,12 +103,12 @@ StatusCode PatPixelTracking::execute() {
     m_timerTool->start( m_timePrepare );
   }
 
-  LHCb::Tracks* outputTracks = new LHCb::Tracks();
-  put( outputTracks, m_outputLocation );
+  // LHCb::Tracks* outputTracks = new LHCb::Tracks();
+  // put( outputTracks, m_outputLocation );
 
-  if ( m_clearHits ) m_hitManager->clearHits();
-  m_hitManager->buildHits();                                        // import hits from VeloLite Clusters
-  m_hitManager->sortByX();                                          // sort by X-pos. within each sensor for faster search
+  // if ( m_clearHits ) m_hitManager->clearHits();
+  // m_hitManager->buildHits();                                        // import hits from VeloLite Clusters
+  // m_hitManager->sortByX();                                          // sort by X-pos. within each sensor for faster search
   // printf(" m_hitManager->nbHits() => %d\n", m_hitManager->nbHits());
 #ifdef DEBUG_HISTO
   plot(m_hitManager->nbHits(), "HitsPerEvent", "PatPixelTracking: Number of hits per event", 0.0, 4000.0, 50);
@@ -140,38 +137,126 @@ StatusCode PatPixelTracking::execute() {
   //==========================================================================
   // Search by finding a pair, then extrapolating
   //==========================================================================
+  
+  // buildHits
+  LHCb::Tracks* outputTracks = new LHCb::Tracks();
+  put( outputTracks, m_outputLocation );
+
+  if ( m_clearHits ) m_hitManager->clearHits();
+  m_hitManager->buildHits();
+
+  // Sequence data
+  pixelDataSequencer = GPUPixelDataSequencer(m_hitManager);
+  
+  cout << "Sequencing data" << endl;
+  std::vector<char> dataPointer;
+  pixelDataSequencer.get(dataPointer);
+
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
-  searchByPair();                                                    // search by attempting to extrapolate every pair (withtn slope limits)
+
+  cout << "Asking for server side solution!" << endl;
+  // Obtain solution from Server
+  std::vector<GpuTrack> solution = gpuService->searchByPair(dataPointer);
+
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );
+
+  // dcampora
+
+  // cout << "Sequencing GPU data" << endl;
+
+  // std::string cont_folder = "dumps/";
+  // std::ofstream outfile;
+  // std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
+  // outfile.open(filename.c_str());
+  // outfile.write((char*) &dataPointer[0], dataPointer.size());
+  // outfile.close();
+
+  // m_event_number ++;
+
+
+  // GpuTrack t = solution[0];
+  // std::cout << "First track: " << std::endl
+  //           << "Track parameters: " << t.x0 << ", " << t.tx << ", "
+  //           << t.y0 << ", " << t.ty << std::endl
+  //           << "Hits: (no) " << t.trackHitsNum << std::endl;
+
+  // for (int i=0; i<t.hits.size(); ++i){
+  //   std::cout << m_hitManager->event->hitIDs[t.hits[i]] << ", ";
+  // }
+  // std::cout << std::endl;
+
+  // std::vector<std::vector<track> >* solution_tracks = (std::vector<std::vector<track> >*) &solution.first;
+  // std::vector<std::vector<int> >* solution_hits = (std::vector<std::vector<int> >*) &solution.second;
+
   //==========================================================================
   // Final storage of tracks
   //==========================================================================
   if ( m_doTiming ) m_timerTool->start( m_timeFinal );
 
+  // TODO: In principle we only look at the first result here
+  // (it will change in a prospective GaudiHive version)
+
+  // Conversion from track to PatPixelTrack
+  cout << "Converting to output_tracks" << endl;
+
+  if(solution.size() > 0){
+    for(int i=0; i<solution.size(); i++){
+      m_tracks.push_back( PatPixelTrack(solution[i], m_hitManager->patPixelHitsIndex, m_hitManager->event->hitIDs) );
+    }
+  }
+
+  cout << "Tagging used hits for >3" << endl;
+  
+  // Tag used hits for >3
+  for (PatPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
+     if ( (*it).hits().size() > 3 )
+          (*it).tagUsedHits();
+  }
+
+  // Print hits to file
+  // string hits_filename = "hits_PPT.out";
+  // ofstream hits_outfile(hits_filename.c_str());
+  // for (int i=0; i<solution.second.size(); i++){
+  //   hits_outfile << "hits " << i << ": ";
+  //   for (int j=0; j<solution.second[i].size(); j++){
+  //     hits_outfile << solution.second[i][j] << ", ";
+  //   }
+  //   hits_outfile << endl;
+  // }
+  // hits_outfile.close(); 
+
+  /*if(solution.first.size() > 0){
+    for(int i=0; i<solution.first[0].size(); i++){
+      // TODO: Comment. Print hits
+      // for (int j=0; j<solution.second[i].size(); j++)
+      //   cout << solution.second[i][j] << ", ";
+      // cout << endl;
+      PatPixelTrack pptrack = PatPixelTrack(solution.first[0][i], solution.second[i], m_hitManager->patPixelHitsIndex);
+      m_tracks.push_back(pptrack);
+    }
+  } */
+
+  // cout << "Printing out info about m_tracks" << endl;
+
+  // Print out info about m_tracks
+  /* string tracks_filename = "m_tracks.out";
+  ofstream tracks_outfile(tracks_filename.c_str());
+  int i = 0;
+  for(PatPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
+    tracks_outfile << "Track " << i << ": " << (*it).print_info() << endl;
+    i++;
+  }
+  tracks_outfile.close(); */
+
+  // cout << "Making LHCbTracks" << endl;
+  
+  cout << "Making LHCbTracks" << endl;
   makeLHCbTracks( outputTracks );                                    // convert out tracks to LHCb tracks
 
   if ( m_doTiming ) {
     m_timerTool->stop( m_timeFinal );
     m_timerTool->stop( m_timeTotal );
   }
-
-  // dcampora
-  vector<char> dataPointer;
-
-  cout << "Sequencing GPU data" << endl;
-  GPUPixelDataSequencer* pds = new GPUPixelDataSequencer(m_hitManager);
-  pds->get(dataPointer);
-
-  std::string cont_folder = "dumps/";
-  std::ofstream outfile;
-  std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
-  outfile.open(filename.c_str());
-  outfile.write((char*) &dataPointer[0], dataPointer.size());
-  outfile.close();
-
-  m_event_number ++;
-
-  gpuService->searchByPair(dataPointer);
 
   return StatusCode::SUCCESS;
 }
@@ -184,7 +269,7 @@ StatusCode PatPixelTracking::finalize() {
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Finalize" << endmsg;
 
   // dcampora
-  delete gpuService;
+  // delete fastTrackSvc;
 
   return GaudiAlgorithm::finalize();  // must be called after all other actions
 }

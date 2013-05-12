@@ -22,8 +22,11 @@
 // dcampora
 #include <iostream>
 #include <fstream>
+#include <utility>
 #include "GpuService/IGpuService.h"
 #include "GPUPixelDataSequencer.h"
+#include "GpuIpc/Api/Api.h"
+
 
 using namespace std;
 
@@ -110,6 +113,8 @@ private:
   int   m_timePrepare;
   int   m_timePairs;
   int   m_timeFinal;
+
+  GPUPixelDataSequencer pixelDataSequencer;
 
 template <class T>
      static std::string toString(T t){

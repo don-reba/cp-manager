@@ -5,31 +5,14 @@
 Tracker::Tracker(IProtocol & protocol) : protocol(protocol) {
 };
 // service function wrappers
-bool Tracker::isPrime(int32_t n) {
-  protocol.writeInt32(TrackerID_isPrime);
-  protocol.writeInt32(n);
-  bool result = protocol.readBool();
-  return result;
-};
-std::vector<int32_t> Tracker::factor(int32_t n, FactorizationMethod method) {
-  protocol.writeInt32(TrackerID_factor);
-  protocol.writeInt32(n);
-  protocol.writeInt32(method);
-  std::vector<int32_t> result(protocol.readInt32());
-  for (int i = 0, size = result.size(); i != size; ++i) {
-    result[i] = protocol.readInt32();
-  };
-  return result;
-};
-std::vector<int8_t> Tracker::searchByPair(std::vector<int8_t> data) {
+void Tracker::searchByPair(std::vector<int8_t> data, std::vector<GpuTrack> & result) {
   protocol.writeInt32(TrackerID_searchByPair);
   protocol.writeInt32(data.size());
   for (int i = 0, size = data.size(); i != size; ++i) {
     protocol.writeInt8(data[i]);
-  };
-  std::vector<int8_t> result(protocol.readInt32());
+  }
+  result.resize(protocol.readInt32());
   for (int i = 0, size = result.size(); i != size; ++i) {
-    result[i] = protocol.readInt8();
-  };
-  return result;
+    result[i].read(protocol);
+  }
 };
