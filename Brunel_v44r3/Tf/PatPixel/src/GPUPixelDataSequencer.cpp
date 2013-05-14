@@ -29,7 +29,7 @@ void GPUPixelDataSequencer::buildAndCombine(vector<char>& combined_vector){
     
     pixelEvent* event = hitManager->event;
 
-    cout << "GPUDataSequencer  Packing data..." << endl;
+    // cout << "GPUDataSequencer  Packing data..." << endl;
 
     // combine all
     // TODO: Make this use malloc and memcpy (much more efficient) 

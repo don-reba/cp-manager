@@ -148,13 +148,13 @@ StatusCode PatPixelTracking::execute() {
   // Sequence data
   pixelDataSequencer = GPUPixelDataSequencer(m_hitManager);
   
-  cout << "Sequencing data" << endl;
+  // cout << "Sequencing data" << endl;
   std::vector<char> dataPointer;
   pixelDataSequencer.get(dataPointer);
 
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-  cout << "Asking for server side solution!" << endl;
+  // cout << "Asking for server side solution!" << endl;
   // Obtain solution from Server
   std::vector<GpuTrack> solution = gpuService->searchByPair(dataPointer);
 
@@ -249,8 +249,6 @@ StatusCode PatPixelTracking::execute() {
   tracks_outfile.close(); */
 
   // cout << "Making LHCbTracks" << endl;
-  
-  cout << "Making LHCbTracks" << endl;
   makeLHCbTracks( outputTracks );                                    // convert out tracks to LHCb tracks
 
   if ( m_doTiming ) {
