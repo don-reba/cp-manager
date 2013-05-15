@@ -33,7 +33,7 @@ void Protocol::writeBool(bool b) {
 
 float Protocol::readFloat() {
   float f = 0.0f;
-  m_transport.readBytes(reinterpret_cast<float*>(&f), 4);
+  m_transport.readBytes(reinterpret_cast<char*>(&f), 4);
   return f;
 }
 
