@@ -7,22 +7,22 @@
 #include <vector>
 class IProtocol;
 struct GpuTrack {
-  double X0;
-  double Tx;
-  double Y0;
-  double Ty;
-  double S0;
-  double Sx;
-  double Sz;
-  double Sxz;
-  double Sz2;
-  double U0;
-  double Uy;
-  double Uz;
-  double Uyz;
-  double Uz2;
-  int32_t TrackHitsNum;
-  std::vector<int32_t> Hits;
+  float x0;
+  float tx;
+  float y0;
+  float ty;
+  float s0;
+  float sx;
+  float sz;
+  float sxz;
+  float sz2;
+  float u0;
+  float uy;
+  float uz;
+  float uyz;
+  float uz2;
+  int32_t trackHitsNum;
+  std::vector<int32_t> hits;
   void read(IProtocol & protocol);
   void write(IProtocol & protocol) const;
 };

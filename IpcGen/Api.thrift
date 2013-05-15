@@ -1,25 +1,25 @@
 struct GpuTrack
 {
-	1:  required double X0;
-	2:  required double Tx;
-	3:  required double Y0;
-	4:  required double Ty;
+	1:  required float x0;
+	2:  required float tx;
+	3:  required float y0;
+	4:  required float ty;
 	
-	5:  required double S0;
-	6:  required double Sx;
-	7:  required double Sz;
-	8:  required double Sxz;
-	9:  required double Sz2;
+	5:  required float s0;
+	6:  required float sx;
+	7:  required float sz;
+	8:  required float sxz;
+	9:  required float sz2;
 	
-	10: required double U0;
-	11: required double Uy;
-	12: required double Uz;
-	13: required double Uyz;
-	14: required double Uz2;
+	10: required float u0;
+	11: required float uy;
+	12: required float uz;
+	13: required float uyz;
+	14: required float uz2;
 	
-	15: required i32 TrackHitsNum;
+	15: required i32 trackHitsNum;
 	
-	16: required list<i32> Hits;
+	16: required list<i32> hits;
 }
 
 service Tracker

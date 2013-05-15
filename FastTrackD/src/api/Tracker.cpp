@@ -16,15 +16,14 @@ bool Tracker::process(IProtocol & protocol) const {
 }
 // service function wrappers
 void Tracker::process_searchByPair(IProtocol & protocol) const {
-  std::vector<GpuTrack> data;
   data.resize(protocol.readInt32());
   for (int i = 0, size = data.size(); i != size; ++i) {
-    data[i].read(protocol);
+    data[i] = protocol.readInt8();
   }
-  std::vector<int8_t> result;
+  std::vector<GpuTrack> result;
   this->searchByPair(data, result);
   protocol.writeInt32(result.size());
   for (int i = 0, size = result.size(); i != size; ++i) {
-    protocol.writeInt8(result[i]);
+    result[i].write(protocol);
   }
 }

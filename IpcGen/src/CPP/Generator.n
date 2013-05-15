@@ -622,6 +622,8 @@ namespace CPP
 				writer.WriteMember("{0}{1} = protocol.readBool();", Decl("bool"), name);
 			| "byte" =>
 				writer.WriteMember("{0}{1} = protocol.readInt8();", Decl("int8_t"), name);
+			| "float" =>
+				writer.WriteMember("{0}{1} = protocol.readFloat();", Decl("float"), name);
 			| "double" =>
 				writer.WriteMember("{0}{1} = protocol.readDouble();", Decl("double"), name);
 			| "i16" =>
@@ -675,6 +677,8 @@ namespace CPP
 				writer.WriteMember("protocol.writeBool({0});", name);
 			| "byte" =>
 				writer.WriteMember("protocol.writeInt8({0});", name);
+			| "float" =>
+				writer.WriteMember("protocol.writeFloat({0});", name);
 			| "double" =>
 				writer.WriteMember("protocol.writeDouble({0});", name);
 			| "i16" =>
@@ -722,6 +726,7 @@ namespace CPP
 			| "binary" => ("std::vector", [ "int8_t" ])
 			| "bool"   => ("bool",    [])
 			| "byte"   => ("int8_t",  [])
+			| "float"  => ("float",   [])
 			| "double" => ("double",  [])
 			| "i16"    => ("int16_t", [])
 			| "i32"    => ("int32_t", [])

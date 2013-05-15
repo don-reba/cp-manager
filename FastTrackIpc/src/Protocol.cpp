@@ -31,6 +31,16 @@ void Protocol::writeBool(bool b) {
   m_transport.writeBytes(reinterpret_cast<char*>(&b), 1);
 }
 
+float Protocol::readFloat() {
+  float f = 0.0f;
+  m_transport.readBytes(reinterpret_cast<float*>(&f), 4);
+  return f;
+}
+
+void Protocol::writeFloat(float f) {
+  m_transport.writeBytes(reinterpret_cast<char*>(&f), 4);
+}
+
 double Protocol::readDouble() {
   double f = 0.0f;
   m_transport.readBytes(reinterpret_cast<char*>(&f), 8);
