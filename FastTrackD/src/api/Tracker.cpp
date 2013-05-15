@@ -16,6 +16,7 @@ bool Tracker::process(IProtocol & protocol) const {
 }
 // service function wrappers
 void Tracker::process_searchByPair(IProtocol & protocol) const {
+  std::vector<int8_t> data;
   data.resize(protocol.readInt32());
   for (int i = 0, size = data.size(); i != size; ++i) {
     data[i] = protocol.readInt8();

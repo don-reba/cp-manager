@@ -29,12 +29,12 @@ StatusCode FastTrackAlg::initialize() {
   for (size_t i = 0, size = tracks.size(); i != size; ++i) {
     const GpuTrack & t(tracks[i]);
     info() << "track " << i << endmsg;
-    info() << "x0: " << t.X0 << "; tx: " << t.Tx << "; y0: " << t.Y0 << "; ty: " << t.Ty << endmsg;
-    info() << "s0: " << t.S0 << "; sx: " << t.S0 << "; sz: " << t.Sz << "; sxz: " << t.Sxz << "; sz2: " << t.Sz2 << endmsg;
-    info() << "u0: " << t.U0 << "; uy: " << t.Uy << "; uz: " << t.Uz << "; uyz: " << t.Uyz << "; uz2: " << t.Uyz << endmsg;
+    info() << "x0: " << t.x0 << "; tx: " << t.tx << "; y0: " << t.y0 << "; ty: " << t.ty << endmsg;
+    info() << "s0: " << t.s0 << "; sx: " << t.s0 << "; sz: " << t.sz << "; sxz: " << t.sxz << "; sz2: " << t.sz2 << endmsg;
+    info() << "u0: " << t.u0 << "; uy: " << t.uy << "; uz: " << t.uz << "; uyz: " << t.uyz << "; uz2: " << t.uyz << endmsg;
     info() << "hits:";
-    for (size_t j = 0, size = t.Hits.size(); j != size; ++j)
-      info() << " " << static_cast<int>(t.Hits[j]);
+    for (size_t j = 0, size = t.hits.size(); j != size; ++j)
+      info() << " " << static_cast<int>(t.hits[j]);
     info() << endmsg;
   }
 

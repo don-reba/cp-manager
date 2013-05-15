@@ -617,7 +617,7 @@ namespace CPP
 			| "binary" =>
 				// make binary a list<byte>
 				def listType = AST2.Type(api.Definitions["list"], [ AST2.Type(api.Definitions["byte"], []) ]);
-				WriteReadStatement(api, name, listType, false, writer);
+				WriteReadStatement(api, name, listType, declareLhs, writer);
 			| "bool" =>
 				writer.WriteMember("{0}{1} = protocol.readBool();", Decl("bool"), name);
 			| "byte" =>
