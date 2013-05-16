@@ -4,7 +4,7 @@
 
 #include <GaudiKernel/Service.h>
 
-#include "GpuIpc/Api/Api.h"
+#include "GpuIpc/api/api.h"
 
 class ITransport;
 class IProtocol;
@@ -17,7 +17,7 @@ class GpuService :
     GpuService(const std::string & name, ISvcLocator * sl);
     virtual ~GpuService();
 
-    // IFastTrackSvc implementation
+    // IGpuService implementation
     virtual std::vector<GpuTrack> searchByPair(const std::vector<char> & tracks);
 
     // Service implementation

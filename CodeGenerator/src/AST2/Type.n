@@ -1,0 +1,18 @@
+namespace AST2
+{
+	[ Record ]
+	public class Type
+	{
+		public mutable Definition : Definition;
+
+		public Parameters : list[Type];
+
+		public override ToString() : string
+		{
+			if (Parameters == [])
+				Definition.name
+			else
+				$"$(Definition.name)<..$Parameters>"
+		}
+	}
+}

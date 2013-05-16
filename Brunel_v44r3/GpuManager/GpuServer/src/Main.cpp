@@ -1,5 +1,5 @@
 #include "App.h"
-#include "Api/Tracker.h"
+#include "api/Tracker.h"
 
 #include "GpuIpc/Protocol.h"
 #include "GpuIpc/SocketServerConnector.h"

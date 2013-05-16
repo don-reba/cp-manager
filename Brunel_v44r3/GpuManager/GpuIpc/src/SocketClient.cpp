@@ -19,7 +19,7 @@ SocketClient::SocketClient(const char * path) :
   if (m_socket == -1)
     throw SystemException("Could not create socket.");
 
-  sockaddr_un address = { 0 };
+  sockaddr_un address = { 0, { 0 } };
   address.sun_family = AF_LOCAL;
   const size_t maxPathLength = sizeof(address.sun_path) - 1;
   if (m_path.size() > maxPathLength)

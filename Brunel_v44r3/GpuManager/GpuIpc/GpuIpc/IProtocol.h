@@ -19,6 +19,12 @@ class IProtocol {
     /// Writes a boolean value.
     virtual void writeBool(bool b) = 0;
 
+    /// Reads a single-precision floating point number.
+    virtual float readFloat() = 0;
+
+    /// Writes a single-precision floating point number;
+    virtual void writeFloat(float f) = 0;
+
     /// Reads a double-precision floating point number.
     virtual double readDouble() = 0;
 
@@ -55,4 +61,3 @@ class IProtocol {
     /// Writes a standard string.
     virtual void writeString(const std::string & str) = 0;
 };
-

@@ -19,6 +19,12 @@ class Protocol : public IProtocol {
     /// Writes a boolean value.
     virtual void writeBool(bool b);
 
+    /// Reads a single-precision floating point number.
+    virtual float readFloat();
+
+    /// Writes a single-precision floating point number;
+    virtual void writeFloat(float f);
+
     /// Reads a double-precision floating point number.
     virtual double readDouble();
 

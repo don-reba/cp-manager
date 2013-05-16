@@ -18,17 +18,11 @@ bool Tracker::process(IProtocol & protocol) const {
 void Tracker::process_searchByPair(IProtocol & protocol) const {
   std::vector<int8_t> data;
   data.resize(protocol.readInt32());
-
-  std::cout << "[GPU - Server] Processing chunk of " << data.size() << "B..." << std::endl;
-
   for (int i = 0, size = data.size(); i != size; ++i) {
     data[i] = protocol.readInt8();
   }
   std::vector<GpuTrack> result;
   this->searchByPair(data, result);
-
-  std::cout << "[GPU - Server] Tracks formed. Sending back " << result.size() << "B..." << std::endl;
-
   protocol.writeInt32(result.size());
   for (int i = 0, size = result.size(); i != size; ++i) {
     result[i].write(protocol);

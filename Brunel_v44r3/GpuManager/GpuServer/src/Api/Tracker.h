@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <vector>
 #include <iostream>
-#include "GpuIpc/Api/Api.h"
+#include "GpuIpc/api/api.h"
 #include "GpuIpc/IProcessor.h"
 class IProtocol;
 class Tracker : public IProcessor {

@@ -1,6 +1,6 @@
 from Gaudi.Configuration import *
-from Configurables import FastTrackAlg
+from Configurables import GpuAlgorithm
 
-alg = FastTrackAlg()
+alg = GpuAlgorithm()
 ApplicationMgr().TopAlg += [ alg ]
 

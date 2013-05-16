@@ -1,0 +1,28 @@
+namespace AST2
+{
+	[ Record ]
+	public class Namespace
+	{
+		public Parts : list[string];
+
+		public override Equals(obj : object) : bool
+		{
+		| other is Namespace => ArePartsEqual(this.Parts, other.Parts)
+		| _                  => false
+		}
+
+		public override GetHashCode() : int
+		{
+			mutable hash = 0;
+			foreach (part in Parts)
+				hash ^= part.GetHashCode();
+			hash;
+		}
+
+		private ArePartsEqual(p1 : list[string], p2 : list[string]) : bool
+		{
+		| ([], [])             => true
+		| (h1 :: t1, h2 :: t2) => h1.Equals(h2) && ArePartsEqual(t1, t2)
+		| _                    => false
+		}
+	}

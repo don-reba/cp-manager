@@ -17,7 +17,7 @@ include_dirs ../GpuIpc
 end_private
 
 # GpuIpc library constituent
-library GpuIpc -no_static -import=Boost *.cpp Api/*.cpp
+library GpuIpc -no_static -import=Boost *.cpp api/*.cpp
 apply_pattern linker_library library=GpuIpc
 
 #action doxygen "$(doxygen_home)/doxygen doxyfile"

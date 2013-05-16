@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GaudiKernel/IInterface.h"
-#include "GpuIpc/Api/Api.h"
+#include "GpuIpc/api/api.h"
 
 /** @class IGpuService IGpuService.h GpuService/IGpuService.h
  * Base interface providing GPU-accelerated algorithms.

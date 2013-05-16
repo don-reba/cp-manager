@@ -33,7 +33,6 @@ StatusCode GPUPixelTracking::initialize() {
   if ( sc.isFailure() ) return sc; // error printed already by GaudiAlgorithm
   
   hitManager = tool<PatPixelHitManager>("PatPixelHitManager");
-  // fastTrackSvc = svc<IFastTrackSvc>("FastTrackSvc", true);
 
   cout << "Initializing GPUPixelTracking" << endl;
 

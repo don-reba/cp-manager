@@ -7,6 +7,8 @@ namespace CPP
 {
 	public class Generator
 	{
+		private mainHeaderName = "api";
+
 		private indent : string;
 
 		public this(indent : string)
@@ -14,46 +16,48 @@ namespace CPP
 			this.indent = indent;
 		}
 
-		public WriteCode(api : AST.Api, rootDirectory : string) : void
+		public WriteCode(api : AST2.Api, rootDirectory : string) : void
 		{
-			def libDir    = Path.Combine(rootDirectory, "lib");
-			def clientDir = Path.Combine(rootDirectory, "client");
-			def serverDir = Path.Combine(rootDirectory, "server");
+			def libDefDir = $@"$rootDirectory\FastTrackIpc\FastTrackIpc\api";
+			def libImpDir = $@"$rootDirectory\FastTrackIpc\src\api";
+			def clientDir = $@"$rootDirectory\FastTrackSvc\src\api";
+			def serverDir = $@"$rootDirectory\FastTrackD\src\api";
 
-			foreach (dir in [rootDirectory, libDir, clientDir, serverDir])
+			foreach (dir in [libDefDir, libImpDir, clientDir, serverDir])
 				_ = Directory.CreateDirectory(dir);
-
-			def env = Environment
-				( api            = api
-				, mainHeaderName = Path.GetFileName(rootDirectory)
-				);
 
 			mutable headers     = List();
 			mutable definitions = List();
-			foreach ((definition, ns) in api.Definitions)
+			foreach (definition in api.Definitions.Values)
 			{
+				def ns = definition.ns;
 				match (definition)
 				{
-				| AST.Definition.Enum
-				| AST.Definition.Exception
-				| AST.Definition.Struct =>
-					headers.Add(CreateDefinitionHeader(definition, ns, libDir));
-				| AST.Definition.Service as service =>
+				| Collection | Primitive | Void =>
+					()
+				| Const | Typedef =>
+					definitions.Add(definition, ns);
+				| Enum =>
+					headers.Add(CreateDefinitionHeader(definition, ns, libDefDir));
+				| Exception =>
+					headers.Add(CreateDefinitionHeader(definition, ns, libDefDir));
+				| Struct as @struct =>
+					headers.Add(CreateDefinitionHeader(@struct, ns, libDefDir));
+					CreateStructImplementation(api, @struct, ns, libImpDir);
+				| Service as service =>
 					CreateServerServiceIDs(service, ns, clientDir);
 					CreateServerServiceIDs(service, ns, serverDir);
 
-					CreateClientServiceHeader(env, service, ns, clientDir);
-					CreateClientServiceImplementation(env, service, ns, clientDir);
+					CreateClientServiceHeader(service, ns, clientDir);
+					CreateClientServiceImplementation(api, service, ns, clientDir);
 
-					CreateServerServiceHeader(env, service, ns, serverDir);
-					CreateServerServiceImplementation(env, service, ns, serverDir);
+					CreateServerServiceHeader(service, ns, serverDir);
+					CreateServerServiceImplementation(api, service, ns, serverDir);
 					CreateServerServiceStubs(service, ns, serverDir);
-				| _ =>
-					definitions.Add(definition, ns);
 				}
 			}
 			headers.Sort();
-			CreateMainHeader(env, headers, definitions, libDir);
+			CreateMainHeader(headers, definitions, libDefDir);
 		}
 
 		//---------------
@@ -61,8 +65,8 @@ namespace CPP
 		//---------------
 
 		private CreateDefinitionHeader
-			( definition : AST.Definition
-			, ns         : AST.Namespace
+			( definition : AST2.Definition
+			, ns         : AST2.Namespace
 			, directory  : string
 			) : string
 		{
@@ -80,14 +84,46 @@ namespace CPP
 			fileName;
 		}
 
+		private CreateStructImplementation
+			( api       : AST2.Api
+			, @struct   : AST2.Definition.Struct
+			, ns        : AST2.Namespace
+			, directory : string
+			) : void
+		{
+			def className = MakeClassName(ns, @struct.name);
+
+			def WriteReadMethod(writer)
+			{
+				writer.OpenBlock("void {0}::read(IProtocol & protocol)", className);
+				foreach (field in @struct.fields)
+					WriteReadStatement(api, field.Name, field.Type, false, writer);
+				writer.CloseBlock();
+			}
+			def WriteWriteMethod(writer)
+			{
+				writer.OpenBlock("void {0}::write(IProtocol & protocol) const", className);
+				foreach (field in @struct.fields)
+					WriteWriteStatement(api, field.Name, field.Type, writer);
+				writer.CloseBlock();
+			}
+
+			using (writer = CreateFile(Path.Combine(directory, MakeApiFileName(ns, @struct.name, ".cpp"))))
+			{
+				writer.WriteMember("#include \"api/{0}\"", MakeApiFileName(ns, @struct.name, ".h"));
+				writer.WriteMember("#include \"IProtocol.h\"");
+				WriteReadMethod(writer);
+				WriteWriteMethod(writer);
+			}
+		}
+
 		private CreateMainHeader
-			( env         : CPP.Environment
-			, headers     : IEnumerable[string]
-			, definitions : IEnumerable[AST.Definition * AST.Namespace]
+			( headers     : IEnumerable[string]
+			, definitions : IEnumerable[AST2.Definition * AST2.Namespace]
 			, directory   : string
 			) : void
 		{
-			using (writer = CreateFile(MakeFilePath(directory, env.MainHeaderName, ".h")))
+			using (writer = CreateFile(MakeFilePath(directory, mainHeaderName, ".h")))
 			{
 				writer.WriteMember("#pragma once");
 				foreach (definitions in GroupByNamespace(definitions))
@@ -109,16 +145,15 @@ namespace CPP
 		}
 
 		private CreateClientServiceHeader
-			( env       : CPP.Environment
-			, service   : AST.Definition.Service
-			, ns        : AST.Namespace
+			( service   : AST2.Definition.Service
+			, ns        : AST2.Namespace
 			, directory : string
 			) : void
 		{
 			using (writer = CreateFile(MakeFilePath(directory, service.name, ".h")))
 			{
 				writer.WriteMember("#pragma once");
-				writer.WriteMember("#include \"FastTrackIpc/Api/{0}.h\"", env.MainHeaderName);
+				writer.WriteMember("#include \"FastTrackIpc/api/{0}.h\"", mainHeaderName);
 				WriteIncludes(writer);
 				writer.WriteMember("class IProtocol;");
 
@@ -152,29 +187,19 @@ namespace CPP
 		}
 
 		private CreateClientServiceImplementation
-			( env       : CPP.Environment
-			, service   : AST.Definition.Service
-			, ns        : AST.Namespace
+			( api       : AST2.Api
+			, service   : AST2.Definition.Service
+			, ns        : AST2.Namespace
 			, directory : string
 			) : void
 		{
-			def MakeNamespacePrefix()
-			{
-				def name = StringBuilder();
-				foreach (part in ns.Parts)
-				{
-					_ = name.Append(part);
-					_ = name.Append("::");
-				}
-				name.ToString();
-			}
-			def nsPrefix = MakeNamespacePrefix();
+			def className = MakeClassName(ns, service.name);
 
 			def WriteConstructor(writer)
 			{
 				writer.OpenBlock
-					( "{0}{1}::{1}(IProtocol & protocol) : protocol(protocol)"
-					, nsPrefix
+					( "{0}::{1}(IProtocol & protocol) : protocol(protocol)"
+					, className
 					, service.name
 					);
 				writer.CloseBlock();
@@ -182,23 +207,19 @@ namespace CPP
 
 			def WriteWrapper(function, writer)
 			{
-				def FieldToString(f)
-				{
-					string.Format("{0} {1}", ToString(f.Type), f.Name)
-				}
-				writer.OpenBlock
-					( "{0} {1}{2}::{3}({4})"
-					, ToString(function.ReturnType)
-					, nsPrefix
-					, service.name
-					, function.Name
-					, string.Join(", ", function.Fields.Select(FieldToString))
-					);
+				WriteFunctionDeclaration(className, function, false, writer);
 				writer.WriteMember("protocol.writeInt32({0}ID_{1});", service.name, function.Name);
 				foreach (field in function.Fields)
-					WriteWriteStatement(env, field.Name, field.Type, writer);
-				WriteReadStatement(env, "result", function.ReturnType, true, writer);
-				writer.WriteMember("return result;");
+					WriteWriteStatement(api, field.Name, field.Type, writer);
+				if (PassByValue(function.ReturnType))
+				{
+					WriteReadStatement(api, "result", function.ReturnType, true, writer);
+					writer.WriteMember("return result;");
+				}
+				else
+				{
+					WriteReadStatement(api, "result", function.ReturnType, false, writer);
+				}
 				writer.CloseBlock();
 			}
 
@@ -217,9 +238,8 @@ namespace CPP
 		}
 
 		private CreateServerServiceHeader
-			( env       : CPP.Environment
-			, service   : AST.Definition.Service
-			, ns        : AST.Namespace
+			( service   : AST2.Definition.Service
+			, ns        : AST2.Namespace
 			, directory : string
 			) : void
 		{
@@ -227,7 +247,7 @@ namespace CPP
 			{
 				writer.WriteMember("#pragma once");
 				WriteIncludes(writer);
-				writer.WriteMember("#include \"FastTrackIpc/Api/{0}.h\"", env.MainHeaderName);
+				writer.WriteMember("#include \"FastTrackIpc/api/{0}.h\"", mainHeaderName);
 				writer.WriteMember("#include \"FastTrackIpc/IProcessor.h\"");
 				writer.WriteMember("class IProtocol;");
 
@@ -267,8 +287,8 @@ namespace CPP
 		}
 
 		private CreateServerServiceIDs
-			( service   : AST.Definition.Service
-			, ns        : AST.Namespace
+			( service   : AST2.Definition.Service
+			, ns        : AST2.Namespace
 			, directory : string
 			) : void
 		{
@@ -282,7 +302,7 @@ namespace CPP
 				writer.OpenBlock("enum {0}ID", service.name);
 				foreach (function in service.functions)
 					writer.WriteMember("{0}ID_{1},", service.name, function.Name);
-				writer.CloseBlock();
+				writer.CloseBlock(addSemicolon = true);
 
 				foreach (_ in ns.Parts)
 					writer.CloseBlock(addSemicolon = true);
@@ -290,27 +310,17 @@ namespace CPP
 		}
 
 		private CreateServerServiceImplementation
-			( env       : CPP.Environment
-			, service   : AST.Definition.Service
-			, ns        : AST.Namespace
+			( api       : AST2.Api
+			, service   : AST2.Definition.Service
+			, ns        : AST2.Namespace
 			, directory : string
 			) : void
 		{
-			def MakeNamespacePrefix()
-			{
-				def name = StringBuilder();
-				foreach (part in ns.Parts)
-				{
-					_ = name.Append(part);
-					_ = name.Append("::");
-				}
-				name.ToString();
-			}
-			def nsPrefix = MakeNamespacePrefix();
+			def className = MakeClassName(ns, service.name);
 
 			def WriteSwitch(writer)
 			{
-				writer.OpenBlock("bool {0}{1}::process(IProtocol & protocol) const", nsPrefix, service.name);
+				writer.OpenBlock("bool {0}::process(IProtocol & protocol) const", className);
 				writer.WriteMember("int id = protocol.readInt32();");
 				writer.OpenBlock("switch (id)");
 				foreach (function in service.functions)
@@ -320,7 +330,7 @@ namespace CPP
 					writer.WriteMember("break;");
 				}
 				writer.WriteLabel("default");
-				writer.WriteMember("throw std::runtime_error(\"{0}{1}::process: unknown ID\");", nsPrefix, service.name);
+				writer.WriteMember("throw std::runtime_error(\"{0}::process: unknown ID\");", className);
 				writer.CloseBlock();
 				writer.WriteMember("return true;");
 				writer.CloseBlock();
@@ -329,14 +339,21 @@ namespace CPP
 			def WriteWrapper(function, writer)
 			{
 				writer.OpenBlock
-					( "void {0}{1}::process_{2}(IProtocol & protocol) const"
-					, nsPrefix
-					, service.name
+					( "void {0}::process_{1}(IProtocol & protocol) const"
+					, className
 					, function.Name
 					);
 				foreach (field in function.Fields)
-					WriteReadStatement(env, field.Name, field.Type, true, writer);
-				unless (function.ReturnType.Name == "void")
+					WriteReadStatement(api, field.Name, field.Type, true, writer);
+				if (function.ReturnType.Definition is AST2.Definition.Void)
+				{
+					writer.WriteMember
+						( "this->{0}({1});"
+						, function.Name
+						, string.Join(", ", function.Fields.Select(_.Name))
+						);
+				}
+				else if (PassByValue(function.ReturnType))
 				{
 					writer.WriteMember
 						( "{0} result = this->{1}({2});"
@@ -344,8 +361,18 @@ namespace CPP
 						, function.Name
 						, string.Join(", ", function.Fields.Select(_.Name))
 						);
+					WriteWriteStatement(api, "result", function.ReturnType, writer);
 				}
-				WriteWriteStatement(env, "result", function.ReturnType, writer);
+				else
+				{
+					writer.WriteMember("{0} result;", ToString(function.ReturnType));
+					writer.WriteMember
+						( "this->{0}({1}, result);"
+						, function.Name
+						, string.Join(", ", function.Fields.Select(_.Name))
+						);
+					WriteWriteStatement(api, "result", function.ReturnType, writer);
+				}
 				writer.CloseBlock();
 			}
 
@@ -365,37 +392,17 @@ namespace CPP
 		}
 
 		private CreateServerServiceStubs
-			( service   : AST.Definition.Service
-			, ns        : AST.Namespace
+			( service   : AST2.Definition.Service
+			, ns        : AST2.Namespace
 			, directory : string
 			) : void
 		{
-			def MakeNamespacePrefix()
-			{
-				def name = StringBuilder();
-				foreach (part in ns.Parts)
-				{
-					_ = name.Append(part);
-					_ = name.Append("::");
-				}
-				name.ToString();
-			}
-			def nsPrefix = MakeNamespacePrefix();
+			def className = MakeClassName(ns, service.name);
 
 			def WriteStub(function, writer)
 			{
-				def FieldToString(f)
-				{
-					string.Format("{0} {1}", ToString(f.Type), f.Name)
-				}
-				writer.OpenBlock
-					( "{0} {1}{2}::{3}({4}) const"
-					, ToString(function.ReturnType)
-					, nsPrefix
-					, service.name
-					, function.Name
-					, string.Join(", ", function.Fields.Select(FieldToString))
-					);
+				WriteFunctionDeclaration(className, function, true, writer);
+				writer.WriteComment("add function implementation here");
 				writer.CloseBlock();
 			}
 			using (writer = CreateFile(MakeFilePath(directory, service.name + "_impl", ".cpp")))
@@ -409,8 +416,8 @@ namespace CPP
 		}
 
 		private GroupByNamespace
-			( definitions : IEnumerable[AST.Definition * AST.Namespace]
-			) : IEnumerable[IGrouping[AST.Namespace, AST.Definition]]
+			( definitions : IEnumerable[AST2.Definition * AST2.Namespace]
+			) : IEnumerable[IGrouping[AST2.Namespace, AST2.Definition]]
 		{
 			definitions.GroupBy
 				( keySelector     = (_, ns) => ns
@@ -419,7 +426,7 @@ namespace CPP
 		}
 
 		private MakeApiFileName
-			( ns        : AST.Namespace
+			( ns        : AST2.Namespace
 			, name      : string
 			, extension : string
 			) : string
@@ -435,6 +442,18 @@ namespace CPP
 			fileName.ToString();
 		}
 
+		private MakeClassName(ns : AST2.Namespace, name : string) : string
+		{
+			def result = StringBuilder();
+			foreach (part in ns.Parts)
+			{
+				_ = result.Append(part);
+				_ = result.Append("::");
+			}
+			_ = result.Append(name);
+			result.ToString();
+		}
+
 		private MakeFilePath
 			( directory : string
 			, fileName  : string
@@ -444,8 +463,20 @@ namespace CPP
 			Path.Combine(directory, fileName + extension)
 		}
 
+
+		private PassByValue(ty : AST2.Type) : bool
+		{
+			match (ty.Definition)
+			{
+			| Enum        => true
+			| Primitive   => true
+			| Typedef(ty) => PassByValue(ty)
+			| _           => false
+			}
+		}
+
 		private WriteDefinition
-			( definition  : AST.Definition
+			( definition  : AST2.Definition
 			, writer      : CodeWriter
 			) : void
 		{
@@ -453,6 +484,9 @@ namespace CPP
 
 			match (definition)
 			{
+			| Collection =>
+				throw GeneratorException("ICE: called WriteDefinition for a collection type.");
+
 			| Const(ty, value) =>
 				writer.WriteMember("const {0} {1} = {2};", ToString(ty), name, ToString(value))
 
@@ -469,42 +503,94 @@ namespace CPP
 				writer.CloseBlock(addSemicolon = true);
 
 			| Exception(fields) =>
-				writer.OpenBlock("class {0} : public std::exception", name);
+				writer.WriteMember("class IProtocol;");
+				writer.OpenBlock("struct {0} : std::exception", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
+				writer.WriteMember("void read(IProtocol & protocol);");
+				writer.WriteMember("void write(IProtocol & protocol) const;");
 				writer.CloseBlock(addSemicolon = true);
+
+			| Primitive =>
+				throw GeneratorException("ICE: called WriteDefinition for a primitive type.");
 
 			| Service => ()
 
 			| Struct(fields) =>
-				writer.OpenBlock("class {0}", name);
+				writer.WriteMember("class IProtocol;");
+				writer.OpenBlock("struct {0}", name);
 				foreach (field in fields)
 					writer.WriteMember("{0} {1};", ToString(field.Type), field.Name);
+				writer.WriteMember("void read(IProtocol & protocol);");
+				writer.WriteMember("void write(IProtocol & protocol) const;");
 				writer.CloseBlock(addSemicolon = true);
 
 			| Typedef(ty) =>
 				writer.WriteMember("typedef {0} {1};", ToString(ty), name);
+
+			| Void =>
+				throw GeneratorException("ICE: called WriteDefinition for the void type.");
+			}
+		}
+
+		// Must be followed by writer.CloseBlock()
+		private WriteFunctionDeclaration
+			( className : string
+			, function  : AST2.Function
+			, isConst   : bool
+			, writer    : CodeWriter
+			) : void
+		{
+			if (PassByValue(function.ReturnType))
+			{
+				writer.OpenBlock
+					( "{0} {1}::{2}({3}){4}"
+					, ToString(function.ReturnType)
+					, className
+					, function.Name
+					, string.Join(", ", function.Fields.Select(ToString))
+					, if (isConst) " const" else ""
+					);
+			}
+			else
+			{
+				writer.OpenBlock
+					( "void {0}::{1}({2}, {3} & result){4}"
+					, className
+					, function.Name
+					, string.Join(", ", function.Fields.Select(ToString))
+					, ToString(function.ReturnType)
+					, if (isConst) " const" else ""
+					);
 			}
 		}
 
 		private WriteFunctionDefinition
-			( function : AST.Function
+			( function : AST2.Function
 			, isConst  : bool
 			, writer   : CodeWriter
 			) : void
 		{
-			def FieldToString(f)
+			if (PassByValue(function.ReturnType))
 			{
-				string.Format("{0} {1}", ToString(f.Type), f.Name)
+				writer.WriteMember
+					( "{0} {1}({2}){3};"
+					, ToString(function.ReturnType)
+					, function.Name
+					, string.Join(", ", function.Fields.Select(ToString))
+					, if (isConst) " const" else ""
+					);
 			}
-
-			writer.WriteMember
-				( "{0} {1}({2}){3};"
-				, ToString(function.ReturnType)
-				, function.Name
-				, string.Join(", ", function.Fields.Select(FieldToString))
-				, if (isConst) " const" else ""
-				);
+			else
+			{
+				writer.WriteMember
+					( "void {0}({1}, {2} & result){3};"
+					, function.Name
+					, string.Join(", ", function.Fields.Select(ToString))
+					, ToString(function.ReturnType)
+					, if (isConst) " const" else ""
+					);
+			}
 		}
 
 		private WriteIncludes(writer : CodeWriter) : void
@@ -515,9 +601,9 @@ namespace CPP
 		}
 
 		private WriteReadStatement
-			( env        : CPP.Environment
+			( api        : AST2.Api
 			, name       : string
-			, ty         : AST.Type
+			, ty         : AST2.Type
 			, declareLhs : bool
 			, writer     : CodeWriter
 			) : void
@@ -526,16 +612,18 @@ namespace CPP
 			{
 				if (declareLhs) tyName + " " else ""
 			}
-			match (ty.Name)
+			match (ty.Definition.name)
 			{
 			| "binary" =>
 				// make binary a list<byte>
-				def listType = AST.Type("list", [AST.Type("byte", [])]);
-				WriteReadStatement(env, name, listType, false, writer);
+				def listType = AST2.Type(api.Definitions["list"], [ AST2.Type(api.Definitions["byte"], []) ]);
+				WriteReadStatement(api, name, listType, declareLhs, writer);
 			| "bool" =>
 				writer.WriteMember("{0}{1} = protocol.readBool();", Decl("bool"), name);
 			| "byte" =>
 				writer.WriteMember("{0}{1} = protocol.readInt8();", Decl("int8_t"), name);
+			| "float" =>
+				writer.WriteMember("{0}{1} = protocol.readFloat();", Decl("float"), name);
 			| "double" =>
 				writer.WriteMember("{0}{1} = protocol.readDouble();", Decl("double"), name);
 			| "i16" =>
@@ -545,49 +633,52 @@ namespace CPP
 			| "i64" =>
 				writer.WriteMember("{0}{1} = protocol.readInt64();", Decl("int64_t"), name);
 			| "list" =>
-				// assume no nested collections
-				writer.WriteMember("{0} {1}(protocol.readInt32());", ToString(ty), name);
+				when (declareLhs)
+					writer.WriteMember("{0} {1};", ToString(ty), name);
+				writer.WriteMember("{0}.resize(protocol.readInt32());", name);
 				writer.OpenBlock("for (int i = 0, size = {0}.size(); i != size; ++i)", name);
-				WriteReadStatement(env, $"$name[i]", ty.Parameters.Head, false, writer);
+				WriteReadStatement(api, $"$name[i]", ty.Parameters.Head, false, writer);
 				writer.CloseBlock();
-			| "map"    => ()
-			| "set"    => ()
+			| "map"    => () // TODO
+			| "set"    => () // TODO
 			| "string" =>
-				writer.WriteMember("std::string {0} = protocol.readString();", name);
+				writer.WriteMember("{0}{1} = protocol.readString();", Decl("std::string"), name);
 			| "void"   => ()
 			| tyName =>
-				match (env.GetDefinition(tyName))
+				match (ty.Definition)
 				{
 				| Enum =>
 					writer.WriteMember("{0}{1} = static_cast<{2}>(protocol.readInt32());", Decl(tyName), name, tyName);
-				| Struct =>
+				| Struct | Exception =>
 					when (declareLhs)
 						writer.WriteMember("{0} {1};", ToString(ty), name);
 					writer.WriteMember("{0}.read(protocol);", name);
 				| Typedef(ty) =>
-					WriteReadStatement(env, name, ty, declareLhs, writer)
+					WriteReadStatement(api, name, ty, declareLhs, writer)
 				| _ => ()
 				}
 			}
 		}
 
 		private WriteWriteStatement
-			( env    : CPP.Environment
+			( api    : AST2.Api
 			, name   : string
-			, ty     : AST.Type
+			, ty     : AST2.Type
 			, writer : CodeWriter
 			) : void
 		{
-			match (ty.Name)
+			match (ty.Definition.name)
 			{
 			| "binary" =>
 				// make binary a list<byte>
-				def listType = AST.Type("list", [AST.Type("byte", [])]);
-				WriteWriteStatement(env, name, listType, writer);
+				def listType = AST2.Type(api.Definitions["list"], [ AST2.Type(api.Definitions["byte"], []) ]);
+				WriteWriteStatement(api, name, listType, writer);
 			| "bool" =>
 				writer.WriteMember("protocol.writeBool({0});", name);
 			| "byte" =>
 				writer.WriteMember("protocol.writeInt8({0});", name);
+			| "float" =>
+				writer.WriteMember("protocol.writeFloat({0});", name);
 			| "double" =>
 				writer.WriteMember("protocol.writeDouble({0});", name);
 			| "i16" =>
@@ -599,52 +690,63 @@ namespace CPP
 			| "list" =>
 				writer.WriteMember("protocol.writeInt32({0}.size());", name);
 				writer.OpenBlock("for (int i = 0, size = {0}.size(); i != size; ++i)", name);
-				WriteWriteStatement(env, $"$name[i]", ty.Parameters.Head, writer);
+				WriteWriteStatement(api, $"$name[i]", ty.Parameters.Head, writer);
 				writer.CloseBlock();
 			| "map"    => ()
 			| "set"    => ()
 			| "string" =>
 				writer.WriteMember("protocol.writeString({0});", name);
 			| "void"   => ()
-			| tyName =>
-				match (env.GetDefinition(tyName))
+			| _ =>
+				match (ty.Definition)
 				{
 				| Enum =>
 					writer.WriteMember("protocol.writeInt32({0});", name);
-				| Struct =>
+				| Struct | Exception =>
 					writer.WriteMember("{0}.write(protocol);", name);
 				| Typedef(ty) =>
-					WriteWriteStatement(env, name, ty, writer)
+					WriteWriteStatement(api, name, ty, writer)
 				| _ => ()
 				}
 			}
 		}
 
-		private ToString(ty : AST.Type) : string
+		private ToString(field : AST2.Field) : string
 		{
-			def name = match (ty.Name)
-			{
-			| "binary" => "std::vector<int8_t>"
-			| "bool"   => "bool"
-			| "byte"   => "int8_t"
-			| "double" => "double"
-			| "i16"    => "int16_t"
-			| "i32"    => "int32_t"
-			| "i64"    => "int64_t"
-			| "list"   => "std::vector"
-			| "map"    => "std::map"
-			| "set"    => "std::set"
-			| "string" => "std::string"
-			| "void"   => "void"
-			| name     => name
-			}
-			if (ty.Parameters == [])
-				name
+			if (PassByValue(field.Type))
+				string.Format("{0} {1}", ToString(field.Type), field.Name)
 			else
-				string.Format("{0}<{1}>", name, string.Join(", ", ty.Parameters.Map(ToString)))
+				string.Format("const {0} & {1}", ToString(field.Type), field.Name)
 		}
 
-		private ToString(ty : AST.Constant) : string
+		private ToString(ty : AST2.Type) : string
+		{
+			def (name, parameters) = match (ty.Definition.name)
+			{
+			| "binary" => ("std::vector", [ "int8_t" ])
+			| "bool"   => ("bool",    [])
+			| "byte"   => ("int8_t",  [])
+			| "float"  => ("float",   [])
+			| "double" => ("double",  [])
+			| "i16"    => ("int16_t", [])
+			| "i32"    => ("int32_t", [])
+			| "i64"    => ("int64_t", [])
+			| "list"   => ("std::vector", ty.Parameters.Map(ToString))
+			| "map"    => ("std::map",    ty.Parameters.Map(ToString))
+			| "set"    => ("std::set",    ty.Parameters.Map(ToString))
+			| "string" => ("std::string", [])
+			| "void"   => ("void", [])
+			| name     => (name,   [])
+			}
+			match (string.Join(", ", parameters))
+			{
+			| ""                     => name
+			| p when p.EndsWith(">") => string.Format("{0}<{1} >", name, p)
+			| p                      => string.Format("{0}<{1}>",  name, p)
+			}
+		}
+
+		private ToString(ty : AST2.Constant) : string
 		{
 		| Int(x) => x.ToString();
 		}

@@ -13,7 +13,7 @@ use GpuIpc      * GpuManager
 apply_pattern install_more_includes more=GpuService
 
 # GpuService library constituent
-library GpuService *.cpp Api/*.cpp
+library GpuService *.cpp api/*.cpp
 apply_pattern component_library library=GpuService
 
 #action doxygen "doxygen Doxyfile"

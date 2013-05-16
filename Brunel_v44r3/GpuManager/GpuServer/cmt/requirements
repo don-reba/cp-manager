@@ -11,7 +11,7 @@ use Boost  v* LCG_Interfaces -no_auto_imports
 use tbb    v* LCG_Interfaces
 
 # application constituent
-application gpuserver -import=Boost *.cpp Api/*.cpp
+application gpuserver -import=Boost *.cpp api/*.cpp
 
 private
 macro_prepend tbb_linkopts " -Wl,--no-as-needed " \

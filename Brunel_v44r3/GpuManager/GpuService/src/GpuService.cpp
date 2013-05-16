@@ -1,6 +1,6 @@
 #include "GpuService.h"
 
-#include "Api/Tracker.h"
+#include "api/Tracker.h"
 
 #include "GpuIpc/SocketClient.h"
 #include "GpuIpc/Protocol.h"

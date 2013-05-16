@@ -1,6 +1,6 @@
 #pragma once
 
-/** @class App App.h FastTrackD/App.h
+/** @class App App.h GpuServer/App.h
  * Application-wide API.
  *
  * @author Alexey Badalov
