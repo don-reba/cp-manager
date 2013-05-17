@@ -81,8 +81,7 @@ StatusCode PatPixelTracking::initialize() {
 
   // dcampora
   gpuService = svc<IGpuService>("GpuService", true);
-
-  cout << "Created GpuService" << endl;
+  // cout << "Created GpuService" << endl;
 
   m_event_number = 0;
 
@@ -154,54 +153,34 @@ StatusCode PatPixelTracking::execute() {
 
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-  // cout << "Asking for server side solution!" << endl;
-  // Obtain solution from Server
   std::vector<GpuTrack> solution = gpuService->searchByPair(dataPointer);
 
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );
 
   // dcampora
 
-  // cout << "Sequencing GPU data" << endl;
-
-  // std::string cont_folder = "dumps/";
-  // std::ofstream outfile;
-  // std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
-  // outfile.open(filename.c_str());
-  // outfile.write((char*) &dataPointer[0], dataPointer.size());
-  // outfile.close();
-
-  // m_event_number ++;
-
-
-  // GpuTrack t = solution[0];
-  // std::cout << "First track: " << std::endl
-  //           << "Track parameters: " << t.x0 << ", " << t.tx << ", "
-  //           << t.y0 << ", " << t.ty << std::endl
-  //           << "Hits: (no) " << t.trackHitsNum << std::endl;
-
-  // for (int i=0; i<t.hits.size(); ++i){
-  //   std::cout << m_hitManager->event->hitIDs[t.hits[i]] << ", ";
-  // }
-  // std::cout << std::endl;
-
-  // std::vector<std::vector<track> >* solution_tracks = (std::vector<std::vector<track> >*) &solution.first;
-  // std::vector<std::vector<int> >* solution_hits = (std::vector<std::vector<int> >*) &solution.second;
+  cout << " GpuManager: Dumping data to dumps folder" << endl;
+  std::string cont_folder = "dumps/";
+  std::ofstream outfile;
+  std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
+  outfile.open(filename.c_str());
+  outfile.write((char*) &dataPointer[0], dataPointer.size());
+  outfile.close();
+  m_event_number ++;
 
   //==========================================================================
   // Final storage of tracks
   //==========================================================================
   if ( m_doTiming ) m_timerTool->start( m_timeFinal );
 
-  // TODO: In principle we only look at the first result here
-  // (it will change in a prospective GaudiHive version)
-
   // Conversion from track to PatPixelTrack
   cout << "Converting to output_tracks" << endl;
 
+  PatPixelTrack _t;
   if(solution.size() > 0){
     for(int i=0; i<solution.size(); i++){
-      m_tracks.push_back( PatPixelTrack(solution[i], m_hitManager->patPixelHitsIndex, m_hitManager->event->hitIDs) );
+      _t.setTrack(solution[i], m_hitManager->patPixelHitsIndex, m_hitManager->event->hitIDs);
+      m_tracks.push_back( _t );
     }
   }
 
@@ -225,19 +204,7 @@ StatusCode PatPixelTracking::execute() {
   // }
   // hits_outfile.close(); 
 
-  /*if(solution.first.size() > 0){
-    for(int i=0; i<solution.first[0].size(); i++){
-      // TODO: Comment. Print hits
-      // for (int j=0; j<solution.second[i].size(); j++)
-      //   cout << solution.second[i][j] << ", ";
-      // cout << endl;
-      PatPixelTrack pptrack = PatPixelTrack(solution.first[0][i], solution.second[i], m_hitManager->patPixelHitsIndex);
-      m_tracks.push_back(pptrack);
-    }
-  } */
-
   // cout << "Printing out info about m_tracks" << endl;
-
   // Print out info about m_tracks
   /* string tracks_filename = "m_tracks.out";
   ofstream tracks_outfile(tracks_filename.c_str());
