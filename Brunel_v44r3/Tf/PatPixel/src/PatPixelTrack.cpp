@@ -35,28 +35,28 @@ PatPixelTrack::PatPixelTrack( ) :
   m_hits.reserve( 20 );
 }
 
-PatPixelTrack::PatPixelTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int> eventHitIDs) :
-  m_backward(false),
-  m_x0( t.x0 ),
-  m_tx( t.tx ),
-  m_y0( t.y0 ),
-  m_ty( t.ty ),
-
-  m_s0 ( t.s0 ),
-  m_sx ( t.sx ),
-  m_sz ( t.sz ),
-  m_sxz( t.sxz ),
-  m_sz2( t.sz2 ),
-
-  m_u0 ( t.u0 ),
-  m_uy ( t.uy ),
-  m_uz ( t.uz ),
-  m_uyz( t.uyz ),
-  m_uz2( t.uz2 )
+void PatPixelTrack::setTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int>&eventHitIDs)
 {
+  m_backward = false;
+  m_x0 = t.x0;
+  m_tx = t.tx;
+  m_y0 = t.y0;
+  m_ty = t.ty;
+
+  m_s0 = t.s0;
+  m_sx = t.sx;
+  m_sz = t.sz;
+  m_sxz = t.sxz;
+  m_sz2 = t.sz2;
+
+  m_u0 = t.u0;
+  m_uy = t.uy;
+  m_uz = t.uz;
+  m_uyz = t.uyz;
+  m_uz2 = t.uz2;
+
   m_hits.clear();
   for (std::vector<int>::iterator it = t.hits.begin(); it != t.hits.end(); it++){
-    // std::cout << "Adding hit: " << (*it) << " - " << patPixelHitsIndex[(*it)] << std::endl;
     m_hits.push_back(patPixelHitsIndex[eventHitIDs[(*it)]]);
   }
 }

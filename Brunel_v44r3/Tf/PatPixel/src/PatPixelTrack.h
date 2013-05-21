@@ -24,7 +24,7 @@ public:
   PatPixelTrack(  );
   
   // dcampora: PatPixelTrack gpu-manager creation
-  PatPixelTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int> eventHitIDs);
+  void setTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int>& eventHitIDs);
   std::string print_info();
 
   virtual ~PatPixelTrack( ){}; ///< Destructor
