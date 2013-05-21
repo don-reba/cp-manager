@@ -7,7 +7,7 @@ namespace CPP
 {
 	public class Generator
 	{
-		private mainHeaderName = "api";
+		private mainHeaderName = "Api";
 
 		private indent : string;
 
@@ -18,10 +18,10 @@ namespace CPP
 
 		public WriteCode(api : AST2.Api, rootDirectory : string) : void
 		{
-			def libDefDir = $@"$rootDirectory\FastTrackIpc\FastTrackIpc\api";
-			def libImpDir = $@"$rootDirectory\FastTrackIpc\src\api";
-			def clientDir = $@"$rootDirectory\FastTrackSvc\src\api";
-			def serverDir = $@"$rootDirectory\FastTrackD\src\api";
+			def libDefDir = $@"$rootDirectory\GpuIpc\GpuIpc\Api";
+			def libImpDir = $@"$rootDirectory\GpuIpc\src\Api";
+			def clientDir = $@"$rootDirectory\GpuService\src\Api";
+			def serverDir = $@"$rootDirectory\GpuServer\src\Api";
 
 			foreach (dir in [libDefDir, libImpDir, clientDir, serverDir])
 				_ = Directory.CreateDirectory(dir);
@@ -110,7 +110,7 @@ namespace CPP
 
 			using (writer = CreateFile(Path.Combine(directory, MakeApiFileName(ns, @struct.name, ".cpp"))))
 			{
-				writer.WriteMember("#include \"api/{0}\"", MakeApiFileName(ns, @struct.name, ".h"));
+				writer.WriteMember("#include \"Api/{0}\"", MakeApiFileName(ns, @struct.name, ".h"));
 				writer.WriteMember("#include \"IProtocol.h\"");
 				WriteReadMethod(writer);
 				WriteWriteMethod(writer);
@@ -153,7 +153,7 @@ namespace CPP
 			using (writer = CreateFile(MakeFilePath(directory, service.name, ".h")))
 			{
 				writer.WriteMember("#pragma once");
-				writer.WriteMember("#include \"FastTrackIpc/api/{0}.h\"", mainHeaderName);
+				writer.WriteMember("#include \"GpuIpc/Api/{0}.h\"", mainHeaderName);
 				WriteIncludes(writer);
 				writer.WriteMember("class IProtocol;");
 
@@ -227,7 +227,7 @@ namespace CPP
 			{
 				writer.WriteMember("#include \"{0}.h\"", service.name);
 				writer.WriteMember("#include \"{0}ID.h\"", service.name);
-				writer.WriteMember("#include \"FastTrackIpc/IProtocol.h\"");
+				writer.WriteMember("#include \"GpuIpc/IProtocol.h\"");
 
 				WriteConstructor(writer);
 
@@ -247,8 +247,8 @@ namespace CPP
 			{
 				writer.WriteMember("#pragma once");
 				WriteIncludes(writer);
-				writer.WriteMember("#include \"FastTrackIpc/api/{0}.h\"", mainHeaderName);
-				writer.WriteMember("#include \"FastTrackIpc/IProcessor.h\"");
+				writer.WriteMember("#include \"GpuIpc/Api/{0}.h\"", mainHeaderName);
+				writer.WriteMember("#include \"GpuIpc/IProcessor.h\"");
 				writer.WriteMember("class IProtocol;");
 
 				foreach (part in ns.Parts)
@@ -380,7 +380,7 @@ namespace CPP
 			{
 				writer.WriteMember("#include \"{0}.h\"", service.name);
 				writer.WriteMember("#include \"{0}ID.h\"", service.name);
-				writer.WriteMember("#include \"FastTrackIpc/IProtocol.h\"");
+				writer.WriteMember("#include \"GpuIpc/IProtocol.h\"");
 
 				writer.WriteComment("IProcess implementation");
 				WriteSwitch(writer);
