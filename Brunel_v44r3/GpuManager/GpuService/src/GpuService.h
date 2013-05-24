@@ -2,6 +2,7 @@
 
 #include "GpuService/IGpuService.h"
 
+#include <GaudiKernel/Property.h>
 #include <GaudiKernel/Service.h>
 
 #include "GpuIpc/api/api.h"
@@ -33,4 +34,6 @@ class GpuService :
     ITransport * m_transport;
     IProtocol  * m_protocol;
     Tracker    * m_tracker;
+
+    StringProperty m_socketPath;
 };

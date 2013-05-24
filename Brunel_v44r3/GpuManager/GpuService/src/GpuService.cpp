@@ -16,10 +16,12 @@ DECLARE_SERVICE_FACTORY(GpuService)
 //-------------
 
 GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
-    Service     (name, sl),
-    m_transport (NULL),
-    m_protocol  (NULL),
-    m_tracker   (NULL) {
+    Service      (name, sl),
+    m_transport  (NULL),
+    m_protocol   (NULL),
+    m_tracker    (NULL),
+    m_socketPath ("/tmp/GpuManager") {
+  declareProperty("SocketPath", m_socketPath);
 }
 
 GpuService::~GpuService() {
@@ -83,7 +85,7 @@ void GpuService::cleanup() {
 }
 
 void GpuService::initIO() {
-  m_transport = new SocketClient("/tmp/GpuManager");
+  m_transport = new SocketClient(m_socketPath.value().c_str());
   m_protocol  = new Protocol(*m_transport);
   m_tracker   = new Tracker(*m_protocol);
 }
