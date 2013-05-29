@@ -5,6 +5,9 @@
 #   gaudirun.py SftWithVP.py
 ##############################################################################
 
+from Configurables import GpuService
+GpuService().SocketPath = "/tmp/GpuManager"
+
 from GaudiKernel.ProcessJobOptions import importOptions
 importOptions("$APPCONFIGOPTS/Brunel/MC-WithTruth.py")
 
