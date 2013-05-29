@@ -1,6 +1,6 @@
 // Automatically generated file
 #pragma once
-#include "GpuIpc/api/api.h"
+#include "GpuIpc/Api/Api.h"
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -13,7 +13,7 @@ public:
   Tracker(IProtocol & protocol);
 public:
   // service function wrappers
-  void searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result);
+  void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result);
 private:
   // data
   IProtocol & protocol;

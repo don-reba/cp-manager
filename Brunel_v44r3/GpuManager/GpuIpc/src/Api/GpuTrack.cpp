@@ -1,5 +1,5 @@
 // Automatically generated file
-#include "api/GpuTrack.h"
+#include "Api/GpuTrack.h"
 #include "IProtocol.h"
 void GpuTrack::read(IProtocol & protocol) {
   x0 = protocol.readFloat();
