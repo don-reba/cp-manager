@@ -243,7 +243,8 @@ namespace CPP
 			, directory : string
 			) : void
 		{
-			using (writer = CreateFile(MakeFilePath(directory, service.name, ".h")))
+			def className = service.name + "Server";
+			using (writer = CreateFile(MakeFilePath(directory, className, ".h")))
 			{
 				writer.WriteMember("#pragma once");
 				WriteIncludes(writer);
@@ -256,8 +257,8 @@ namespace CPP
 
 				match (service.@base)
 				{
-				| Some(@base) => writer.OpenBlock("class {0} : public IProcessor, public {1}", service.name, @base);
-				| None        => writer.OpenBlock("class {0} : public IProcessor", service.name);
+				| Some(@base) => writer.OpenBlock("class {0} : public IProcessor, public {1}", className, @base + "Server");
+				| None        => writer.OpenBlock("class {0} : public IProcessor", className);
 				}
 
 				writer.WriteLabel("public");
@@ -316,7 +317,7 @@ namespace CPP
 			, directory : string
 			) : void
 		{
-			def className = MakeClassName(ns, service.name);
+			def className = MakeClassName(ns, service.name + "Server");
 
 			def WriteSwitch(writer)
 			{
@@ -376,9 +377,10 @@ namespace CPP
 				writer.CloseBlock();
 			}
 
-			using (writer = CreateFile(MakeFilePath(directory, service.name, ".cpp")))
+			def className = service.name + "Server";
+			using (writer = CreateFile(MakeFilePath(directory, className, ".cpp")))
 			{
-				writer.WriteMember("#include \"{0}.h\"", service.name);
+				writer.WriteMember("#include \"{0}.h\"", className);
 				writer.WriteMember("#include \"{0}ID.h\"", service.name);
 				writer.WriteMember("#include \"GpuIpc/IProtocol.h\"");
 
@@ -407,7 +409,7 @@ namespace CPP
 			}
 			using (writer = CreateFile(MakeFilePath(directory, service.name + "_impl", ".cpp")))
 			{
-				writer.WriteMember("#include \"{0}.h\"", service.name);
+				writer.WriteMember("#include \"{0}Server.h\"", service.name);
 
 				writer.WriteComment("service functions for the user to implement");
 				foreach (function in service.functions)

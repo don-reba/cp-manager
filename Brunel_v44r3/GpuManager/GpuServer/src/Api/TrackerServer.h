@@ -8,7 +8,7 @@
 #include "GpuIpc/Api/Api.h"
 #include "GpuIpc/IProcessor.h"
 class IProtocol;
-class Tracker : public IProcessor {
+class TrackerServer : public IProcessor {
 public:
   // IProcess implementation
   virtual bool process(IProtocol & protocol) const;
