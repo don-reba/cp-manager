@@ -17,12 +17,12 @@ class ThreadedServer {
         ConnectionHandler (
           boost::shared_ptr<ITransport>   transport,
           boost::shared_ptr<IProtocol>    protocol,
-          const IProcessor              & processor);
+          IProcessor                    & processor);
         void operator () ();
       private:
           boost::shared_ptr<ITransport>   m_transport;
           boost::shared_ptr<IProtocol>    m_protocol;
-          const IProcessor              & m_processor;
+          IProcessor                    & m_processor;
     };
 
   public: // public interface
@@ -30,7 +30,7 @@ class ThreadedServer {
     typedef boost::function<boost::shared_ptr<IProtocol> (ITransport&)> ProtocolFactory;
 
     void serve(
-        IConnector       & connector,
-        ProtocolFactory    protocolFactory,
-        const IProcessor & processor);
+        IConnector      & connector,
+        ProtocolFactory   protocolFactory,
+        IProcessor      & processor);
 };

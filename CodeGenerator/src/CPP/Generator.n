@@ -263,19 +263,19 @@ namespace CPP
 
 				writer.WriteLabel("public");
 				writer.WriteComment("IProcess implementation");
-				writer.WriteMember("virtual bool process(IProtocol & protocol) const;");
+				writer.WriteMember("virtual bool process(IProtocol & protocol);");
 
 				writer.WriteLabel("private");
 				writer.WriteComment("service functions for the user to implement");
 				foreach (function in service.functions)
-					WriteFunctionDefinition(function, true, writer);
+					WriteFunctionDefinition(function, false, writer);
 
 				writer.WriteLabel("private");
 				writer.WriteComment("generated wrappers");
 				foreach (function in service.functions)
 				{
 					writer.WriteMember
-						( "void process_{0}(IProtocol & protocol) const;"
+						( "void process_{0}(IProtocol & protocol);"
 						, function.Name
 						);
 				}
@@ -321,7 +321,7 @@ namespace CPP
 
 			def WriteSwitch(writer)
 			{
-				writer.OpenBlock("bool {0}::process(IProtocol & protocol) const", className);
+				writer.OpenBlock("bool {0}::process(IProtocol & protocol)", className);
 				writer.WriteMember("int id = protocol.readInt32();");
 				writer.OpenBlock("switch (id)");
 				foreach (function in service.functions)
@@ -340,7 +340,7 @@ namespace CPP
 			def WriteWrapper(function, writer)
 			{
 				writer.OpenBlock
-					( "void {0}::process_{1}(IProtocol & protocol) const"
+					( "void {0}::process_{1}(IProtocol & protocol)"
 					, className
 					, function.Name
 					);
@@ -399,11 +399,11 @@ namespace CPP
 			, directory : string
 			) : void
 		{
-			def className = MakeClassName(ns, service.name);
+			def className = MakeClassName(ns, service.name + "Server");
 
 			def WriteStub(function, writer)
 			{
-				WriteFunctionDeclaration(className, function, true, writer);
+				WriteFunctionDeclaration(className, function, false, writer);
 				writer.WriteComment("add function implementation here");
 				writer.CloseBlock();
 			}

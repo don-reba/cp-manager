@@ -11,11 +11,11 @@ class IProtocol;
 class TrackerServer : public IProcessor {
 public:
   // IProcess implementation
-  virtual bool process(IProtocol & protocol) const;
+  virtual bool process(IProtocol & protocol);
 private:
   // service functions for the user to implement
-  void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result) const;
+  void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result);
 private:
   // generated wrappers
-  void process_searchByPair(IProtocol & protocol) const;
+  void process_searchByPair(IProtocol & protocol);
 };
