@@ -153,7 +153,8 @@ StatusCode PatPixelTracking::execute() {
 
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-  std::vector<GpuTrack> solution = gpuService->searchByPair(dataPointer);
+  std::vector<GpuTrack> solution;
+	//gpuService->searchByPair(dataPointer, solution);
 
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );
 

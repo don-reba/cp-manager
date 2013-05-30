@@ -1,5 +1,5 @@
 #include "App.h"
-#include "api/Tracker.h"
+#include "Api/TrackerServer.h"
 
 #include "GpuIpc/Protocol.h"
 #include "GpuIpc/SocketServerConnector.h"
@@ -95,7 +95,7 @@ try {
     daemonize();
 
   SocketServerConnector connector(path.c_str());
-  Tracker processor;
+  TrackerServer processor;
 
   ThreadedServer().serve(connector, &getProtocol, processor);
 

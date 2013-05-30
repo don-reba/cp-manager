@@ -25,7 +25,7 @@
 #include <utility>
 #include "GpuService/IGpuService.h"
 #include "GPUPixelDataSequencer.h"
-#include "GpuIpc/api/api.h"
+#include "GpuIpc/Api/Api.h"
 
 
 using namespace std;
