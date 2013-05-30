@@ -20,9 +20,9 @@ using namespace std;
 //-----------------
 
 void ThreadedServer::serve(
-    IConnector       & connector,
-    ProtocolFactory    protocolFactory,
-    const IProcessor & processor) {
+    IConnector      & connector,
+    ProtocolFactory   protocolFactory,
+    IProcessor      & processor) {
   for (;;) {
     shared_ptr<ITransport> transport = connector.accept();
     shared_ptr<IProtocol>  protocol  = protocolFactory(*transport);
@@ -37,8 +37,8 @@ void ThreadedServer::serve(
 ThreadedServer::ConnectionHandler::ConnectionHandler(
     shared_ptr<ITransport>   transport,
     shared_ptr<IProtocol>    protocol,
-    const IProcessor       & processor) :
-
+    IProcessor             & processor) :
+    // initializers
     m_transport (transport),
     m_protocol  (protocol),
     m_processor (processor) {
