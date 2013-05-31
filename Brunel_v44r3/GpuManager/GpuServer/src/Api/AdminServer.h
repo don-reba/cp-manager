@@ -14,7 +14,7 @@ public:
   virtual bool process(IProtocol & protocol);
 private:
   // service functions for the user to implement
-  void Exit(, void & result);
+  void Exit();
 private:
   // generated wrappers
   void process_Exit(IProtocol & protocol);

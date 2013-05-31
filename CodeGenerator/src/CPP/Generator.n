@@ -211,14 +211,14 @@ namespace CPP
 				writer.WriteMember("protocol.writeInt32({0}ID_{1});", service.name, function.Name);
 				foreach (field in function.Fields)
 					WriteWriteStatement(api, field.Name, field.Type, writer);
-				if (PassByValue(function.ReturnType))
+				match (function.ReturnType)
 				{
-					WriteReadStatement(api, "result", function.ReturnType, true, writer);
+				| returnType when returnType.Definition is AST2.Definition.Void => ()
+				| returnType when PassByValue(returnType) =>
+					WriteReadStatement(api, "result", returnType, true, writer);
 					writer.WriteMember("return result;");
-				}
-				else
-				{
-					WriteReadStatement(api, "result", function.ReturnType, false, writer);
+				| returnType =>
+					WriteReadStatement(api, "result", returnType, false, writer);
 				}
 				writer.CloseBlock();
 			}
@@ -473,6 +473,7 @@ namespace CPP
 			| Enum        => true
 			| Primitive   => true
 			| Typedef(ty) => PassByValue(ty)
+			| Void        => true
 			| _           => false
 			}
 		}
