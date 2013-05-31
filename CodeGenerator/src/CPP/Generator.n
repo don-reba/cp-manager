@@ -407,7 +407,7 @@ namespace CPP
 				writer.WriteComment("add function implementation here");
 				writer.CloseBlock();
 			}
-			using (writer = CreateFile(MakeFilePath(directory, service.name + "_impl", ".cpp")))
+			using (writer = CreateFile(MakeFilePath(directory, "~" + service.name + "_impl", ".cpp")))
 			{
 				writer.WriteMember("#include \"{0}Server.h\"", service.name);
 

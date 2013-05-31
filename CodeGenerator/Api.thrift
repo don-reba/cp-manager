@@ -39,3 +39,8 @@ service Tracker
 {
 	list<GpuTrack> searchByPair(1: PixelEvent data);
 }
+
+service Admin
+{
+	oneway void Exit();
+}
