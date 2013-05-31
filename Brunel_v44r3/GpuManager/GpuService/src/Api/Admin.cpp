@@ -7,4 +7,5 @@ Admin::Admin(IProtocol & protocol) : protocol(protocol) {
 // service function wrappers
 void Admin::Exit() {
   protocol.writeInt32(AdminID_Exit);
+  return result;
 }
