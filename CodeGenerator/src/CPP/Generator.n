@@ -473,6 +473,7 @@ namespace CPP
 			| Enum        => true
 			| Primitive   => true
 			| Typedef(ty) => PassByValue(ty)
+			| Void        => true
 			| _           => false
 			}
 		}

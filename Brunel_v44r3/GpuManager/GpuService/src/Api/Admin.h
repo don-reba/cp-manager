@@ -13,7 +13,7 @@ public:
   Admin(IProtocol & protocol);
 public:
   // service function wrappers
-  void Exit(, void & result);
+  void Exit();
 private:
   // data
   IProtocol & protocol;
