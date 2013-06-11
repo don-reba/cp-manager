@@ -11,7 +11,7 @@ class IProtocol;
 class TrackerServer : public IProcessor {
 public:
   // IProcess implementation
-  virtual bool process(IProtocol & protocol);
+  virtual void process(IProtocol & protocol);
 private:
   // service functions for the user to implement
   void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result);

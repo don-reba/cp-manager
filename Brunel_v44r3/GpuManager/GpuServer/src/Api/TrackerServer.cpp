@@ -3,7 +3,7 @@
 #include "TrackerID.h"
 #include "GpuIpc/IProtocol.h"
 // IProcess implementation
-bool TrackerServer::process(IProtocol & protocol) {
+void TrackerServer::process(IProtocol & protocol) {
   int id = protocol.readInt32();
   switch (id) {
   case TrackerID_searchByPair:
@@ -12,7 +12,6 @@ bool TrackerServer::process(IProtocol & protocol) {
   default:
     throw std::runtime_error("TrackerServer::process: unknown ID");
   }
-  return true;
 }
 // service function wrappers
 void TrackerServer::process_searchByPair(IProtocol & protocol) {

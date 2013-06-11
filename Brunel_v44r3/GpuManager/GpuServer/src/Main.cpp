@@ -17,7 +17,9 @@
 #include <boost/program_options.hpp>
 #include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 
+using namespace boost;
 using namespace std;
 
 namespace po = boost::program_options;
@@ -97,10 +99,15 @@ try {
   SocketServerConnector connector(path.c_str());
   TrackerServer processor;
 
-  ThreadedServer().serve(connector, &getProtocol, processor);
+  ThreadedServer server(connector, &getProtocol, processor);
+	cout << "starting" << endl;
+	shared_ptr<thread> serverThread(server.serve());
+	cout << "stopping" << endl;
+	server.stop();
+	serverThread->join();
 
   return EXIT_SUCCESS;
-} catch (const exception & e) {
+} catch (const std::exception & e) {
   cout << "Unrecoverable error: " << e.what() << '\n';
   syslog(LOG_ERR, "Unrecoverable error: %s", e.what());
   return EXIT_FAILURE;

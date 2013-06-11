@@ -15,6 +15,8 @@ class SocketServerConnector : public IConnector {
 
     virtual boost::shared_ptr<ITransport> accept();
 
+    virtual void close();
+
   private: // data
 
     std::string m_path;

@@ -3,7 +3,7 @@
 #include "AdminID.h"
 #include "GpuIpc/IProtocol.h"
 // IProcess implementation
-bool AdminServer::process(IProtocol & protocol) {
+void AdminServer::process(IProtocol & protocol) {
   int id = protocol.readInt32();
   switch (id) {
   case AdminID_Exit:
@@ -12,7 +12,6 @@ bool AdminServer::process(IProtocol & protocol) {
   default:
     throw std::runtime_error("AdminServer::process: unknown ID");
   }
-  return true;
 }
 // service function wrappers
 void AdminServer::process_Exit(IProtocol & protocol) {
