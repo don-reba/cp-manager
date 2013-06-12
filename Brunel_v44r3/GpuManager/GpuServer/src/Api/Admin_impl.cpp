@@ -1,6 +1,10 @@
-// Automatically generated file
 #include "AdminServer.h"
-// service functions for the user to implement
+#include "../IApp.h"
+
+AdminServer::AdminServer(IApp & app)
+    : m_app (app) {
+}
+
 void AdminServer::Exit() {
-  // add function implementation here
+  m_app.exit();
 }

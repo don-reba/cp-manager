@@ -1,9 +1,4 @@
 #include "App.h"
-#include "Api/TrackerServer.h"
-
-#include "GpuIpc/Protocol.h"
-#include "GpuIpc/SocketServerConnector.h"
-#include "GpuIpc/ThreadedServer.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -13,11 +8,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <boost/make_shared.hpp>
 #include <boost/program_options.hpp>
-#include <boost/ref.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
 
 using namespace boost;
 using namespace std;
@@ -78,10 +69,6 @@ bool parseCommandLine(
   return true;
 }
 
-boost::shared_ptr<IProtocol> getProtocol(ITransport & transport) {
-  return boost::make_shared<Protocol>(boost::ref(transport));
-}
-
 // Main entry point.
 int main(int argc, char * argv[])
 try {
@@ -90,21 +77,12 @@ try {
   if (!parseCommandLine(argc, argv, enableDaemonize, path))
     return EXIT_SUCCESS;
 
-  const bool useStdIO = !enableDaemonize;
-  App app(useStdIO);
-
   if (enableDaemonize)
     daemonize();
 
-  SocketServerConnector connector(path.c_str());
-  TrackerServer processor;
-
-  ThreadedServer server(connector, &getProtocol, processor);
-	cout << "starting" << endl;
-	shared_ptr<thread> serverThread(server.serve());
-	cout << "stopping" << endl;
-	server.stop();
-	serverThread->join();
+  const bool useStdIO = !enableDaemonize;
+  App app(useStdIO);
+  app.run();
 
   return EXIT_SUCCESS;
 } catch (const std::exception & e) {
