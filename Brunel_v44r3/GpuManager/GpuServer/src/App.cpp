@@ -40,7 +40,7 @@ void App::run() {
 
   printMessage("stopping");
 
-  //exit();
+  exit();
 
   adminServer->join();
   trackerServer->join();

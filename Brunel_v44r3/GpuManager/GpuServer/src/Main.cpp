@@ -16,7 +16,7 @@ using namespace std;
 namespace po = boost::program_options;
 
 // Run the process as a daemon.
-void daemonize() {
+void doDaemonize() {
   // fork off the parent process
   pid_t pid(fork());
   if (pid > 0)
@@ -41,30 +41,35 @@ bool parseCommandLine(
     int      argc,
     char   * argv[],
     bool   & daemonize,
+    bool   & exit,
     string & path) {
   po::options_description desc("Supported options");
   desc.add_options()
     ("help",
      "display this help message")
     ("daemonize",
-     po::value<bool>()->default_value(false),
+     po::value<bool>(&daemonize)->default_value(daemonize),
      "run the process as a daemon")
+    ("exit",
+     po::value<bool>(&exit)->default_value(exit),
+     "stop the server with the given path")
     ("path",
-     po::value<string>()->default_value("/tmp/GpuManager"),
-     "socket path")
-    ;
+     po::value<string>(&path)->default_value(path),
+     "socket path");
 
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
-
-  if (vm.count("help")) {
-    desc.print(cout);
-    return false;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    if (vm.count("help")) {
+      cout << desc << '\n';
+      return EXIT_SUCCESS;
+    }
+    po::notify(vm);
+  } catch (const std::exception & e) {
+    cerr << e.what() << endl;
+    cout << desc << '\n';
+    return EXIT_FAILURE;
   }
-
-  daemonize = vm["daemonize"].as<bool>();
-  path      = vm["path"].as<string>();
 
   return true;
 }
@@ -72,15 +77,16 @@ bool parseCommandLine(
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  bool enableDaemonize(false);
-  string path;
-  if (!parseCommandLine(argc, argv, enableDaemonize, path))
+  bool   daemonize (false);
+  bool   exit      (false);
+  string path      ("/tmp/GpuManager");
+  if (!parseCommandLine(argc, argv, daemonize, exit, path))
     return EXIT_SUCCESS;
 
-  if (enableDaemonize)
-    daemonize();
+  if (daemonize)
+    doDaemonize();
 
-  const bool useStdIO = !enableDaemonize;
+  const bool useStdIO = !daemonize;
   App app(useStdIO);
   app.run();
 
