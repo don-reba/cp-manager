@@ -12,6 +12,7 @@
 
 #include "VPDet/DeVP.h"
 #include "Event/VPLiteCluster.h"
+#include "GpuIpc/api/api.h"
 
 #include "PatPixelSensor.h"
 
@@ -19,20 +20,6 @@
 #include <map>
 
 using namespace std;
-
-// map<int, PatPixelHit*> patPixelHitsIndex;
-
-struct pixelEvent {
-  int noSensors;
-  int noHits;
-  vector<int> sensorZs;
-  vector<int> sensorHitStarts;
-  vector<int> sensorHitsNums;
-  vector<int> hitIDs;
-  vector<double> hitXs;
-  vector<double> hitYs;
-  vector<int> hitZs;
-};
 
 static const InterfaceID IID_PatPixelHitManager ( "PatPixelHitManager", 1, 0 );
 
@@ -46,7 +33,7 @@ class PatPixelHitManager : public GaudiTool, public IIncidentListener {
 public: 
 
   // dcampora
-  pixelEvent* event;
+  PixelEvent event;
   std::map<int, PatPixelHit*> patPixelHitsIndex;
 
   // Return the interface ID

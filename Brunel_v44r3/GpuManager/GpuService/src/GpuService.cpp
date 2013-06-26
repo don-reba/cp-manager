@@ -31,14 +31,8 @@ GpuService::~GpuService() {
 // IGpuService implementation
 //-----------------------------
 
-std::vector<GpuTrack> GpuService::searchByPair(const std::vector<char> & trackerInputData) {
-  // TODO: Efficient?
-  const std::vector<int8_t> convertedDataPointer(trackerInputData.begin(), trackerInputData.end());
-  
-  std::vector<GpuTrack> result;
-  m_tracker->searchByPair(convertedDataPointer, result);
-
-  return result;
+void GpuService::searchByPair(const PixelEvent & input, std::vector<GpuTrack>& tracks) {
+  m_tracker->searchByPair(input, tracks);
 }
 
 //-----------------------

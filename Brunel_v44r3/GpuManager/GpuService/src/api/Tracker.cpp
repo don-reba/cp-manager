@@ -5,14 +5,16 @@
 Tracker::Tracker(IProtocol & protocol) : protocol(protocol) {
 }
 // service function wrappers
-void Tracker::searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result) {
+void Tracker::searchByPair(const PixelEvent & event, std::vector<GpuTrack> & tracks) {
   protocol.writeInt32(TrackerID_searchByPair);
-  protocol.writeInt32(data.size());
-  for (int i = 0, size = data.size(); i != size; ++i) {
-    protocol.writeInt8(data[i]);
-  }
-  result.resize(protocol.readInt32());
-  for (int i = 0, size = result.size(); i != size; ++i) {
-    result[i].read(protocol);
+  // Only write one
+  /*protocol.writeInt32(event.size());
+  for (int i = 0, size = event.size(); i != size; ++i) {
+    pixelIO.write(protocol, event[i]);
+  }*/
+  event.write(protocol);
+  tracks.resize(protocol.readInt32());
+  for (int i = 0, size = tracks.size(); i != size; ++i) {
+    tracks[i].read(protocol);
   }
 }

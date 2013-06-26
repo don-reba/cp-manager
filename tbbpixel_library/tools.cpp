@@ -1,7 +1,7 @@
 
 #include "tools.h"
 
-void quickSort(double*& hit_Xs, double*& hit_Ys, int*& hit_IDs, int*& hit_Zs, int _beginning, int _end)
+void quickSort(float*& hit_Xs, float*& hit_Ys, int*& hit_IDs, int*& hit_Zs, int _beginning, int _end)
 {
   int max_levels = 300;
   int beg[max_levels], end[max_levels], i=0, L, R, swap;

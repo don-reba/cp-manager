@@ -1,11 +1,9 @@
 // Automatically generated file
 #include "Tracker.h"
-#include "../pixeltbb/pixel_tbb.h"
+#include "GpuIpc/api/api.h"
+#include "../PixelTracker/PixelImplementation.h"
 
 // service functions for the user to implement
-void Tracker::searchByPair(const std::vector<int8_t> & data, std::vector<GpuTrack> & result) const {
-  // add function implementation here
-	// TODO: Uncomment
-
-	// pixel_tracker_implementation(data, result);
+void Tracker::searchByPair(const PixelEvent & event, std::vector<GpuTrack> & tracks) const {
+  pixel_tracker_implementation(event, tracks);
 }

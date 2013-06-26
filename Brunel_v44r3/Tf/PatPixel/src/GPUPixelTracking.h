@@ -38,7 +38,7 @@ public:
 protected:
 private:
   SmartIF<IGpuService> gpuService;
-  pixelEvent event;
+  PixelEvent event;
 
 };
 

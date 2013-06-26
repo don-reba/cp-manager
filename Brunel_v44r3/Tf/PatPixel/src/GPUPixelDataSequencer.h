@@ -27,7 +27,6 @@ public:
 
     template<class T> void combineWithElement(vector<char>& combined_vector, T element);
     template<class T> void combineWithVector(vector<char>& combined_vector, vector<T> input);
-    void combineDoubleToFloat(vector<char>& combined_vector, vector<double> input);
     void buildAndCombine(vector<char>& combined_vector);
 
 };

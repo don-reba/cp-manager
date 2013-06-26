@@ -62,8 +62,6 @@ StatusCode PatPixelHitManager::initialize() {
   m_maxSize = 0;
   m_eventReady = false;
 
-  event = new pixelEvent;
-
   return StatusCode::SUCCESS;
 }
 
@@ -76,7 +74,6 @@ StatusCode PatPixelHitManager::finalize ( ) {
     if ( NULL != *itS ) delete *itS;
   }
 
-  delete event;
   patPixelHitsIndex.clear();
   std::cout << "------- DELETED patPixelHitsIndex -------------" << std::endl;
 
@@ -160,19 +157,25 @@ void PatPixelHitManager::buildHits ( )
 if ( m_eventReady ) return;
   m_eventReady = true;
 
-  delete event;
-  event = new pixelEvent;
+  // Empty event
+  event.sensorZs.clear();
+  event.sensorHitStarts.clear();
+  event.sensorHitsNums.clear();
+  event.hitIDs.clear();
+  event.hitXs.clear();
+  event.hitYs.clear();
+  event.hitZs.clear();
+
   patPixelHitsIndex.clear();
-  // std::cout << "------- DELETED patPixelHitsIndex -------------" << std::endl;
 
   // TODO: Assume 48 sensors
-  event->noSensors = 48;
-  event->noHits = 0;
+  event.noSensors = 48;
+  event.noHits = 0;
 
-  for (int i=0; i<event->noSensors; i++){
-      event->sensorZs.push_back( 0 );
-      event->sensorHitStarts.push_back( 0 );
-      event->sensorHitsNums.push_back( 0 );
+  for (int i=0; i<event.noSensors; i++){
+      event.sensorZs.push_back( 0 );
+      event.sensorHitStarts.push_back( 0 );
+      event.sensorHitsNums.push_back( 0 );
   }
 
   LHCb::VPLiteCluster::VPLiteClusters * liteClusters =
@@ -198,8 +201,8 @@ if ( m_eventReady ) return;
        lastSensor = sensor;                                  // switch HitManager sensor
        mySensor = m_sensors[sensor];
 
-       event->sensorHitStarts[mySensor->number()] = event->noHits;
-       event->sensorZs[mySensor->number()] = mySensor->z();
+       event.sensorHitStarts[mySensor->number()] = event.noHits;
+       event.sensorZs[mySensor->number()] = mySensor->z();
     }                      // sensor number in HitManager
     PatPixelHit* hit = &(*(m_nextInPool++));  // get the next object in the pool => here we store the new hit
 
@@ -214,12 +217,12 @@ if ( m_eventReady ) return;
     patPixelHitsIndex[(int) (*iClus).channelID()] = hit;
     
 
-    event->sensorHitsNums[mySensor->number()]++;
-    event->hitIDs.push_back( (*iClus).channelID() );
-    event->hitXs.push_back( point.x() );
-    event->hitYs.push_back( point.y() );
-    event->hitZs.push_back( mySensor->z() );
-    event->noHits++;
+    event.sensorHitsNums[mySensor->number()]++;
+    event.hitIDs.push_back( (*iClus).channelID() );
+    event.hitXs.push_back( float(point.x()) );
+    event.hitYs.push_back( float(point.y()) );
+    event.hitZs.push_back( mySensor->z() );
+    event.noHits++;
   }
 }
 

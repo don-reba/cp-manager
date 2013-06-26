@@ -5,6 +5,8 @@
  *      Author: dcampora
  */
 
+// note: deprecated
+
 #include "GPUPixelDataSequencer.h"
 
 void GPUPixelDataSequencer::get(vector <char>& dataPointer){
@@ -25,29 +27,23 @@ void GPUPixelDataSequencer::combineWithVector(vector<char>& combined_vector, vec
     }
 }
 
-void GPUPixelDataSequencer::combineDoubleToFloat(vector<char>& combined_vector, vector<double> input){
-    for (typename vector<double>::iterator it = input.begin(); it< input.end(); it++){
-        combineWithElement(combined_vector, (float) (*it));
-    }
-}
-
 void GPUPixelDataSequencer::buildAndCombine(vector<char>& combined_vector){
     
-    pixelEvent* event = hitManager->event;
+    PixelEvent event = hitManager->event;
 
     // combine all
     // TODO: Make this use malloc and memcpy (much more efficient) 
 
-    // Sizes of event->sensor* and event->hit*
-    combineWithElement(combined_vector, event->noSensors);
-    combineWithElement(combined_vector, event->noHits);
+    // Sizes of event.sensor* and event.hit*
+    combineWithElement(combined_vector, event.noSensors);
+    combineWithElement(combined_vector, event.noHits);
 
     // Data itself
-    combineWithVector(combined_vector, event->sensorZs);
-    combineWithVector(combined_vector, event->sensorHitStarts);
-    combineWithVector(combined_vector, event->sensorHitsNums);
-    combineWithVector(combined_vector, event->hitIDs);
-    combineDoubleToFloat(combined_vector, event->hitXs);
-    combineDoubleToFloat(combined_vector, event->hitYs);
-    combineWithVector(combined_vector, event->hitZs);
+    combineWithVector(combined_vector, event.sensorZs);
+    combineWithVector(combined_vector, event.sensorHitStarts);
+    combineWithVector(combined_vector, event.sensorHitsNums);
+    combineWithVector(combined_vector, event.hitIDs);
+    combineWithVector(combined_vector, event.hitXs);
+    combineWithVector(combined_vector, event.hitYs);
+    combineWithVector(combined_vector, event.hitZs);
 }

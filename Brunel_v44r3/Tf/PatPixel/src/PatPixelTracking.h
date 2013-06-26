@@ -24,7 +24,6 @@
 #include <fstream>
 #include <utility>
 #include "GpuService/IGpuService.h"
-#include "GPUPixelDataSequencer.h"
 #include "GpuIpc/api/api.h"
 
 
@@ -114,7 +113,7 @@ private:
   int   m_timePairs;
   int   m_timeFinal;
 
-  GPUPixelDataSequencer pixelDataSequencer;
+  // GPUPixelDataSequencer pixelDataSequencer;
 
 template <class T>
      static std::string toString(T t){

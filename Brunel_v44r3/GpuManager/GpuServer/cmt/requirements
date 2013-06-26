@@ -22,5 +22,5 @@ macro_append tbb_linkopts " -Wl,--as-needed " \
 	            target-winxp  "" \
 	            target-icc    ""
 macro application_suffix ""
-macro_append Boost_linkopts " $(Boost_linkopts_program_options) $(Boost_linkopts_threads) -lpixeltbb -L../src/pixeltbb/slc6"
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) $(Boost_linkopts_threads) -lpixeltbb -L../src/PixelTracker/slc6"
 end_private

@@ -51,7 +51,7 @@ public:
 //    quickSort(&myArray[3],5); // sorts elements 3, 4, 5, 6, and 7
 
 // Slightly mod to match my needs
-void quickSort(double*& hit_Xs, double*& hit_Ys, int*& hit_IDs, int*& hit_Zs, int _beginning, int _end);
+void quickSort(float*& hit_Xs, float*& hit_Ys, int*& hit_IDs, int*& hit_Zs, int _beginning, int _end);
 
 #endif
 

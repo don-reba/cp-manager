@@ -3,32 +3,52 @@
 #define TRACK 1
 
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <stdlib.h>
 
-struct track {
-	double m_x0;
-	double m_tx;
-	double m_y0;
-	double m_ty;
+template <class T>
+static std::string toString(T t){
+	std::stringstream ss;
+	std::string s;
+	ss << t;
+	ss >> s;
+	return s;
+}
 
-	double m_s0;
-	double m_sx;
-	double m_sz;
-	double m_sxz;
-	double m_sz2;
-
-	double m_u0;
-	double m_uy;
-	double m_uz;
-	double m_uyz;
-	double m_uz2;
-	
-	int trackHitsNum;
-	std::vector<int> hits;
+struct PixelEvent {
+  int noSensors;
+  int noHits;
+  std::vector<int> sensorZs;
+  std::vector<int> sensorHitStarts;
+  std::vector<int> sensorHitsNums;
+  std::vector<int> hitIDs;
+  std::vector<float> hitXs;
+  std::vector<float> hitYs;
+  std::vector<int> hitZs;
 };
 
-void pixel_tbb(char*& input);
+struct GpuTrack {
+  float x0;
+  float tx;
+  float y0;
+  float ty;
+  float s0;
+  float sx;
+  float sz;
+  float sxz;
+  float sz2;
+  float u0;
+  float uy;
+  float uz;
+  float uyz;
+  float uz2;
+  int trackHitsNum;
+  std::vector<int> hits;
+};
 
-extern std::vector<std::vector<track> > parallel_tracks_vector;
-extern std::vector<std::vector<int> > hits;
+void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>& result);
 
 #endif

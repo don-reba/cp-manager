@@ -23,11 +23,11 @@
 using namespace std;
 using namespace tbb;
 
-void printResultTracks(vector<track> tracks, int event_no, string track_folder);
-bool compareTracks(vector<track> tracks_1, vector<track> tracks_2);
+void printResultTracks(vector<GpuTrack> tracks, int event_no, string track_folder);
+bool compareTracks(vector<GpuTrack> tracks_1, vector<GpuTrack> tracks_2);
 map<string, float> calcResults(vector<float> times);
 float infinite();
-void clean_vector(vector<vector<track> >& _tracks_vector);
+void clean_vector(vector<vector<GpuTrack> >& _tracks_vector);
 
 // Prepare the data types (globally accesible)
 int* no_sensors;
@@ -36,8 +36,8 @@ int* sensor_Zs;
 int* sensor_hitStarts;
 int* sensor_hitNums;
 int* hit_IDs;
-double* hit_Xs;
-double* hit_Ys;
+float* hit_Xs;
+float* hit_Ys;
 int* hit_Zs;
 
 // Association hit - sensor
@@ -47,7 +47,7 @@ int num_events, sens_num, hits_num;
 
 Debug debug;
 
-std::vector<std::vector<track> > parallel_tracks_vector;
+std::vector<std::vector<GpuTrack> > parallel_tracks_vector;
 std::vector<std::vector<int> > hits;
 
 template <class T>
@@ -76,6 +76,8 @@ void printContentsDump(){
 }
 
 void fill_hit_sensorNums(){
+	debug << "Filling in hit_sensorNums... ";
+
 	hit_sensorNums = (int*) malloc(hits_num * sizeof(int));
 
 	int sensor_id = 0;
@@ -85,18 +87,22 @@ void fill_hit_sensorNums(){
 			sensor_id++;
 		hit_sensorNums[i] = sensor_id;
 	}
+
+	debug << "done" << endl;
 }
 
 void quicksort_the_thing(){
+	debug << "Starting quicksort... ";
 	for(int i=0; i<sens_num; i++)
                 quickSort(hit_Xs, hit_Ys, hit_IDs, hit_Zs,
                           sensor_hitStarts[i], sensor_hitStarts[i] + sensor_hitNums[i]);
-	
+
+    debug << "done" << endl;
 }
 
 
 
-void pixel_tbb(char*& input)
+void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>& result)
 {
 	num_events = 1;
 	int num_threads = 0; // auto
@@ -107,6 +113,7 @@ void pixel_tbb(char*& input)
 	debug << "Setup:" << endl
 		 << " Number of threads: " << (num_threads > 0 ? toString<int>(num_threads) : "auto") << endl;
 
+	// Deprecated - Now we use PixelEvent and GpuTrack (more civilized)
 	/* Expected format:
 	no_sensors - int
 	no_hits    - int
@@ -118,7 +125,8 @@ void pixel_tbb(char*& input)
 	hit_Ys   - no_hits * double
 	hit_Zs   - no_hits * int
 	*/
-	no_sensors = (int*) &input[0];
+	/*
+	no_sensors = (int*) &data;
 	no_hits = (int*) (no_sensors + 1);
 	sensor_Zs = (int*) (no_hits + 1);
 	sensor_hitStarts = (int*) (sensor_Zs + no_sensors[0]);
@@ -127,9 +135,30 @@ void pixel_tbb(char*& input)
 	hit_Xs = (double*) (hit_IDs + no_hits[0]);
     hit_Ys = (double*) (hit_Xs + no_hits[0]);
     hit_Zs = (int*) (hit_Ys + no_hits[0]);
-
 	sens_num = no_sensors[0];
 	hits_num = no_hits[0];
+	*/
+
+	// int noSensors;
+	// int noHits;
+	// std::vector<int> sensorZs;
+	// std::vector<int> sensorHitStarts;
+	// std::vector<int> sensorHitsNums;
+	// std::vector<int> hitIDs;
+	// std::vector<float> hitXs;
+	// std::vector<float> hitYs;
+	// std::vector<int> hitZs;
+
+	sens_num = data.noSensors;
+	hits_num = data.noHits;
+	sensor_Zs = (int*) &data.sensorZs[0];
+	sensor_hitStarts = (int*) &data.sensorHitStarts[0];
+	sensor_hitNums = (int*) &data.sensorHitsNums[0];
+	
+	hit_IDs = (int*) &data.hitIDs[0];
+	hit_Xs = (float*) &data.hitXs[0];
+	hit_Ys = (float*) &data.hitYs[0];
+	hit_Zs = (int*) &data.hitZs[0];
 
 	printContentsDump();
 
@@ -146,7 +175,7 @@ void pixel_tbb(char*& input)
 	// Allocate space for tracks vectors
 	parallel_tracks_vector.clear();
 	for (int i=0; i<num_events; ++i){
-		vector<track> t1;
+		vector<GpuTrack> t1;
 		parallel_tracks_vector.push_back(t1);
 	}
 
@@ -160,6 +189,8 @@ void pixel_tbb(char*& input)
 	parallel_for(blocked_range<int>(0, num_events),
 	             TBBSearchByPair());
 	tick_count parallel_end = tick_count::now();
+	result = parallel_tracks_vector[0];
+
 
 	debug << std::setprecision(3);
 
@@ -171,7 +202,7 @@ void pixel_tbb(char*& input)
 		  << experiment_timing["min"] << " min, "
 		  << experiment_timing["max"] << " max " << endl; */
 
-	debug << "Testing hits (first track): " << endl;
+	debug << "Testing hits (first GpuTrack): " << endl;
 	bool all_ok = 1;
 	for (int i=0; i<hits[0].size(); i++){
 		if(hits[0][i] != parallel_tracks_vector[0][0].hits[i]){
@@ -191,8 +222,8 @@ void pixel_tbb(char*& input)
 
 
 
-void clean_vector(vector<vector<track> >& _tracks_vector){
-	for(vector<vector<track> >::iterator it = _tracks_vector.begin(); it != _tracks_vector.end(); it++){
+void clean_vector(vector<vector<GpuTrack> >& _tracks_vector){
+	for(vector<vector<GpuTrack> >::iterator it = _tracks_vector.begin(); it != _tracks_vector.end(); it++){
 		(*it).clear();
 	}
 }
@@ -231,15 +262,15 @@ float infinite() {
 	return *(float*)& value;
 }
 
-bool compareTracks(vector<track> tracks_1, vector<track> tracks_2){
+bool compareTracks(vector<GpuTrack> tracks_1, vector<GpuTrack> tracks_2){
 	if(tracks_1.size() != tracks_2.size()){
 		debug << "x (tracks size)";
 		return false;
 	}
 
 	for(int i=0; i<tracks_1.size(); ++i){
-		track track_1 = tracks_1[i];
-		track track_2 = tracks_2[i];
+		GpuTrack track_1 = tracks_1[i];
+		GpuTrack track_2 = tracks_2[i];
 		if(track_1.hits.size() != track_2.hits.size()){
 			debug << "x (hits size)";
 			return false;
@@ -256,15 +287,15 @@ bool compareTracks(vector<track> tracks_1, vector<track> tracks_2){
 	return true;
 }
 
-void printResultTracks(vector<track> tracks, int event_no, string track_folder_container){
+void printResultTracks(vector<GpuTrack> tracks, int event_no, string track_folder_container){
 	string track_filename = track_folder_container + "//tracks_" + toString<int>(event_no) + ".txt";
 	ofstream track_file(track_filename.c_str());
 	track_file << std::setprecision(3);
 	
 	int t_no = 0;
-	for (vector<track>::iterator it = tracks.begin(); it != tracks.end(); it++){
-		// info() << format( "Dist%8.3f chi%7.3f ", track.distance( *itH ), track.chi2( *itH ) );
-		track_file << "track " << t_no++ /*<< " chi2 " << chi2(&(*it))*/ << std::endl;
+	for (vector<GpuTrack>::iterator it = tracks.begin(); it != tracks.end(); it++){
+		// info() << format( "Dist%8.3f chi%7.3f ", GpuTrack.distance( *itH ), GpuTrack.chi2( *itH ) );
+		track_file << "GpuTrack " << t_no++ /*<< " chi2 " << chi2(&(*it))*/ << std::endl;
 		for (vector<int>::iterator ith = (*it).hits.begin(); ith != (*it).hits.end(); ith++){
 			track_file << "hit " << hit_IDs[(*ith)] << " s " << hit_sensorNums[(*ith)] << " ("
 					   << hit_Xs[(*ith)] << ", " << hit_Ys[(*ith)] << ", " << hit_Zs[(*ith)] << ")" << endl;

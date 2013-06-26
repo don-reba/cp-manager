@@ -15,17 +15,17 @@ int 	m_sensNum			= 48;
 
 double  w                   = 1.0 / ((0.055 / sqrt( 12. )) * ((0.055 / sqrt( 12. ))));
 
-double zBeam(track *tr) {
+double zBeam(GpuTrack *tr) {
 	return -( tr->m_x0 * tr->m_tx + tr->m_y0 * tr->m_ty ) / ( tr->m_tx * tr->m_tx + tr->m_ty * tr->m_ty );
 }
 
-double r2AtZ( double z , track *tr) {
+double r2AtZ( double z , GpuTrack *tr) {
     double xx = tr->m_x0 + z * tr->m_tx;
     double yy = tr->m_y0 + z * tr->m_ty;
     return xx*xx + yy * yy;
  }
 
-void solve (track *tr) {
+void solve (GpuTrack *tr) {
 	double den = ( tr->m_sz2 * tr->m_s0 - tr->m_sz * tr->m_sz );
 	if ( fabs(den) < 10e-10 ) den = 1.;
 	tr->m_tx     = ( tr->m_sxz * tr->m_s0  - tr->m_sx  * tr->m_sz ) / den;
@@ -37,7 +37,7 @@ void solve (track *tr) {
 	tr->m_y0     = ( tr->m_uy  * tr->m_uz2 - tr->m_uyz * tr->m_uz ) / den;
 }
 
-void addHit ( track *tr, int offset) {
+void addHit ( GpuTrack *tr, int offset) {
 
 	// track_ids[offset] = tr->internalId;
 	tr->trackHitsNum++;
@@ -67,7 +67,7 @@ void addHit ( track *tr, int offset) {
 	tr->hits.push_back(offset);
 }
 
-void setTrack(track *tr, int hit0_offset, int hit1_offset){
+void setTrack(GpuTrack *tr, int hit0_offset, int hit1_offset){
 
 	// track_ids[hit0_offset] = tr->internalId;
 	tr->trackHitsNum = 1;
@@ -103,20 +103,20 @@ double chi2Hit( double x, double y, double hitX, double hitY, double hitW){
 	double dy = y - hitY;
 	return dx * dx * (hitW) + dy * dy * (hitW);
 }
-double xAtHit(track *tr, double z )
+double xAtHit(GpuTrack *tr, double z )
 {
 	return tr->m_x0 + tr->m_tx * z;
 }
-double yAtHit( track *tr, double z  )
+double yAtHit( GpuTrack *tr, double z  )
 {
 	return tr->m_y0 + tr->m_ty * z;
 }
-double chi2Track(track *tr, int offset)
+double chi2Track(GpuTrack *tr, int offset)
 {
 	double z = hit_Zs[offset];
 	return chi2Hit( xAtHit( tr, z ), yAtHit(tr, z ), hit_Xs[offset], hit_Ys[offset], w);
 }
-double chi2(track *t)
+double chi2(GpuTrack *t)
 {
 	double ch = 0.0;
 	int nDoF  = -4;
@@ -130,7 +130,7 @@ double chi2(track *t)
 }
 
 bool addHitsOnSensor( sensorInfo *sensor, double xTol, double maxChi2,
-							 track *tr, int eventId ) {
+							 GpuTrack *tr, int eventId ) {
 	
 	if (sensor->hitsNum == 0) return false;
 	int offset = eventId * hits_num;
@@ -188,7 +188,7 @@ bool addHitsOnSensor( sensorInfo *sensor, double xTol, double maxChi2,
 	return added;
 }
 
-void removeHit(track *tr, int worstHitOffset){
+void removeHit(GpuTrack *tr, int worstHitOffset){
 	tr->trackHitsNum--;
 
 	double z = hit_Zs[worstHitOffset];
@@ -219,7 +219,7 @@ void removeHit(track *tr, int worstHitOffset){
 }
 
 //== Remove the worst hit until all chi2 are good
-void removeWorstHit(track* tr)
+void removeWorstHit(GpuTrack* tr)
 {
 	double topChi2 = 1.e9;
 	int worstHitOffset;
@@ -241,7 +241,7 @@ void removeWorstHit(track* tr)
 		  // It has still not been added to isUseds, no need to do this :)
 
 	      removeHit(tr, worstHitOffset);
-		  // This changes the chi2 of the track, which is why 
+		  // This changes the chi2 of the GpuTrack, which is why 
 	    }
 
 	    // And the algorithm goes on... ?
@@ -250,14 +250,14 @@ void removeWorstHit(track* tr)
 	}
 }
 
-bool all3SensorsAreDifferent(track *t) {
+bool all3SensorsAreDifferent(GpuTrack *t) {
 	/* if ( t->sensorNums[0] == t->sensorNums[1] ) return false;
     if ( t->sensorNums[0] == t->sensorNums[2] ) return false;
     if ( t->sensorNums[1] == t->sensorNums[2] ) return false; */
     return true;
 }
 
-int nbUnused(track *t, bool*& hit_isUseds, int event_hit_displ) {
+int nbUnused(GpuTrack *t, bool*& hit_isUseds, int event_hit_displ) {
 	int nn = 0;
 	for (vector<int>::iterator it = t->hits.begin(); it != t->hits.end(); ++it){
 		if (!hit_isUseds[(*it) - event_hit_displ])
@@ -273,11 +273,11 @@ void TBBSearchByPair::operator() (const blocked_range<int>& r) const{
 	}
 }
 
-void searchByPair(int eventId, vector<track>& tracks_vector) {
+void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
 	int lastSensor  = sens_num - 1;
 	int firstSensor = 2;
 
-	track m_track;
+	GpuTrack m_track;
 
 	bool* hit_isUseds = (bool*) calloc(hits_num, sizeof(bool));
 
@@ -357,11 +357,11 @@ void searchByPair(int eventId, vector<track>& tracks_vector) {
 				continue;
 			}
 
-			// Creates a track starting at itH0 (first hit) and containing itH1 (second hit - addHit)
+			// Creates a GpuTrack starting at itH0 (first hit) and containing itH1 (second hit - addHit)
 			m_track.hits.clear();
 			setTrack(&m_track, hit0_offset, hit1_offset);
 
-			debug << endl << "hit" << hit_IDs[hit0_offset] << " and hit" << hit_IDs[hit1_offset] << " are compatible, creating track" << endl;
+			debug << endl << "hit" << hit_IDs[hit0_offset] << " and hit" << hit_IDs[hit1_offset] << " are compatible, creating GpuTrack" << endl;
 
 			//== Cut on R2Beam if needed : backward tracks, i.e zBeam > first hit
 			if ( sensor0.z < m_maxZForRBeamCut ) {
@@ -483,11 +483,11 @@ void searchByPair(int eventId, vector<track>& tracks_vector) {
 				}
 			}
 
-			// debug << endl << "++ Writing track" << endl;
+			// debug << endl << "++ Writing GpuTrack" << endl;
 			tracks_vector.push_back(m_track);
 			addHitIDs(m_track.hits);
 
-			// Tag used hits IF the track is bigger than 3!!
+			// Tag used hits IF the GpuTrack is bigger than 3!!
 			if (m_track.trackHitsNum > 3){
 				for (int i=0; i<m_track.hits.size(); i++){
 					hit_isUseds[m_track.hits[i] - event_hit_displ] = 1;

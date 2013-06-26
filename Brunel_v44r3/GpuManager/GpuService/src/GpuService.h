@@ -19,7 +19,7 @@ class GpuService :
     virtual ~GpuService();
 
     // IGpuService implementation
-    virtual std::vector<GpuTrack> searchByPair(const std::vector<char> & tracks);
+    virtual void searchByPair(const PixelEvent & input, std::vector<GpuTrack>& tracks);
 
     // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);

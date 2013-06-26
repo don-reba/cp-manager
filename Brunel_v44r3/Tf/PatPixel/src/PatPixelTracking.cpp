@@ -145,28 +145,29 @@ StatusCode PatPixelTracking::execute() {
   m_hitManager->buildHits();
 
   // Sequence data
-  pixelDataSequencer = GPUPixelDataSequencer(m_hitManager);
+  // pixelDataSequencer = GPUPixelDataSequencer(m_hitManager);
   
   // cout << "Sequencing data" << endl;
-  std::vector<char> dataPointer;
-  pixelDataSequencer.get(dataPointer);
-
+  // std::vector<char> dataPointer;
+  // pixelDataSequencer.get(dataPointer);
+  std::vector<GpuTrack> solution;
+  
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-  std::vector<GpuTrack> solution = gpuService->searchByPair(dataPointer);
+  gpuService->searchByPair( const_cast<const PixelEvent&>(m_hitManager->event), solution);
 
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );
 
   // dcampora
 
-  cout << " GpuManager: Dumping data to dumps folder" << endl;
-  std::string cont_folder = "dumps/";
-  std::ofstream outfile;
-  std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
-  outfile.open(filename.c_str());
-  outfile.write((char*) &dataPointer[0], dataPointer.size());
-  outfile.close();
-  m_event_number ++;
+  // cout << " GpuManager: Dumping data to dumps folder" << endl;
+  // std::string cont_folder = "dumps/";
+  // std::ofstream outfile;
+  // std::string filename = cont_folder + "pixel-sft-event-" + toString(m_event_number) + ".dump";
+  // outfile.open(filename.c_str());
+  // outfile.write((char*) &dataPointer[0], dataPointer.size());
+  // outfile.close();
+  // m_event_number ++;
 
   //==========================================================================
   // Final storage of tracks
@@ -176,11 +177,11 @@ StatusCode PatPixelTracking::execute() {
   // Conversion from track to PatPixelTrack
   cout << "Converting to output_tracks" << endl;
 
-  PatPixelTrack _t;
+  PatPixelTrack ppTrack;
   if(solution.size() > 0){
     for(int i=0; i<solution.size(); i++){
-      _t.setTrack(solution[i], m_hitManager->patPixelHitsIndex, m_hitManager->event->hitIDs);
-      m_tracks.push_back( _t );
+      ppTrack.setTrack(solution[i], m_hitManager->patPixelHitsIndex, m_hitManager->event.hitIDs);
+      m_tracks.push_back( ppTrack );
     }
   }
 
