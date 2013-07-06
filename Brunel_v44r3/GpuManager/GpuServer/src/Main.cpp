@@ -1,4 +1,6 @@
 #include "App.h"
+#include "Controller.h"
+#include "Logger.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -7,6 +9,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
 #include <boost/program_options.hpp>
 
@@ -51,7 +54,7 @@ bool parseCommandLine(
      po::value<bool>(&daemonize)->default_value(daemonize),
      "run the process as a daemon")
     ("exit",
-     po::value<bool>(&exit)->default_value(exit),
+     po::value<bool>(&exit)->zero_tokens(),
      "stop the server with the given path")
     ("path",
      po::value<string>(&path)->default_value(path),
@@ -87,8 +90,18 @@ try {
     doDaemonize();
 
   const bool useStdIO = !daemonize;
-  App app(useStdIO);
-  app.run();
+  Logger logger(useStdIO);
+
+  string adminPath   = path + "-admin";
+  string trackerPath = path + "-tracker";
+
+  if (exit) {
+    Controller controller(logger, adminPath.c_str());
+    controller.stopServer();
+  } else {
+    App app(logger, adminPath.c_str(), trackerPath.c_str());
+    app.run();
+  }
 
   return EXIT_SUCCESS;
 } catch (const std::exception & e) {

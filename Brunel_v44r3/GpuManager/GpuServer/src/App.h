@@ -2,6 +2,8 @@
 
 #include "IApp.h"
 
+#include "Logger.h"
+
 #include "Api/AdminServer.h"
 #include "Api/TrackerServer.h"
 
@@ -18,33 +20,29 @@
  * @date   2013-01-11
  */
 class App : public IApp {
-  public:
+  public: // interface
+
     /// @param useStdIO switches between the use of the standard streams and
     /// syslog.
-    App(bool useStdIO);
-    ~App();
+    App(
+      Logger     & logger,
+      const char * adminPath,
+      const char * trackerPath);
 
     void run();
 
   public: // IApp implementation
+
     /// Safely terminates the application.
     virtual void exit();
 
-    /// Prints an error message.
-    /// @param text is the message to be printed.
-    virtual void printError(const char * text);
-    //
-    /// Prints an information message.
-    /// @param text is the message to be printed.
-    virtual void printMessage(const char * text);
-
   private: // private functions
+
     static boost::shared_ptr<IProtocol> getProtocol(ITransport & transport);
 
-    static std::string makePath(const char * name);
-
   private: // data
-    const bool m_useStdIO;
+
+    Logger & m_logger;
 
     SocketServerConnector m_adminConnector;
     SocketServerConnector m_trackerConnector;
