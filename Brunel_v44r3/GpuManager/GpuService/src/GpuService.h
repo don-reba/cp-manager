@@ -5,8 +5,6 @@
 #include <GaudiKernel/Property.h>
 #include <GaudiKernel/Service.h>
 
-#include "GpuIpc/api/api.h"
-
 class ITransport;
 class IProtocol;
 class Tracker;
@@ -19,7 +17,9 @@ class GpuService :
     virtual ~GpuService();
 
     // IGpuService implementation
-    virtual void searchByPair(const PixelEvent & input, std::vector<GpuTrack>& tracks);
+    virtual void searchByPair(
+      const PixelEvent      & event,
+      std::vector<GpuTrack> & tracks);
 
     // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);

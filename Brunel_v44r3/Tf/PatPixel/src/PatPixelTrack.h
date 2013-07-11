@@ -6,7 +6,7 @@
 #include "PatPixelHit.h"
 #include "PatPixelSensor.h"
 #include "Event/StateVector.h"
-#include "GpuIpc/api/api.h"
+#include "GpuIpc/Api/Api.h"
 
 #include <map>
 #include <string>

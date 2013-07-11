@@ -9,4 +9,6 @@ class IConnector {
     virtual ~IConnector() {}
 
     virtual boost::shared_ptr<ITransport> accept() = 0;
+
+    virtual void close() = 0;
 };

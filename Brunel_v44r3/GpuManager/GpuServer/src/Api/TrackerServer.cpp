@@ -1,21 +1,20 @@
 // Automatically generated file
-#include "Tracker.h"
+#include "TrackerServer.h"
 #include "TrackerID.h"
 #include "GpuIpc/IProtocol.h"
 // IProcess implementation
-bool Tracker::process(IProtocol & protocol) const {
+void TrackerServer::process(IProtocol & protocol) {
   int id = protocol.readInt32();
   switch (id) {
   case TrackerID_searchByPair:
     process_searchByPair(protocol);
     break;
   default:
-    throw std::runtime_error("Tracker::process: unknown ID");
+    throw std::runtime_error("TrackerServer::process: unknown ID");
   }
-  return true;
 }
 // service function wrappers
-void Tracker::process_searchByPair(IProtocol & protocol) const {
+void TrackerServer::process_searchByPair(IProtocol & protocol) {
   PixelEvent data;
   data.read(protocol);
   std::vector<GpuTrack> result;

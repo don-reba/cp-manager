@@ -1,9 +1,6 @@
 #include "App.h"
-#include "api/Tracker.h"
-
-#include "GpuIpc/Protocol.h"
-#include "GpuIpc/SocketServerConnector.h"
-#include "GpuIpc/ThreadedServer.h"
+#include "Controller.h"
+#include "Logger.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -12,18 +9,17 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
-#include <boost/make_shared.hpp>
 #include <boost/program_options.hpp>
-#include <boost/ref.hpp>
-#include <boost/shared_ptr.hpp>
 
+using namespace boost;
 using namespace std;
 
 namespace po = boost::program_options;
 
 // Run the process as a daemon.
-void daemonize() {
+void doDaemonize() {
   // fork off the parent process
   pid_t pid(fork());
   if (pid > 0)
@@ -48,59 +44,67 @@ bool parseCommandLine(
     int      argc,
     char   * argv[],
     bool   & daemonize,
+    bool   & exit,
     string & path) {
   po::options_description desc("Supported options");
   desc.add_options()
     ("help",
      "display this help message")
     ("daemonize",
-     po::value<bool>()->default_value(false),
+     po::value<bool>(&daemonize)->default_value(daemonize),
      "run the process as a daemon")
+    ("exit",
+     po::value<bool>(&exit)->zero_tokens(),
+     "stop the server with the given path")
     ("path",
-     po::value<string>()->default_value("/tmp/GpuManager"),
-     "socket path")
-    ;
+     po::value<string>(&path)->default_value(path),
+     "socket path");
 
   po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
-
-  if (vm.count("help")) {
-    desc.print(cout);
-    return false;
+  try {
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    if (vm.count("help")) {
+      cout << desc << '\n';
+      return EXIT_SUCCESS;
+    }
+    po::notify(vm);
+  } catch (const std::exception & e) {
+    cerr << e.what() << endl;
+    cout << desc << '\n';
+    return EXIT_FAILURE;
   }
 
-  daemonize = vm["daemonize"].as<bool>();
-  path      = vm["path"].as<string>();
-
   return true;
-}
-
-boost::shared_ptr<IProtocol> getProtocol(ITransport & transport) {
-  return boost::make_shared<Protocol>(boost::ref(transport));
 }
 
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  bool enableDaemonize(false);
-  string path;
-  if (!parseCommandLine(argc, argv, enableDaemonize, path))
+  bool   daemonize (false);
+  bool   exit      (false);
+  string path      ("/tmp/GpuManager");
+  if (!parseCommandLine(argc, argv, daemonize, exit, path))
     return EXIT_SUCCESS;
 
-  const bool useStdIO = !enableDaemonize;
-  App app(useStdIO);
+  if (daemonize)
+    doDaemonize();
 
-  if (enableDaemonize)
-    daemonize();
+  const bool useStdIO = !daemonize;
+  Logger logger(useStdIO);
 
-  SocketServerConnector connector(path.c_str());
-  Tracker processor;
+  string adminPath   = path + "-admin";
+  string trackerPath = path + "-tracker";
 
-  ThreadedServer().serve(connector, &getProtocol, processor);
+  if (exit) {
+    Controller controller(logger, adminPath.c_str());
+    controller.stopServer();
+  } else {
+    App app(logger, adminPath.c_str(), trackerPath.c_str());
+    app.run();
+  }
 
   return EXIT_SUCCESS;
-} catch (const exception & e) {
+} catch (const std::exception & e) {
   cout << "Unrecoverable error: " << e.what() << '\n';
   syslog(LOG_ERR, "Unrecoverable error: %s", e.what());
   return EXIT_FAILURE;

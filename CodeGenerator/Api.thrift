@@ -26,3 +26,8 @@ service Tracker
 {
 	list<GpuTrack> searchByPair(1: binary data);
 }
+
+service Admin
+{
+	oneway void Exit();
+}

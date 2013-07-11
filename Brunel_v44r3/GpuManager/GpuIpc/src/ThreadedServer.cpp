@@ -10,8 +10,6 @@
 
 #include <iostream>
 
-#include <boost/thread/thread.hpp>
-
 using namespace boost;
 using namespace std;
 
@@ -19,15 +17,40 @@ using namespace std;
 // public interface
 //-----------------
 
-void ThreadedServer::serve(
-    IConnector       & connector,
-    ProtocolFactory    protocolFactory,
-    const IProcessor & processor) {
-  for (;;) {
-    shared_ptr<ITransport> transport = connector.accept();
-    shared_ptr<IProtocol>  protocol  = protocolFactory(*transport);
-    thread(ConnectionHandler(transport, protocol, processor));
+ThreadedServer::ThreadedServer(
+    IConnector      & connector,
+    ProtocolFactory   protocolFactory,
+    IProcessor      & processor) :
+    // initializers
+    m_connector       (connector),
+    m_protocolFactory (protocolFactory),
+    m_processor       (processor) {
+}
+
+thread * ThreadedServer::serve() {
+  return new thread(&ThreadedServer::serveConnector, this);
+}
+
+void ThreadedServer::stop() {
+  m_connector.close();
+}
+
+//------------------
+// private functions
+//------------------
+
+void ThreadedServer::serveConnector() {
+  try {
+    for (;;) { // until an exception is thrown
+      shared_ptr<ITransport> transport = m_connector.accept();
+      shared_ptr<IProtocol>  protocol  = m_protocolFactory(*transport);
+      // TODO: create a new processor for each thread
+      m_connections.create_thread(ConnectionHandler(*this, transport, protocol, m_processor));
+    }
+  } catch (const IOException &) {
+    // connection closed, no need for alarm
   }
+  m_connections.join_all();
 }
 
 //----------------------------------
@@ -35,10 +58,12 @@ void ThreadedServer::serve(
 //----------------------------------
 
 ThreadedServer::ConnectionHandler::ConnectionHandler(
+    ThreadedServer         & server,
     shared_ptr<ITransport>   transport,
     shared_ptr<IProtocol>    protocol,
-    const IProcessor       & processor) :
-
+    IProcessor             & processor) :
+    // initializers
+    m_server    (server),
     m_transport (transport),
     m_protocol  (protocol),
     m_processor (processor) {
@@ -46,8 +71,8 @@ ThreadedServer::ConnectionHandler::ConnectionHandler(
 
 void ThreadedServer::ConnectionHandler::operator () ()
 try {
-  while (m_processor.process(*m_protocol)) {
-  }
+  for (;;) // until an exception is thrown
+    m_processor.process(*m_protocol);
 } catch (const IOException &) {
   // connection closed, no need for alarm
 } catch (const std::exception & e) {

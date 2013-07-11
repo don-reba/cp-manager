@@ -5,17 +5,17 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <vector>
-#include "GpuIpc/api/api.h"
+#include "GpuIpc/Api/Api.h"
 #include "GpuIpc/IProcessor.h"
 class IProtocol;
-class Tracker : public IProcessor {
+class TrackerServer : public IProcessor {
 public:
   // IProcess implementation
-  virtual bool process(IProtocol & protocol) const;
+  virtual void process(IProtocol & protocol);
 private:
   // service functions for the user to implement
-  void searchByPair(const PixelEvent & event, std::vector<GpuTrack> & tracks) const;
+  void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result);
 private:
   // generated wrappers
-  void process_searchByPair(IProtocol & protocol) const;
+  void process_searchByPair(IProtocol & protocol);
 };
