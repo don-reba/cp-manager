@@ -1,7 +1,7 @@
 // Automatically generated file
-#include "TrackerServer.h"
+#include "Api/TrackerServer.h"
 #include "GpuIpc/Api/Api.h"
-#include "../PixelTracker/PixelImplementation.h"
+#include "PixelTracker/PixelImplementation.h"
 
 // service functions for the user to implement
 void TrackerServer::searchByPair(const PixelEvent & event, std::vector<GpuTrack> & tracks) {

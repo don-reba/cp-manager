@@ -1,5 +1,5 @@
-#include "AdminServer.h"
-#include "../IApp.h"
+#include "Api/AdminServer.h"
+#include "IApp.h"
 
 AdminServer::AdminServer(IApp & app)
     : m_app (app) {
