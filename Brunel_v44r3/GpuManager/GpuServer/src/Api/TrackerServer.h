@@ -14,7 +14,7 @@ public:
   virtual void process(IProtocol & protocol);
 private:
   // service functions for the user to implement
-  void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result);
+  void searchByPair(const PixelEvent & event, std::vector<GpuTrack> & result);
 private:
   // generated wrappers
   void process_searchByPair(IProtocol & protocol);

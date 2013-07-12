@@ -4,6 +4,6 @@
 #include "../PixelTracker/PixelImplementation.h"
 
 // service functions for the user to implement
-void Tracker::searchByPair(const PixelEvent & event, std::vector<GpuTrack> & tracks) const {
+void TrackerServer::searchByPair(const PixelEvent & event, std::vector<GpuTrack> & tracks) {
   pixel_tracker_implementation(event, tracks);
 }

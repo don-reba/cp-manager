@@ -12,7 +12,7 @@
 
 #include "VPDet/DeVP.h"
 #include "Event/VPLiteCluster.h"
-#include "GpuIpc/api/api.h"
+#include "GpuIpc/Api/Api.h"
 
 #include "PatPixelSensor.h"
 
