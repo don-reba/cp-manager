@@ -18,5 +18,5 @@ rmdir/s/q GpuIpc\src\Api
 rmdir/s/q GpuService\src\Api
 rmdir/s/q GpuServer\src\Api
 
-:: substitute in th new hotness
+:: substitute new hotness
 xcopy/s "%root%\Api" .
