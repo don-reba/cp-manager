@@ -1,3 +1,16 @@
+struct PixelEvent
+{
+	1: required i32         noSensors;
+	2: required i32         noHits;
+	3: required list<i32>   sensorZs;
+	4: required list<i32>   sensorHitStarts;
+	5: required list<i32>   sensorHitsNums;
+	6: required list<i32>   hitIDs;
+	7: required list<float> hitXs;
+	8: required list<float> hitYs;
+	9: required list<i32>   hitZs;
+}
+
 struct GpuTrack
 {
 	1:  required float x0;
@@ -24,7 +37,7 @@ struct GpuTrack
 
 service Tracker
 {
-	list<GpuTrack> searchByPair(1: binary data);
+	list<GpuTrack> searchByPair(1: PixelEvent event);
 }
 
 service Admin

@@ -5,7 +5,11 @@
 Tracker::Tracker(IProtocol & protocol) : protocol(protocol) {
 }
 // service function wrappers
-void Tracker::searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result) {
+void Tracker::searchByPair(const PixelEvent & event, std::vector<GpuTrack> & result) {
   protocol.writeInt32(TrackerID_searchByPair);
-  data.write(protocol);
+  event.write(protocol);
+  result.resize(protocol.readInt32());
+  for (int i = 0, size = result.size(); i != size; ++i) {
+    result[i].read(protocol);
+  }
 }

@@ -263,7 +263,7 @@ namespace CPP
 
 				writer.WriteLabel("public");
 				writer.WriteComment("IProcess implementation");
-				writer.WriteMember("virtual bool process(IProtocol & protocol);");
+				writer.WriteMember("virtual void process(IProtocol & protocol);");
 
 				writer.WriteLabel("private");
 				writer.WriteComment("service functions for the user to implement");
@@ -321,7 +321,7 @@ namespace CPP
 
 			def WriteSwitch(writer)
 			{
-				writer.OpenBlock("bool {0}::process(IProtocol & protocol)", className);
+				writer.OpenBlock("void {0}::process(IProtocol & protocol)", className);
 				writer.WriteMember("int id = protocol.readInt32();");
 				writer.OpenBlock("switch (id)");
 				foreach (function in service.functions)
@@ -333,7 +333,6 @@ namespace CPP
 				writer.WriteLabel("default");
 				writer.WriteMember("throw std::runtime_error(\"{0}::process: unknown ID\");", className);
 				writer.CloseBlock();
-				writer.WriteMember("return true;");
 				writer.CloseBlock();
 			}
 
@@ -407,7 +406,7 @@ namespace CPP
 				writer.WriteComment("add function implementation here");
 				writer.CloseBlock();
 			}
-			using (writer = CreateFile(MakeFilePath(directory, "~" + service.name + "_impl", ".cpp")))
+			using (writer = CreateFile(MakeFilePath(directory, service.name + "_impl_new", ".cpp")))
 			{
 				writer.WriteMember("#include \"{0}Server.h\"", service.name);
 
