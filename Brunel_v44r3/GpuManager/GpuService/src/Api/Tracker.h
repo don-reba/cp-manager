@@ -13,7 +13,7 @@ public:
   Tracker(IProtocol & protocol);
 public:
   // service function wrappers
-  void searchByPair(const PixelEvent & data, std::vector<GpuTrack> & result);
+  void searchByPair(const PixelEvent & event, std::vector<GpuTrack> & result);
 private:
   // data
   IProtocol & protocol;

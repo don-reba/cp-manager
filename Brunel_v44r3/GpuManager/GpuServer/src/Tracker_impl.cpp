@@ -1,6 +1,5 @@
 // Automatically generated file
 #include "Api/TrackerServer.h"
-#include "GpuIpc/Api/Api.h"
 #include "PixelTracker/PixelImplementation.h"
 
 // service functions for the user to implement

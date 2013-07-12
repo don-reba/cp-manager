@@ -15,10 +15,10 @@ void TrackerServer::process(IProtocol & protocol) {
 }
 // service function wrappers
 void TrackerServer::process_searchByPair(IProtocol & protocol) {
-  PixelEvent data;
-  data.read(protocol);
+  PixelEvent event;
+  event.read(protocol);
   std::vector<GpuTrack> result;
-  this->searchByPair(data, result);
+  this->searchByPair(event, result);
   protocol.writeInt32(result.size());
   for (int i = 0, size = result.size(); i != size; ++i) {
     result[i].write(protocol);
