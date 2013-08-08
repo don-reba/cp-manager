@@ -18,6 +18,12 @@ using namespace std;
 
 namespace po = boost::program_options;
 
+struct Args {
+  bool   daemonize;
+  bool   exit;
+  string path;
+};
+
 // Run the process as a daemon.
 void doDaemonize() {
   // fork off the parent process
@@ -40,25 +46,23 @@ void doDaemonize() {
 }
 
 // Parse command line options.
-bool parseCommandLine(
-    int      argc,
-    char   * argv[],
-    bool   & daemonize,
-    bool   & exit,
-    string & path) {
+bool parseCommandLine(int argc, char * argv[], /* OUT */ Args & args) {
+  args.daemonize = false;
+  args.exit      = false;
+
   po::options_description desc("Supported options");
   desc.add_options()
-    ("help",
-     "display this help message")
     ("daemonize",
-     po::value<bool>(&daemonize)->default_value(daemonize),
+     po::value<bool>(&args.daemonize)->zero_tokens(),
      "run the process as a daemon")
     ("exit",
-     po::value<bool>(&exit)->zero_tokens(),
+     po::value<bool>(&args.exit)->zero_tokens(),
      "stop the server with the given path")
     ("path",
-     po::value<string>(&path)->default_value(path),
-     "socket path");
+     po::value<string>(&args.path)->default_value("/tmp/GpuManager"),
+     "socket path"),
+    ("help",
+     "display this help message");
 
   po::variables_map vm;
   try {
@@ -80,22 +84,20 @@ bool parseCommandLine(
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  bool   daemonize (false);
-  bool   exit      (false);
-  string path      ("/tmp/GpuManager");
-  if (!parseCommandLine(argc, argv, daemonize, exit, path))
-    return EXIT_SUCCESS;
+  Args args;
+  if (!parseCommandLine(argc, argv, args))
+    return EXIT_FAILURE;
 
-  if (daemonize)
+  if (args.daemonize)
     doDaemonize();
 
-  const bool useStdIO = !daemonize;
+  const bool useStdIO = !args.daemonize;
   Logger logger(useStdIO);
 
-  string adminPath   = path + "-admin";
-  string trackerPath = path + "-tracker";
+  string adminPath   = args.path + "-admin";
+  string trackerPath = args.path + "-tracker";
 
-  if (exit) {
+  if (args.exit) {
     Controller controller(logger, adminPath.c_str());
     controller.stopServer();
   } else {
