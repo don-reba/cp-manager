@@ -12,9 +12,9 @@ class SocketClient : public ITransport {
 
     // ITransport implementation
 
-    virtual void readBytes(char * data, size_t size);
+    virtual void readBytes(void * data, size_t size);
 
-    virtual void writeBytes(const char * data, size_t size);
+    virtual void writeBytes(const void * data, size_t size);
 
   private:
     std::string m_path;

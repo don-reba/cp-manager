@@ -6,7 +6,7 @@ class ITransport {
   public:
     virtual ~ITransport() {}
 
-    virtual void readBytes(char * data, size_t size) = 0;
+    virtual void readBytes(void * data, size_t size) = 0;
 
-    virtual void writeBytes(const char * data, size_t size) = 0;
+    virtual void writeBytes(const void * data, size_t size) = 0;
 };

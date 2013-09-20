@@ -39,7 +39,7 @@ SocketClient::~SocketClient() {
 // ITransport implementation
 //--------------------------
 
-void SocketClient::readBytes(char * data, size_t size) {
+void SocketClient::readBytes(void * data, size_t size) {
   size_t received = read(m_socket, data, size);
   if (received == static_cast<size_t>(-1))
     throw SystemException("Read error.");
@@ -50,7 +50,7 @@ void SocketClient::readBytes(char * data, size_t size) {
   }
 }
 
-void SocketClient::writeBytes(const char * data, size_t size) {
+void SocketClient::writeBytes(const void * data, size_t size) {
   size_t sent = write(m_socket, data, size);
   if (sent == static_cast<size_t>(-1))
     throw SystemException("Write error.");

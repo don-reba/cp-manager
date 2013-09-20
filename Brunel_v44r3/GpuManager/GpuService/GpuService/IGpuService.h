@@ -11,9 +11,10 @@ class IGpuService :
   public:
     virtual ~IGpuService() {}
 
-    virtual void searchByPair(
-      const PixelEvent      & event,
-      std::vector<GpuTrack> & tracks) = 0;
+    virtual void submitData(
+        std::string  handlerName,
+        const void * data,
+        const size_t size) = 0;
 
     DeclareInterfaceID(IGpuService, 1, 0);
 };

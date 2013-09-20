@@ -12,16 +12,17 @@ class Tracker;
 class GpuService :
     public         Service,
     public virtual IGpuService {
-  public:
+  public: // construction
     GpuService(const std::string & name, ISvcLocator * sl);
     virtual ~GpuService();
 
-    // IGpuService implementation
-    virtual void searchByPair(
-      const PixelEvent      & event,
-      std::vector<GpuTrack> & tracks);
+  public: // IGpuService implementation
+    virtual void submitData(
+        std::string  handlerName,
+        const void * data,
+        const size_t size);
 
-    // Service implementation
+  public: // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);
     virtual StatusCode initialize();
     virtual StatusCode finalize();
@@ -33,7 +34,6 @@ class GpuService :
   private:
     ITransport * m_transport;
     IProtocol  * m_protocol;
-    Tracker    * m_tracker;
 
     StringProperty m_socketPath;
 };

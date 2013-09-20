@@ -13,9 +13,9 @@ class SocketServer : public ITransport {
 
   public: // ITransport implementation
 
-    virtual void readBytes(char * data, size_t size);
+    virtual void readBytes(void * data, size_t size);
 
-    virtual void writeBytes(const char * data, size_t size);
+    virtual void writeBytes(const void * data, size_t size);
 
   private: // data
 

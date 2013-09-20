@@ -19,7 +19,6 @@ GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
     Service      (name, sl),
     m_transport  (NULL),
     m_protocol   (NULL),
-    m_tracker    (NULL),
     m_socketPath ("/tmp/GpuManager") {
   declareProperty("SocketPath", m_socketPath);
 }
@@ -31,12 +30,12 @@ GpuService::~GpuService() {
 // IGpuService implementation
 //-----------------------------
 
-void GpuService::searchByPair(
-    const PixelEvent      & event,
-    std::vector<GpuTrack> & tracks) {
-  // simple forward to the API
-  // this is the place to perform any special encoding
-  m_tracker->searchByPair(event, tracks);
+void GpuService::submitData(
+    std::string  handlerName,
+    const void * data,
+    const size_t size) {
+  m_protocol.writeString(handlerName);
+  m_protocol.writeData(data, size);
 }
 
 //-----------------------
