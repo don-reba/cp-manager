@@ -4,11 +4,11 @@
 #include "GpuIpc/IProcessor.h"
 
 class IProtocol;
-class TrackerServer : public IProcessor {
+class MainServer : public IProcessor {
 private:
 
-  typedef void (TrackerServer::*Handler)(void * data, size_t size);
-  typedef map<std::string, Handler> HandlerMap;
+  typedef void (MainServer::*Handler)(void * data, size_t size);
+  typedef std::map<std::string, Handler> HandlerMap;
 
 public: // interface
 
@@ -24,7 +24,7 @@ private: // service functions for the user to implement
 
 private: // handlers
 
-  void process_searchByPair(IProtocol & protocol);
+  void process_searchByPair(void * data, size_t size);
 
 private:
 

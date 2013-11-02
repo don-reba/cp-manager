@@ -3,10 +3,10 @@
 #define PATPIXELTRACK_H 1
 
 // Include files
+#include "GpuTrack.h"
 #include "PatPixelHit.h"
 #include "PatPixelSensor.h"
 #include "Event/StateVector.h"
-#include "GpuIpc/Api/Api.h"
 
 #include <map>
 #include <string>
@@ -24,7 +24,11 @@ public:
   PatPixelTrack(  );
   
   // dcampora: PatPixelTrack gpu-manager creation
-  void setTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int>& eventHitIDs);
+  void setTrack(
+      GpuTrack                    & t,
+      std::map<int, PatPixelHit*> & patPixelHitsIndex,
+      std::vector<int>            & eventHitIDs);
+
   std::string print_info();
 
   virtual ~PatPixelTrack( ){}; ///< Destructor

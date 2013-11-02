@@ -2,8 +2,7 @@
 #ifndef PATPIXELHITMANAGER_H 
 #define PATPIXELHITMANAGER_H 1
 
-// Include files
-// from Gaudi
+#include "PixelEvent.h"
 #include "PatPixelHit.h"
 
 #include "GaudiAlg/GaudiTool.h"
@@ -12,7 +11,6 @@
 
 #include "VPDet/DeVP.h"
 #include "Event/VPLiteCluster.h"
-#include "GpuIpc/Api/Api.h"
 
 #include "PatPixelSensor.h"
 

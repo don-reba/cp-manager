@@ -4,7 +4,6 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <vector>
-#include "GpuIpc/Api/Api.h"
 #include "GpuIpc/IProcessor.h"
 
 class IApp;

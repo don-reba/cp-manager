@@ -5,7 +5,7 @@
 #include "Logger.h"
 
 #include "Api/AdminServer.h"
-#include "Api/TrackerServer.h"
+#include "Api/MainServer.h"
 
 #include "GpuIpc/Protocol.h"
 #include "GpuIpc/SocketServerConnector.h"
@@ -50,6 +50,6 @@ class App : public IApp {
     ThreadedServer m_adminServer;
     ThreadedServer m_trackerServer;
 
-    TrackerServer m_tracker;
+    MainServer m_tracker;
     AdminServer   m_admin;
 };

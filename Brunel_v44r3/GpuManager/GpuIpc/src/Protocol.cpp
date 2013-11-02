@@ -32,14 +32,14 @@ void Protocol::writeUInt32(uint32_t n) {
 }
 
 string Protocol::readString() {
-  int32_t length = readInt32();
+  uint32_t length = readUInt32();
   vector<char> text(length);
   m_transport.readBytes(&text[0], length);
   return &text[0];
 }
 
 void Protocol::writeString(const string & str) {
-  writeInt32(str.size());
+  writeUInt32(str.size());
   m_transport.writeBytes(str.c_str(), str.size());
 }
 
@@ -47,6 +47,6 @@ void Protocol::readData(void * data, size_t size) {
   m_transport.readBytes(data, size);
 }
 
-void Protocol::writeData(void * data, size_t size) {
+void Protocol::writeData(const void * data, size_t size) {
   m_transport.writeBytes(data, size);
 }

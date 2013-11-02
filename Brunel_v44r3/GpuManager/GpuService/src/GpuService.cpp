@@ -1,7 +1,5 @@
 #include "GpuService.h"
 
-#include "Api/Tracker.h"
-
 #include "GpuIpc/SocketClient.h"
 #include "GpuIpc/Protocol.h"
 
@@ -34,8 +32,8 @@ void GpuService::submitData(
     std::string  handlerName,
     const void * data,
     const size_t size) {
-  m_protocol.writeString(handlerName);
-  m_protocol.writeData(data, size);
+  m_protocol->writeString(handlerName);
+  m_protocol->writeData(data, size);
 }
 
 //-----------------------
@@ -73,8 +71,6 @@ StatusCode GpuService::finalize() {
 }
 
 void GpuService::cleanup() {
-  if (m_tracker != NULL)
-    delete m_tracker;
   if (m_protocol != NULL)
     delete m_protocol;
   if (m_transport != NULL)
@@ -84,5 +80,4 @@ void GpuService::cleanup() {
 void GpuService::initIO() {
   m_transport = new SocketClient(m_socketPath.value().c_str());
   m_protocol  = new Protocol(*m_transport);
-  m_tracker   = new Tracker(*m_protocol);
 }

@@ -7,6 +7,8 @@
 
 // local
 #include "PatPixelTracking.h"
+#include "GpuTrack.h"
+#include "PixelEvent.h"
 
 //-----------------------------------------------------------------------------
 // Implementation file for class : PatPixelTracking
@@ -154,7 +156,8 @@ StatusCode PatPixelTracking::execute() {
   
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-  gpuService->searchByPair( const_cast<const PixelEvent&>(m_hitManager->event), solution);
+	gpuService->submitData("PatPixel", &m_hitManager->event, sizeof(PixelEvent));
+  //gpuService->searchByPair( const_cast<const PixelEvent&>(m_hitManager->event), solution);
 
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );
 

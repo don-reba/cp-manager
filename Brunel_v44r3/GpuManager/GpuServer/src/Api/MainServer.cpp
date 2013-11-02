@@ -1,4 +1,4 @@
-#include "TrackerServer.h"
+#include "MainServer.h"
 #include "GpuIpc/IProtocol.h"
 
 #include <stdexcept>
@@ -11,27 +11,28 @@ using namespace std;
 //----------
 
 MainServer::MainServer() {
-  m_handlers["search by pair"] = process_searchByPair;
+  m_handlers["search by pair"] = &MainServer::process_searchByPair;
 }
 
 //------------------------
 // IProcess implementation
 //------------------------
 
-void TrackerServer::process(IProtocol & protocol) {
+void MainServer::process(IProtocol & protocol) {
   std::string handlerName = protocol.readString();
   size_t      size        = protocol.readUInt32();
 
   vector<uint8_t> data(size);
   protocol.readData(&data[0], size);
 
-  HandlerMap::const_iter i = m_handlers.find(handlerName);
+  HandlerMap::const_iterator i = m_handlers.find(handlerName);
   if (i != m_handlers.end()) {
-    (*i->second)(&data[0], size);
+    Handler handler = i->second;
+    (this->*handler)(&data[0], size);
   } else {
     string msg = "invalid handler name: ";
     msg.append(handlerName);
-    throw exception(msg);
+    throw runtime_error(msg);
   }
 }
 
@@ -39,6 +40,6 @@ void TrackerServer::process(IProtocol & protocol) {
 // handlers
 //---------
 
-void TrackerServer::process_searchByPair(void * data, size_t size) {
+void MainServer::process_searchByPair(void *, size_t size) {
   cout << "searchByPair received " << size << " data" << endl;
 }
