@@ -20,7 +20,9 @@ class GpuService :
     virtual void submitData(
         std::string  handlerName,
         const void * data,
-        const size_t size);
+        const size_t size,
+        Alloc        allocResults,
+        void *       allocResultsParam);
 
   public: // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);

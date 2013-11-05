@@ -93,6 +93,24 @@ StatusCode PatPixelTracking::initialize() {
 //=============================================================================
 // Main execution
 //=============================================================================
+
+/// Callback function used with GpuService::SubmitData.
+/// AllocTracks takes the size of received data and a pointer to a GpuTrack
+/// vector. The received data is assumed to consist of an array of GpuTrack
+/// objects. AllocTracks reserves enough space to store the received tracks and
+/// returns a pointer to the start of that memory.
+void * AllocTracks(size_t size, void * param)
+{
+  if (size % sizeof(GpuTrack) != 0)
+    throw runtime_error("Invlaid result size.");
+
+  typedef std::vector<GpuTrack> Tracks;
+  Tracks * tracks = reinterpret_cast<Tracks*>(param);
+
+  tracks->resize(size / sizeof(GpuTrack));
+  return &tracks->at(0); // size is strictly positive
+}
+
 StatusCode PatPixelTracking::execute() {
 
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Execute" << endmsg;
@@ -156,7 +174,7 @@ StatusCode PatPixelTracking::execute() {
   
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-	gpuService->submitData("PatPixel", &m_hitManager->event, sizeof(PixelEvent));
+	gpuService->submitData("PatPixel", &m_hitManager->event, sizeof(PixelEvent), AllocTracks, &solution);
   //gpuService->searchByPair( const_cast<const PixelEvent&>(m_hitManager->event), solution);
 
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );

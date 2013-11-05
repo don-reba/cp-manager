@@ -31,9 +31,17 @@ GpuService::~GpuService() {
 void GpuService::submitData(
     std::string  handlerName,
     const void * data,
-    const size_t size) {
+    const size_t size,
+    Alloc        allocResults,
+    void *       allocResultsParam) {
   m_protocol->writeString(handlerName);
   m_protocol->writeData(data, size);
+
+  size_t resultSize = m_protocol->readUInt32();
+  if (resultSize > 0) {
+    void * resultData = allocResults(size, allocResultsParam);
+    m_protocol->readData(resultData, resultSize);
+  }
 }
 
 //-----------------------

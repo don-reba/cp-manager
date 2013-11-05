@@ -8,12 +8,17 @@
 class IGpuService :
     public virtual IInterface {
   public:
+    typedef void * (*Alloc)(size_t size, void * param);
+
+  public:
     virtual ~IGpuService() {}
 
     virtual void submitData(
         std::string  handlerName,
         const void * data,
-        const size_t size) = 0;
+        const size_t size,
+        Alloc        allocResults,
+        void *       allocResultsParam) = 0;
 
     DeclareInterfaceID(IGpuService, 1, 0);
 };
