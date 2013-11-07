@@ -14,7 +14,7 @@ GpuAlgorithm::~GpuAlgorithm() {
 StatusCode GpuAlgorithm::initialize() {
   info() << "GpuAlgorithm::initialize" << endmsg;
 
-  SmartIF<IGpuService> GpuService(svc<IGpuService>("GpuService", true));
+  gpuService.reset(svc<IGpuService>("GpuService", true));
   info() << "got GpuService" << endmsg;
 
   return StatusCode::SUCCESS;
@@ -27,5 +27,8 @@ StatusCode GpuAlgorithm::execute() {
 
 StatusCode GpuAlgorithm::finalize() {
   info() << "GpuAlgorithm::finalize" << endmsg;
+
+  gpuService.reset();
+
   return StatusCode::SUCCESS;
 }

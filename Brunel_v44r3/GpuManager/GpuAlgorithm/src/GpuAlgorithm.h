@@ -1,5 +1,9 @@
 #include "GaudiAlg/GaudiAlgorithm.h"
 
+// forward declarations
+class IGpuService;
+
+/// GpuAlgorithm
 class GpuAlgorithm : public GaudiAlgorithm {
   public:
     GpuAlgorithm(std::string name, ISvcLocator * pSL);
@@ -9,4 +13,7 @@ class GpuAlgorithm : public GaudiAlgorithm {
     virtual StatusCode initialize();
     virtual StatusCode execute();
     virtual StatusCode finalize();
+
+  private:
+    SmartIF<IGpuService> gpuService;
 };
