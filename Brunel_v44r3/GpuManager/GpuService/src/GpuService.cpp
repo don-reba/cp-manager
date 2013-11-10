@@ -6,6 +6,10 @@
 #include <GaudiKernel/SvcFactory.h>
 
 #include <iostream>
+#include <stdexcept>
+#include <string>
+
+using namespace std;
 
 DECLARE_SERVICE_FACTORY(GpuService)
 
@@ -33,14 +37,31 @@ void GpuService::submitData(
     const void * data,
     const size_t size,
     Alloc        allocResults,
-    void *       allocResultsParam) {
+    AllocParam   allocResultsParam) {
+  // send the name of the addressee, followed by the data package
   m_protocol->writeString(handlerName);
+  m_protocol->writeUInt32(size);
   m_protocol->writeData(data, size);
 
   size_t resultSize = m_protocol->readUInt32();
+
+  // handle errors
+  const size_t FAIL_FLAG = 0xFFFFFFFF;
+  if (resultSize == FAIL_FLAG) {
+    string message = m_protocol->readString();
+    throw runtime_error(message);
+  }
+
+  // zero data size is normal
   if (resultSize > 0) {
-    void * resultData = allocResults(size, allocResultsParam);
-    m_protocol->readData(resultData, resultSize);
+    void * resultData = allocResults(resultSize, allocResultsParam);
+    if (resultData == NULL) {
+      // allocate a temporary buffer, if the client won't cooperate
+      vector<uint8_t> temp(resultSize);
+      m_protocol->readData(&temp[0], resultSize);
+    } else {
+      m_protocol->readData(resultData, resultSize);
+    }
   }
 }
 
@@ -86,6 +107,7 @@ void GpuService::cleanup() {
 }
 
 void GpuService::initIO() {
-  m_transport = new SocketClient(m_socketPath.value().c_str());
+  string socketPath = m_socketPath.value() + "-tracker";
+  m_transport = new SocketClient(socketPath.c_str());
   m_protocol  = new Protocol(*m_transport);
 }

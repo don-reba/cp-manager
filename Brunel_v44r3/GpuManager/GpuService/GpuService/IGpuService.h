@@ -8,7 +8,8 @@
 class IGpuService :
     public virtual IInterface {
   public:
-    typedef void * (*Alloc)(size_t size, void * param);
+    typedef void * AllocParam;
+    typedef void * (*Alloc)(size_t size, AllocParam param);
 
   public:
     virtual ~IGpuService() {}

@@ -22,7 +22,7 @@ class GpuService :
         const void * data,
         const size_t size,
         Alloc        allocResults,
-        void *       allocResultsParam);
+        AllocParam   allocResultsParam);
 
   public: // Service implementation
     virtual StatusCode queryInterface(const InterfaceID & riid, void ** ppvIF);

@@ -7,7 +7,10 @@ class IProtocol;
 class MainServer : public IProcessor {
 private:
 
-  typedef void (MainServer::*Handler)(void * data, size_t size);
+  typedef void * AllocParam;
+  typedef void * (*Alloc)(size_t size, AllocParam param);
+
+  typedef void (MainServer::*Handler)(void * data, size_t size, Alloc resultAlloc, AllocParam resultAllocParam);
   typedef std::map<std::string, Handler> HandlerMap;
 
 public: // interface
@@ -18,13 +21,22 @@ public: // IProcess implementation
 
   virtual void process(IProtocol & protocol);
 
-private: // service functions for the user to implement
+private: // service functions
 
-  void searchByPair(void * data, size_t size);
+  static void * vectorAlloc(size_t size, AllocParam param);
 
 private: // handlers
 
-  void process_searchByPair(void * data, size_t size);
+  void process_SearchByPair(
+      void *     data,
+      size_t     size,
+      Alloc      allocResult,
+      AllocParam allocResultParam);
+  void process_Test(
+      void *     data,
+      size_t     size,
+      Alloc      allocResult,
+      AllocParam allocResultParam);
 
 private:
 
