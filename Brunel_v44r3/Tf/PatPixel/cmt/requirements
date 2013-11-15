@@ -9,6 +9,7 @@ version           v1r0
 # Structure, i.e. directories to process. 
 #============================================================================
 branches          cmt doc src
+
 #============================================================================
 # Used packages. Specify the version, * at the end specifies 'any revision'
 #    Put as many lines as needed, with all packages, without the '#'
@@ -21,15 +22,20 @@ use     GaudiKernel     v*
 use     GpuService      v*      GpuManager
 
 include_path      none
+
 #============================================================================
-# Component library building rule
+# Component library constitutent
 #============================================================================
 library          PatPixel    ../src/*.cpp 
+
 #============================================================================
 # define component library link options
 #============================================================================
 apply_pattern    component_library library=PatPixel
 
 private
-macro_append use_cppflags " -g"
+
+# enable debugging information
+macro_append PatPixel_cppflags " -g"
+
 end_private

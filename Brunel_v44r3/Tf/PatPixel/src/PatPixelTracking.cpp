@@ -9,6 +9,7 @@
 #include "PatPixelTracking.h"
 #include "GpuTrack.h"
 #include "PixelEvent.h"
+#include "Serialization.h"
 
 #include <algorithm>
 #include <cassert>
@@ -98,78 +99,6 @@ StatusCode PatPixelTracking::initialize() {
 //=============================================================================
 // Main execution
 //=============================================================================
-
-void deserializeGpuTracks(const vector<uint8_t> & buffer, vector<GpuTrack> & tracks) {
-  const uint8_t * src = &buffer[0];
-
-  tracks.resize(*(const uint32_t *)src);
-  for (vector<GpuTrack>::iterator track = tracks.begin(); track != tracks.end(); ++track) {
-    // deserialize pod members
-    track->x0           = *(const float *)src; src+= 4;
-    track->tx           = *(const float *)src; src+= 4;
-    track->y0           = *(const float *)src; src+= 4;
-    track->ty           = *(const float *)src; src+= 4;
-    track->s0           = *(const float *)src; src+= 4;
-    track->sx           = *(const float *)src; src+= 4;
-    track->sz           = *(const float *)src; src+= 4;
-    track->sxz          = *(const float *)src; src+= 4;
-    track->sz2          = *(const float *)src; src+= 4;
-    track->u0           = *(const float *)src; src+= 4;
-    track->uy           = *(const float *)src; src+= 4;
-    track->uz           = *(const float *)src; src+= 4;
-    track->uyz          = *(const float *)src; src+= 4;
-    track->uz2          = *(const float *)src; src+= 4;
-    track->trackHitsNum = *(const float *)src; src+= 4;
-    // deserialize hit collection
-    const uint32_t hitsCount = *(const uint32_t *)src; src += 4;
-    track->hits.reserve(hitsCount);
-    std::copy(
-        (const int32_t *)src,
-        (const int32_t *)src + hitsCount,
-        back_inserter(track->hits));
-    src += 4 * hitsCount;
-  }
-
-  assert(src == &buffer[0] + buffer.size());
-}
-
-void serializeEvent(const PixelEvent & event, vector<uint8_t> & buffer) {
-  // compute total size and allocate memory
-  const size_t noSensorsSize       = 4;
-  const size_t noHitsSize          = 4;
-  const size_t sensorZsSize        = 4 + 4 * event.sensorZs.size();        // 1
-  const size_t sensorHitStartsSize = 4 + 4 * event.sensorHitStarts.size(); // 2
-  const size_t sensorHitsNumsSize  = 4 + 4 * event.sensorHitsNums.size();  // 3
-  const size_t hitIDsSize          = 4 + 4 * event.hitIDs.size();          // 4
-  const size_t hitXsSize           = 4 + 4 * event.hitXs.size();           // 5
-  const size_t hitYsSize           = 4 + 4 * event.hitYs.size();           // 6
-  const size_t hitZsSize           = 4 + 4 * event.hitZs.size();           // 7
-  buffer.resize(noSensorsSize + noHitsSize + sensorZsSize + sensorHitStartsSize
-      + sensorHitsNumsSize + hitIDsSize + hitXsSize + hitYsSize + hitZsSize);
-
-  int8_t * dst = (int8_t *)&buffer[0];
-  // serialize POD members
-  *(int32_t *)dst = event.noSensors; dst += 4;
-  *(int32_t *)dst = event.noHits;    dst += 4;
-  // serialize container sizes
-  *(uint32_t *)dst = event.sensorZs.size();        dst += 4; // 1
-  *(uint32_t *)dst = event.sensorHitStarts.size(); dst += 4; // 2
-  *(uint32_t *)dst = event.sensorHitsNums.size();  dst += 4; // 3
-  *(uint32_t *)dst = event.hitIDs.size();          dst += 4; // 4
-  *(uint32_t *)dst = event.hitXs.size();           dst += 4; // 5
-  *(uint32_t *)dst = event.hitYs.size();           dst += 4; // 6
-  *(uint32_t *)dst = event.hitZs.size();           dst += 4; // 7
-  // serialize container contents
-  dst = (int8_t *)std::copy(event.sensorZs.begin(),        event.sensorZs.end(),        (int32_t *) dst); // 1
-  dst = (int8_t *)std::copy(event.sensorHitStarts.begin(), event.sensorHitStarts.end(), (int32_t *) dst); // 2
-  dst = (int8_t *)std::copy(event.sensorHitsNums.begin(),  event.sensorHitsNums.end(),  (int32_t *) dst); // 3
-  dst = (int8_t *)std::copy(event.hitIDs.begin(),          event.hitIDs.end(),          (int32_t *) dst); // 4
-  dst = (int8_t *)std::copy(event.hitXs.begin(),           event.hitXs.end(),           (float   *) dst); // 5
-  dst = (int8_t *)std::copy(event.hitYs.begin(),           event.hitYs.end(),           (float   *) dst); // 6
-  dst = (int8_t *)std::copy(event.hitZs.begin(),           event.hitZs.end(),           (int32_t *) dst); // 7
-
-  assert(dst == &buffer[0] + buffer.size());
-}
 
 /// Callback function used with GpuService::SubmitData.
 /// allocTracks takes the size of received data and a pointer to a GpuTrack
