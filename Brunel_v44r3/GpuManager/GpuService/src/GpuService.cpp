@@ -5,7 +5,6 @@
 
 #include <GaudiKernel/SvcFactory.h>
 
-#include <iostream>
 #include <stdexcept>
 #include <string>
 

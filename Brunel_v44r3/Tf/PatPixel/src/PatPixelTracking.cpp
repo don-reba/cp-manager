@@ -11,9 +11,6 @@
 #include "PixelEvent.h"
 #include "Serialization.h"
 
-#include <algorithm>
-#include <cassert>
-#include <iterator>
 #include <vector>
 
 //-----------------------------------------------------------------------------
@@ -107,14 +104,10 @@ StatusCode PatPixelTracking::initialize() {
 /// returns a pointer to the start of that memory.
 void * allocTracks(size_t size, void * param)
 {
-  if (size % sizeof(GpuTrack) != 0)
-    throw runtime_error("Invlaid result size.");
-
-  typedef std::vector<uint8_t> Tracks;
-  Tracks * tracks = reinterpret_cast<Tracks*>(param);
-
-  tracks->resize(size / sizeof(GpuTrack));
-  return &tracks->at(0); // size is strictly positive
+  typedef vector<uint8_t> Data;
+  Data & tracks = *reinterpret_cast<Data*>(param);
+  tracks.resize(size);
+  return &tracks[0]; // size is strictly positive
 }
 
 StatusCode PatPixelTracking::execute() {

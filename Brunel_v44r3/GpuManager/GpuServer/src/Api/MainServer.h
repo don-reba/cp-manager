@@ -1,16 +1,22 @@
 #pragma once
-#include <map>
-#include <string>
+
 #include "GpuIpc/IProcessor.h"
+
+#include <map>
+#include <stdint.h>
+#include <string>
+#include <vector>
 
 class IProtocol;
 class MainServer : public IProcessor {
 private:
 
+  typedef std::vector<uint8_t> Data;
+
   typedef void * AllocParam;
   typedef void * (*Alloc)(size_t size, AllocParam param);
 
-  typedef void (MainServer::*Handler)(void * data, size_t size, Alloc resultAlloc, AllocParam resultAllocParam);
+  typedef void (MainServer::*Handler)(const Data & data, Alloc resultAlloc, AllocParam resultAllocParam);
   typedef std::map<std::string, Handler> HandlerMap;
 
 public: // interface
@@ -25,18 +31,18 @@ private: // service functions
 
   static void * vectorAlloc(size_t size, AllocParam param);
 
+  std::string createInvalidHandlerMsg(const std::string & handler) const;
+
 private: // handlers
 
   void process_SearchByPair(
-      void *     data,
-      size_t     size,
-      Alloc      allocResult,
-      AllocParam allocResultParam);
+      const Data & data,
+      Alloc        allocResult,
+      AllocParam   allocResultParam);
   void process_Test(
-      void *     data,
-      size_t     size,
-      Alloc      allocResult,
-      AllocParam allocResultParam);
+      const Data & data,
+      Alloc        allocResult,
+      AllocParam   allocResultParam);
 
 private:
 

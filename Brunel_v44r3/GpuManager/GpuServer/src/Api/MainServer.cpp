@@ -1,10 +1,14 @@
 #include "MainServer.h"
 #include "GpuIpc/IProtocol.h"
 
+#include "Serialization.h"
+#include "../PixelTracker/PixelImplementation.h"
+
+#include <algorithm>
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
-#include <vector>
+#include <sstream>
 
 using namespace std;
 
@@ -21,14 +25,9 @@ MainServer::MainServer() {
 // IProcess implementation
 //------------------------
 
-void * MainServer::vectorAlloc(size_t size, AllocParam param) {
-  typedef vector<uint8_t> Data;
-  Data * data = reinterpret_cast<Data*>(param);
-  data->resize(size);
-  return &data->at(0);
-}
-
 void MainServer::process(IProtocol & protocol) {
+  const size_t FAIL_FLAG = 0xFFFFFFFF;
+
   std::string handlerName = protocol.readString();
 
   size_t size = protocol.readUInt32();
@@ -37,25 +36,52 @@ void MainServer::process(IProtocol & protocol) {
   protocol.readData(&data[0], size);
 
   HandlerMap::const_iterator i = m_handlers.find(handlerName);
-  if (i != m_handlers.end()) {
-    // call the handler and return the result to client
-    vector<uint8_t> result;
-
-    Handler handler = i->second;
-    (this->*handler)(&data[0], size, vectorAlloc, &result);
-
-    protocol.writeUInt32(result.size());
-    protocol.writeData(&result[0], result.size());
-  } else {
-    // when a handler is not found, return an error flag instead of the size
-    // and an error message to client
-    const size_t FAIL_FLAG = 0xFFFFFFFF;
+  if (i == m_handlers.end()) {
+    // when a handler is not found, inform the client
     protocol.writeUInt32(FAIL_FLAG);
-
-    string msg = "invalid handler name: ";
-    msg.append(handlerName);
-    protocol.writeString(msg);
+    protocol.writeString(createInvalidHandlerMsg(handlerName));
+    return;
   }
+
+  // call the handler
+  Data result;
+  Handler handler = i->second;
+  try {
+    (this->*handler)(data, vectorAlloc, &result);
+  } catch (const exception & e) {
+    // when the handler crashes, inform the client
+    protocol.writeUInt32(FAIL_FLAG);
+    protocol.writeString(e.what());
+    return;
+  }
+
+  // return the result to client
+  protocol.writeUInt32(result.size());
+  protocol.writeData(&result[0], result.size());
+}
+
+//------------------
+// Service functions
+//------------------
+
+void * MainServer::vectorAlloc(size_t size, AllocParam param) {
+  typedef vector<uint8_t> Data;
+  Data * data = reinterpret_cast<Data*>(param);
+  data->resize(size);
+  return &data->at(0);
+}
+
+string MainServer::createInvalidHandlerMsg(const string & handler) const {
+    ostringstream msg;
+    msg << "invalid handler name: " << handler << "; ";
+    msg << "valid handlers: ";
+    for (HandlerMap::const_iterator i = m_handlers.begin(), end = m_handlers.end(); i != end; ++i) {
+      if (i != m_handlers.begin())
+        msg << ", ";
+      msg << i->first;
+    }
+    msg << ".";
+    return msg.str();
 }
 
 //---------
@@ -63,20 +89,30 @@ void MainServer::process(IProtocol & protocol) {
 //---------
 
 void MainServer::process_SearchByPair(
-    void *     ,
-    size_t     size,
-    Alloc      allocResult,
-    AllocParam allocResultParam) {
-  cout << "'searchByPair' received " << size << " data" << endl;
-  *(uint32_t*)allocResult(4, allocResultParam) = 0;
+    const Data & data,
+    Alloc        allocResult,
+    AllocParam   allocResultParam) {
+  cout << "'searchByPair' received " << data.size() << " bytes" << endl;
+
+  PixelEvent event;
+  deserializePixelEvent(data, event);
+
+  std::vector<GpuTrack> tracks;
+  pixel_tracker_implementation(event, tracks);
+
+  // TODO: move allocation out of serialization
+  Data result;
+  serializeGpuTracks(tracks, result);
+
+  void * buffer = allocResult(result.size(), allocResultParam);
+  copy(result.begin(), result.end(), (uint8_t*)buffer);
 }
 
 void MainServer::process_Test(
-    void *     ,
-    size_t     size,
-    Alloc      allocResult,
-    AllocParam allocResultParam) {
-  cout << "'test' received " << size << " data" << endl;
+    const Data & data,
+    Alloc        allocResult,
+    AllocParam   allocResultParam) {
+  cout << "'test' received " << data.size() << " bytes" << endl;
 
   static uint32_t callCount = 0;
   *(uint32_t*)allocResult(4, allocResultParam) = callCount;

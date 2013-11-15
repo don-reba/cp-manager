@@ -33,7 +33,7 @@ void Protocol::writeUInt32(uint32_t n) {
 
 string Protocol::readString() {
   uint32_t length = readUInt32();
-  vector<char> text(length);
+  vector<char> text(length + 1); // + terminating zero
   m_transport.readBytes(&text[0], length);
   return &text[0];
 }
