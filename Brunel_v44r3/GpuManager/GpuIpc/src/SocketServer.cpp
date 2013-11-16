@@ -26,7 +26,7 @@ SocketServer::~SocketServer() {
 // ITransport implementation
 //--------------------------
 
-void SocketServer::readBytes(char * data, size_t size) {
+void SocketServer::readBytes(void * data, size_t size) {
   size_t received = read(m_socket, data, size);
   if (received == static_cast<size_t>(-1))
     throw SystemException("Read error.");
@@ -37,7 +37,7 @@ void SocketServer::readBytes(char * data, size_t size) {
   }
 }
 
-void SocketServer::writeBytes(const char * data, size_t size) {
+void SocketServer::writeBytes(const void * data, size_t size) {
   size_t sent = write(m_socket, data, size);
   if (sent == static_cast<size_t>(-1))
     throw SystemException("Write error.");

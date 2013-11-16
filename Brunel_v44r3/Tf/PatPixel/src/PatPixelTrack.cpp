@@ -35,7 +35,10 @@ PatPixelTrack::PatPixelTrack( ) :
   m_hits.reserve( 20 );
 }
 
-void PatPixelTrack::setTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelHitsIndex, std::vector<int>&eventHitIDs)
+void PatPixelTrack::setTrack(
+  GpuTrack                    & t,
+  std::map<int, PatPixelHit*> & patPixelHitsIndex,
+  std::vector<int>            & eventHitIDs)
 {
   m_backward = false;
   m_x0 = t.x0;
@@ -56,7 +59,7 @@ void PatPixelTrack::setTrack(GpuTrack& t, std::map<int, PatPixelHit*>& patPixelH
   m_uz2 = t.uz2;
 
   m_hits.clear();
-  for (std::vector<int>::iterator it = t.hits.begin(); it != t.hits.end(); it++){
+  for (std::vector<int>::iterator it = t.hits.begin(); it != t.hits.end(); it++) {
     m_hits.push_back(patPixelHitsIndex[eventHitIDs[(*it)]]);
   }
 }

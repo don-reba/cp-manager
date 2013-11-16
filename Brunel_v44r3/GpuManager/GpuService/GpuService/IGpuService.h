@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GaudiKernel/IInterface.h"
-#include "GpuIpc/Api/Api.h"
 
 /** @class IGpuService IGpuService.h GpuService/IGpuService.h
  * Base interface providing GPU-accelerated algorithms.
@@ -9,11 +8,18 @@
 class IGpuService :
     public virtual IInterface {
   public:
+    typedef void * AllocParam;
+    typedef void * (*Alloc)(size_t size, AllocParam param);
+
+  public:
     virtual ~IGpuService() {}
 
-    virtual void searchByPair(
-      const PixelEvent      & event,
-      std::vector<GpuTrack> & tracks) = 0;
+    virtual void submitData(
+        std::string  handlerName,
+        const void * data,
+        const size_t size,
+        Alloc        allocResults,
+        void *       allocResultsParam) = 0;
 
     DeclareInterfaceID(IGpuService, 1, 0);
 };

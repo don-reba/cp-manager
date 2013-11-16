@@ -24,7 +24,6 @@
 #include <fstream>
 #include <utility>
 #include "GpuService/IGpuService.h"
-#include "GpuIpc/Api/Api.h"
 
 
 using namespace std;

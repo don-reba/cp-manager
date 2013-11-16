@@ -1,13 +1,14 @@
 #include "GpuService.h"
 
-#include "Api/Tracker.h"
-
 #include "GpuIpc/SocketClient.h"
 #include "GpuIpc/Protocol.h"
 
 #include <GaudiKernel/SvcFactory.h>
 
-#include <iostream>
+#include <stdexcept>
+#include <string>
+
+using namespace std;
 
 DECLARE_SERVICE_FACTORY(GpuService)
 
@@ -19,7 +20,6 @@ GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
     Service      (name, sl),
     m_transport  (NULL),
     m_protocol   (NULL),
-    m_tracker    (NULL),
     m_socketPath ("/tmp/GpuManager") {
   declareProperty("SocketPath", m_socketPath);
 }
@@ -31,12 +31,37 @@ GpuService::~GpuService() {
 // IGpuService implementation
 //-----------------------------
 
-void GpuService::searchByPair(
-    const PixelEvent      & event,
-    std::vector<GpuTrack> & tracks) {
-  // simple forward to the API
-  // this is the place to perform any special encoding
-  m_tracker->searchByPair(event, tracks);
+void GpuService::submitData(
+    std::string  handlerName,
+    const void * data,
+    const size_t size,
+    Alloc        allocResults,
+    AllocParam   allocResultsParam) {
+  // send the name of the addressee, followed by the data package
+  m_protocol->writeString(handlerName);
+  m_protocol->writeUInt32(size);
+  m_protocol->writeData(data, size);
+
+  size_t resultSize = m_protocol->readUInt32();
+
+  // handle errors
+  const size_t FAIL_FLAG = 0xFFFFFFFF;
+  if (resultSize == FAIL_FLAG) {
+    string message = m_protocol->readString();
+    throw runtime_error(message);
+  }
+
+  // zero data size is normal
+  if (resultSize > 0) {
+    void * resultData = allocResults(resultSize, allocResultsParam);
+    if (resultData == NULL) {
+      // allocate a temporary buffer, if the client won't cooperate
+      vector<uint8_t> temp(resultSize);
+      m_protocol->readData(&temp[0], resultSize);
+    } else {
+      m_protocol->readData(resultData, resultSize);
+    }
+  }
 }
 
 //-----------------------
@@ -74,8 +99,6 @@ StatusCode GpuService::finalize() {
 }
 
 void GpuService::cleanup() {
-  if (m_tracker != NULL)
-    delete m_tracker;
   if (m_protocol != NULL)
     delete m_protocol;
   if (m_transport != NULL)
@@ -83,7 +106,7 @@ void GpuService::cleanup() {
 }
 
 void GpuService::initIO() {
-  m_transport = new SocketClient(m_socketPath.value().c_str());
+  string socketPath = m_socketPath.value() + "-tracker";
+  m_transport = new SocketClient(socketPath.c_str());
   m_protocol  = new Protocol(*m_transport);
-  m_tracker   = new Tracker(*m_protocol);
 }

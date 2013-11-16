@@ -76,9 +76,9 @@ try {
 } catch (const IOException &) {
   // connection closed, no need for alarm
 } catch (const std::exception & e) {
-  cout << "Unrecoverable error: " << e.what() << '\n';
-  syslog(LOG_ERR, "Unrecoverable error: %s", e.what());
+  cout << "Connection error: " << e.what() << '\n';
+  syslog(LOG_ERR, "Connection error: %s", e.what());
 } catch (...) {
-  cout << "Unknown unrecoverable error." << '\n';
-  syslog(LOG_ERR, "Unknown unrecoverable error.");
+  cout << "Unknown connection error." << '\n';
+  syslog(LOG_ERR, "Unknown connection error.");
 }

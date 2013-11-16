@@ -16,15 +16,15 @@
 class PatPixelHit {
 public:
   /// Standard constructor
-  PatPixelHit( ): 
-    m_x(0.), 
-    m_y(0.), 
-    m_z(0.), 
-    m_wx(0.),
-    m_wy(0.),
-    m_sensor(0),
-    m_isUsed( false ),
-    m_realid(0)
+  PatPixelHit() : 
+    m_realid (0),
+    m_x      (0.0),
+    m_y      (0.0),
+    m_z      (0.0),
+    m_wx     (0.0),
+    m_wy     (0.0),
+    m_sensor (0),
+    m_isUsed (false)
   {
   };
 
@@ -93,7 +93,7 @@ private:
   double m_y;             // Y-position
   double m_z;             // Z-position
   double m_wx;            // weight: 1/exp. squared error in X
-  double m_wy;            // weight: 1/exp. squared error in	Y
+  double m_wy;            // weight: 1/exp. squared error in Y
   unsigned int m_sensor;  // sensor number
   bool   m_isUsed;        // already used by (associated to) a track ?
 };

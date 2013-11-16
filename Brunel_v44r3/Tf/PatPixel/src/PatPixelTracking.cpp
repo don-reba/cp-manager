@@ -7,6 +7,11 @@
 
 // local
 #include "PatPixelTracking.h"
+#include "GpuTrack.h"
+#include "PixelEvent.h"
+#include "Serialization.h"
+
+#include <vector>
 
 //-----------------------------------------------------------------------------
 // Implementation file for class : PatPixelTracking
@@ -91,6 +96,20 @@ StatusCode PatPixelTracking::initialize() {
 //=============================================================================
 // Main execution
 //=============================================================================
+
+/// Callback function used with GpuService::SubmitData.
+/// allocTracks takes the size of received data and a pointer to a GpuTrack
+/// vector. The received data is assumed to consist of an array of GpuTrack
+/// objects. allocTracks reserves enough space to store the received tracks and
+/// returns a pointer to the start of that memory.
+void * allocTracks(size_t size, void * param)
+{
+  typedef vector<uint8_t> Data;
+  Data & tracks = *reinterpret_cast<Data*>(param);
+  tracks.resize(size);
+  return &tracks[0]; // size is strictly positive
+}
+
 StatusCode PatPixelTracking::execute() {
 
   if ( msgLevel(MSG::DEBUG) ) debug() << "==> Execute" << endmsg;
@@ -154,7 +173,11 @@ StatusCode PatPixelTracking::execute() {
   
   if ( m_doTiming ) m_timerTool->start( m_timePairs );
 
-  gpuService->searchByPair( const_cast<const PixelEvent&>(m_hitManager->event), solution);
+  vector<uint8_t> serializedEvent;
+  vector<uint8_t> serializedTracks;
+  serializeEvent(m_hitManager->event, serializedEvent);
+	gpuService->submitData("searchByPair", &serializedEvent[0], serializedEvent.size(), allocTracks, &serializedTracks);
+  deserializeGpuTracks(serializedTracks, solution);
 
   if ( m_doTiming ) m_timerTool->stop( m_timePairs );
 
@@ -179,7 +202,7 @@ StatusCode PatPixelTracking::execute() {
 
   PatPixelTrack ppTrack;
   if(solution.size() > 0){
-    for(int i=0; i<solution.size(); i++){
+    for(size_t i=0; i<solution.size(); i++){
       ppTrack.setTrack(solution[i], m_hitManager->patPixelHitsIndex, m_hitManager->event.hitIDs);
       m_tracks.push_back( ppTrack );
     }

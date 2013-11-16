@@ -1,4 +1,5 @@
 #include "App.h"
+#include "CommandLine.h"
 #include "Controller.h"
 #include "Logger.h"
 
@@ -11,18 +12,8 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/program_options.hpp>
-
 using namespace boost;
 using namespace std;
-
-namespace po = boost::program_options;
-
-struct Args {
-  bool   daemonize;
-  bool   exit;
-  string path;
-};
 
 // Run the process as a daemon.
 void doDaemonize() {
@@ -45,59 +36,23 @@ void doDaemonize() {
     throw runtime_error("Failed to change the current working directory.");
 }
 
-// Parse command line options.
-bool parseCommandLine(int argc, char * argv[], /* OUT */ Args & args) {
-  args.daemonize = false;
-  args.exit      = false;
-
-  po::options_description desc("Supported options");
-  desc.add_options()
-    ("daemonize",
-     po::value<bool>(&args.daemonize)->zero_tokens(),
-     "run the process as a daemon")
-    ("exit",
-     po::value<bool>(&args.exit)->zero_tokens(),
-     "stop the server with the given path")
-    ("path",
-     po::value<string>(&args.path)->default_value("/tmp/GpuManager"),
-     "socket path"),
-    ("help",
-     "display this help message");
-
-  po::variables_map vm;
-  try {
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    if (vm.count("help")) {
-      cout << desc << '\n';
-      return EXIT_SUCCESS;
-    }
-    po::notify(vm);
-  } catch (const std::exception & e) {
-    cerr << e.what() << endl;
-    cout << desc << '\n';
-    return EXIT_FAILURE;
-  }
-
-  return true;
-}
-
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  Args args;
-  if (!parseCommandLine(argc, argv, args))
-    return EXIT_FAILURE;
+  CommandLine commandLine(false, "/tmp/GpuManager");
+  if (!commandLine.Parse(argc, argv))
+    return EXIT_SUCCESS;
 
-  if (args.daemonize)
+  if (commandLine.daemonize())
     doDaemonize();
 
-  const bool useStdIO = !args.daemonize;
+  const bool useStdIO = !commandLine.daemonize();
   Logger logger(useStdIO);
 
-  string adminPath   = args.path + "-admin";
-  string trackerPath = args.path + "-tracker";
+  string adminPath   = commandLine.path() + "-admin";
+  string trackerPath = commandLine.path() + "-tracker";
 
-  if (args.exit) {
+  if (commandLine.exit()) {
     Controller controller(logger, adminPath.c_str());
     controller.stopServer();
   } else {
