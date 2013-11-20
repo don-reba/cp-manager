@@ -13,6 +13,7 @@ use GaudiAlg    v*
 use GaudiKernel v*
 use GpuService  v* GpuManager
 use Boost       v* LCG_Interfaces -no_auto_imports
+use PatPixelSerialization v* Tf
 
 include_path      none
 
@@ -20,8 +21,6 @@ include_path      none
 application PatPixelTest -import=Boost *.cpp
 
 private
-include_dirs ../../PatPixel/src
-
 macro application_suffix ""
 
 # set up the Boost unit test framework

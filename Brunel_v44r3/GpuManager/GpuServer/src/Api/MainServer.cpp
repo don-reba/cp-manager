@@ -1,7 +1,7 @@
 #include "MainServer.h"
 #include "GpuIpc/IProtocol.h"
 
-#include "Serialization.h"
+#include "PatPixelSerialization/Serialization.h"
 #include "../PixelTracker/PixelImplementation.h"
 
 #include <algorithm>

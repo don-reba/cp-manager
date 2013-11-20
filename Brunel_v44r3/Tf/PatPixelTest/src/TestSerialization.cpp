@@ -1,4 +1,4 @@
-#include "Serialization.h"
+#include "PatPixelSerialization/Serialization.h"
 
 #include <boost/test/unit_test.hpp>
 
