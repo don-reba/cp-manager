@@ -13,6 +13,18 @@ class IProtocol {
   public:
     virtual ~IProtocol() {}
 
+    /// Reads a boolean.
+    virtual bool readBool() = 0;
+
+    /// Writes a boolean.
+    virtual void writeBool(bool b) = 0;
+
+    /// Reads a double.
+    virtual double readDouble() = 0;
+
+    // Writes a double.
+    virtual void writeDouble(double n) = 0;
+
     /// Reads an unsigned 32-bit integer.
     virtual uint32_t readUInt32() = 0;
 

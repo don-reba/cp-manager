@@ -37,5 +37,6 @@ class GpuService :
     ITransport * m_transport;
     IProtocol  * m_protocol;
 
-    StringProperty m_socketPath;
+    StringProperty  m_socketPath;
+    BooleanProperty m_isProfiling;
 };

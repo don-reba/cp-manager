@@ -2,6 +2,7 @@
 
 #include "GpuIpc/SocketClient.h"
 #include "GpuIpc/Protocol.h"
+#include "Timer.h"
 
 #include <GaudiKernel/SvcFactory.h>
 
@@ -17,11 +18,13 @@ DECLARE_SERVICE_FACTORY(GpuService)
 //-------------
 
 GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
-    Service      (name, sl),
-    m_transport  (NULL),
-    m_protocol   (NULL),
-    m_socketPath ("/tmp/GpuManager") {
-  declareProperty("SocketPath", m_socketPath);
+    Service       (name, sl),
+    m_transport   (NULL),
+    m_protocol    (NULL),
+    m_socketPath  ("/tmp/GpuManager"),
+		m_isProfiling (false) {
+  declareProperty("SocketPath",  m_socketPath);
+  declareProperty("IsProfiling", m_isProfiling);
 }
 
 GpuService::~GpuService() {
@@ -37,11 +40,20 @@ void GpuService::submitData(
     const size_t size,
     Alloc        allocResults,
     AllocParam   allocResultsParam) {
-  // send the name of the addressee, followed by the data package
+	Timer timer(m_isProfiling);
+	timer.start();
+
+  // send the name of the addressee
   m_protocol->writeString(handlerName);
+
+	// send a flag indicating whether profiling is enabled
+	m_protocol->writeBool(m_isProfiling);
+
+	// send the data package
   m_protocol->writeUInt32(size);
   m_protocol->writeData(data, size);
 
+	// receive the result
   size_t resultSize = m_protocol->readUInt32();
 
   // handle errors
@@ -62,6 +74,12 @@ void GpuService::submitData(
       m_protocol->readData(resultData, resultSize);
     }
   }
+
+	timer.stop();
+
+	// send performance data
+	if (m_isProfiling)
+		m_protocol->writeDouble(timer.secondsElapsed());
 }
 
 //-----------------------

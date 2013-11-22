@@ -18,3 +18,7 @@ apply_pattern component_library library=GpuService
 
 #action doxygen "doxygen Doxyfile"
 #macro GpuService_dependencies "doxygen"
+
+private
+macro_append GpuService_use_linkopts " -lrt "
+end_private

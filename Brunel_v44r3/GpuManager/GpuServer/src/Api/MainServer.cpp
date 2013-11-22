@@ -1,11 +1,13 @@
 #include "MainServer.h"
 #include "GpuIpc/IProtocol.h"
+#include "Timer.h"
 
 #include "PatPixelSerialization/Serialization.h"
 #include "../PixelTracker/PixelImplementation.h"
 
 #include <algorithm>
 #include <cstring>
+#include <ctime>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
@@ -16,7 +18,8 @@ using namespace std;
 // interface
 //----------
 
-MainServer::MainServer() {
+MainServer::MainServer() :
+    m_perfLog("perf.log") {
   m_handlers["searchByPair"] = &MainServer::process_SearchByPair;
   m_handlers["test"]         = &MainServer::process_Test;
 }
@@ -29,6 +32,9 @@ void MainServer::process(IProtocol & protocol) {
   const size_t FAIL_FLAG = 0xFFFFFFFF;
 
   std::string handlerName = protocol.readString();
+
+  bool isProfiling = protocol.readBool();
+  Timer timer(isProfiling);
 
   size_t size = protocol.readUInt32();
 
@@ -47,7 +53,9 @@ void MainServer::process(IProtocol & protocol) {
   Data result;
   Handler handler = i->second;
   try {
+    timer.start();
     (this->*handler)(data, vectorAlloc, &result);
+    timer.stop();
   } catch (const exception & e) {
     // when the handler crashes, inform the client
     protocol.writeUInt32(FAIL_FLAG);
@@ -58,6 +66,12 @@ void MainServer::process(IProtocol & protocol) {
   // return the result to client
   protocol.writeUInt32(result.size());
   protocol.writeData(&result[0], result.size());
+
+  if (isProfiling) {
+    double totalSeconds  = protocol.readDouble();
+    double kernelSeconds = timer.secondsElapsed();
+    m_perfLog.addRecord(time(0), handlerName.c_str(), totalSeconds, kernelSeconds, size, result.size());
+  }
 }
 
 //------------------

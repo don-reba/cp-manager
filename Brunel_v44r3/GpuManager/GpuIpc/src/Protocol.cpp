@@ -21,6 +21,26 @@ Protocol::~Protocol() {
 // IProtocol implementation
 //-------------------------
 
+bool Protocol::readBool() {
+  uint8_t b = false;
+  m_transport.readBytes(reinterpret_cast<void*>(&b), 1);
+  return b;
+}
+
+void Protocol::writeBool(bool b) {
+  m_transport.writeBytes(reinterpret_cast<void*>(&b), 1);
+}
+
+double Protocol::readDouble() {
+  double n = 0.0;
+  m_transport.readBytes(reinterpret_cast<void*>(&n), 8);
+  return n;
+}
+
+void Protocol::writeDouble(double n) {
+  m_transport.writeBytes(reinterpret_cast<void*>(&n), 8);
+}
+
 uint32_t Protocol::readUInt32() {
   uint32_t n = 0;
   m_transport.readBytes(reinterpret_cast<void*>(&n), 4);

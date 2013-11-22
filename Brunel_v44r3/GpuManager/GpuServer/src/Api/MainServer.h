@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GpuIpc/IProcessor.h"
+#include "PerfLog.h"
 
 #include <map>
 #include <stdint.h>
@@ -47,4 +48,5 @@ private: // handlers
 private:
 
   HandlerMap m_handlers;
+  PerfLog    m_perfLog;
 };

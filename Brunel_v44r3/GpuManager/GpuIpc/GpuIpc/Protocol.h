@@ -13,6 +13,18 @@ class Protocol : public IProtocol {
 
   public: // IProtocol implementation
 
+    // Reads a boolean.
+    virtual bool readBool();
+
+    // Writes a boolean.
+    virtual void writeBool(bool b);
+
+    /// Reads a double.
+    virtual double readDouble();
+
+    // Writes a double.
+    virtual void writeDouble(double n);
+
     /// Reads an unsigned 32-bit integer.
     virtual uint32_t readUInt32();
 
