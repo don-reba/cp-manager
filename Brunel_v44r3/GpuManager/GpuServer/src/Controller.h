@@ -2,7 +2,7 @@
 
 #include "Logger.h"
 
-#include "Api/Admin.h"
+#include "Admin.h"
 
 #include "GpuIpc/SocketClient.h"
 #include "GpuIpc/Protocol.h"

@@ -1,4 +1,4 @@
-#include "Api/AdminServer.h"
+#include "AdminServer.h"
 #include "IApp.h"
 
 AdminServer::AdminServer(IApp & app)

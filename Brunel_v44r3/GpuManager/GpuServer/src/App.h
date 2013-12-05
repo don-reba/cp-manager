@@ -4,8 +4,8 @@
 
 #include "Logger.h"
 
-#include "Api/AdminServer.h"
-#include "Api/MainServer.h"
+#include "AdminServer.h"
+#include "MainServer.h"
 
 #include "GpuIpc/Protocol.h"
 #include "GpuIpc/SocketServerConnector.h"

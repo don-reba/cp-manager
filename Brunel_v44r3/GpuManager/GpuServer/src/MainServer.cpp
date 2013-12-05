@@ -3,7 +3,7 @@
 #include "Timer.h"
 
 #include "PatPixelSerialization/Serialization.h"
-#include "../PixelTracker/PixelImplementation.h"
+#include "PixelTracker/PixelImplementation.h"
 
 #include <algorithm>
 #include <cstring>
