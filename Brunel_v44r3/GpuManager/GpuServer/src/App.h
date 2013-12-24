@@ -27,7 +27,7 @@ class App : public IApp {
     App(
       Logger     & logger,
       const char * adminPath,
-      const char * trackerPath);
+      const char * mainPath);
 
     void run();
 
@@ -45,11 +45,11 @@ class App : public IApp {
     Logger & m_logger;
 
     SocketServerConnector m_adminConnector;
-    SocketServerConnector m_trackerConnector;
+    SocketServerConnector m_mainConnector;
 
     ThreadedServer m_adminServer;
-    ThreadedServer m_trackerServer;
+    ThreadedServer m_mainServer;
 
-    MainServer m_tracker;
-    AdminServer   m_admin;
+    MainServer  m_main;
+    AdminServer m_admin;
 };

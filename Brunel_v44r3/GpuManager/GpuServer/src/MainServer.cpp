@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 
+using namespace boost;
 using namespace std;
 
 //----------
@@ -29,12 +30,13 @@ MainServer::MainServer() :
 //------------------------
 
 void MainServer::process(IProtocol & protocol) {
+  cout << "processing..." << endl;
+
   const size_t FAIL_FLAG = 0xFFFFFFFF;
 
   std::string handlerName = protocol.readString();
 
   bool isProfiling = protocol.readBool();
-  Timer timer(isProfiling);
 
   size_t size = protocol.readUInt32();
 
@@ -51,15 +53,17 @@ void MainServer::process(IProtocol & protocol) {
 
   // call the handler
   Data result;
-  Handler handler = i->second;
-  try {
-    timer.start();
-    (this->*handler)(data, vectorAlloc, &result);
-    timer.stop();
-  } catch (const exception & e) {
-    // when the handler crashes, inform the client
+	DataPacket packet(handlerName, &data, &result);
+	m_dataQueue.push(&packet);
+
+  Timer timer;
+  timer.start();
+  packet.Wait();
+  timer.stop();
+
+  if (packet.ExceptionThrown()) {
     protocol.writeUInt32(FAIL_FLAG);
-    protocol.writeString(e.what());
+    protocol.writeString(packet.ExceptionMessage());
     return;
   }
 
@@ -68,17 +72,25 @@ void MainServer::process(IProtocol & protocol) {
   protocol.writeData(&result[0], result.size());
 
   if (isProfiling) {
-    double totalSeconds  = protocol.readDouble();
-    double kernelSeconds = timer.secondsElapsed();
+    double kernelSeconds = packet.Seconds();
+    double idleSeconds   = timer.secondsElapsed() - kernelSeconds;
+    double totalSeconds  = protocol.readDouble() - idleSeconds;
     m_perfLog.addRecord(time(0), handlerName.c_str(), totalSeconds, kernelSeconds, size, result.size());
   }
 }
 
+void MainServer::start() {
+    m_processingThread = thread(&MainServer::processQueue, this);
+}
+
+void MainServer::stop() {
+}
+
 //------------------
-// Service functions
+// Private functions
 //------------------
 
-void * MainServer::vectorAlloc(size_t size, AllocParam param) {
+void * MainServer::allocVector(size_t size, AllocParam param) {
   typedef vector<uint8_t> Data;
   Data * data = reinterpret_cast<Data*>(param);
   data->resize(size);
@@ -96,6 +108,42 @@ string MainServer::createInvalidHandlerMsg(const string & handler) const {
     }
     msg << ".";
     return msg.str();
+}
+
+//#include <boost/chrono/duration.hpp>
+#include <boost/version.hpp>
+
+void MainServer::processQueue() {
+  cout << "Boost version: " << BOOST_VERSION << endl;
+  //cout << "sleeping..." << endl;
+  //m_processingThread.sleep(system_time::from_time_t(60));
+  //cout << "awake" << endl;
+
+  while (true) {
+    DataPacket * packet = m_dataQueue.pop();
+
+    Timer timer;
+
+    // get handler by name
+    HandlerMap::const_iterator i = m_handlers.find(packet->Name());
+    if (i == m_handlers.end())
+      throw runtime_error(createInvalidHandlerMsg(packet->Name()));
+    Handler handler = i->second;
+
+    // execute handler
+    try {
+      timer.start();
+      (this->*handler)(*packet->Data(), allocVector, packet->Result());
+      timer.stop();
+    } catch (const std::exception & e) {
+			packet->SetExceptionMessage(e.what());
+    }
+
+		packet->SetSeconds(timer.secondsElapsed());
+
+    packet->Signal();
+
+  }
 }
 
 //---------

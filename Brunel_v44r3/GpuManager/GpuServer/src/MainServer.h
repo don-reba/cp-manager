@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BlockingQueue.h"
+#include "DataPacket.h"
 #include "GpuIpc/IProcessor.h"
 #include "PerfLog.h"
 
@@ -8,11 +10,11 @@
 #include <string>
 #include <vector>
 
+#include <boost/thread/thread.hpp>
+
 class IProtocol;
 class MainServer : public IProcessor {
 private:
-
-  typedef std::vector<uint8_t> Data;
 
   typedef void * AllocParam;
   typedef void * (*Alloc)(size_t size, AllocParam param);
@@ -24,15 +26,20 @@ public: // interface
 
   MainServer();
 
+  void start();
+  void stop();
+
 public: // IProcess implementation
 
   virtual void process(IProtocol & protocol);
 
-private: // service functions
+private: // private functions
 
-  static void * vectorAlloc(size_t size, AllocParam param);
+  static void * allocVector(size_t size, AllocParam param);
 
   std::string createInvalidHandlerMsg(const std::string & handler) const;
+
+  void processQueue();
 
 private: // handlers
 
@@ -49,4 +56,8 @@ private:
 
   HandlerMap m_handlers;
   PerfLog    m_perfLog;
+
+  BlockingQueue<DataPacket*>  m_dataQueue;
+
+  boost::thread m_processingThread;
 };

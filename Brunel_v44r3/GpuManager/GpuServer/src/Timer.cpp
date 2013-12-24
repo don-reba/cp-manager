@@ -1,20 +1,17 @@
 #include "Timer.h"
 
-Timer::Timer(bool enabled) :
-    m_enabled (enabled),
-    m_clock   (CLOCK_REALTIME) {
+Timer::Timer() :
+    m_clock(CLOCK_REALTIME) {
   m_s.tv_sec  = m_f.tv_sec  = 0;
   m_s.tv_nsec = m_f.tv_nsec = 0;
 }
 
 void Timer::start() {
-  if (m_enabled)
-    clock_gettime(m_clock, &m_s);
+  clock_gettime(m_clock, &m_s);
 }
 
 void Timer::stop() {
-  if (m_enabled)
-    clock_gettime(m_clock, &m_f);
+  clock_gettime(m_clock, &m_f);
 }
 
 double Timer::secondsElapsed() const {

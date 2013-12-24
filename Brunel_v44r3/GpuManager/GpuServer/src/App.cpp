@@ -11,27 +11,30 @@ using namespace std;
 App::App(
     Logger     & logger,
     const char * adminPath,
-    const char * trackerPath) :
+    const char * mainPath) :
     // initializers
-    m_logger           (logger),
-    m_adminConnector   (adminPath),
-    m_trackerConnector (trackerPath),
-    m_adminServer      (m_adminConnector,   &App::getProtocol, m_admin),
-    m_trackerServer    (m_trackerConnector, &App::getProtocol, m_tracker),
-    m_admin            (*this) {
+    m_logger         (logger),
+    m_adminConnector (adminPath),
+    m_mainConnector  (mainPath),
+    m_adminServer    (m_adminConnector,   &App::getProtocol, m_admin),
+    m_mainServer     (m_mainConnector, &App::getProtocol, m_main),
+    m_admin          (*this) {
 }
 
 void App::run() {
-	shared_ptr<thread> adminServer   (m_adminServer.serve());
-	shared_ptr<thread> trackerServer (m_trackerServer.serve());
+	shared_ptr<thread> adminServer(m_adminServer.serve());
+	shared_ptr<thread> mainServer(m_mainServer.serve());
+
+  m_main.start();
 
   adminServer->join();
-  trackerServer->join();
+  mainServer->join();
 }
 
 void App::exit() {
   m_adminServer.stop();
-  m_trackerServer.stop();
+  m_mainServer.stop();
+  m_main.stop();
 }
 
 shared_ptr<IProtocol> App::getProtocol(ITransport & transport) {

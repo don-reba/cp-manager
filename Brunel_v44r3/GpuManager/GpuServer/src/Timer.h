@@ -4,7 +4,7 @@
 
 class Timer {
   public:
-    Timer(bool enabled);
+    Timer();
 
     void start();
     void stop();
@@ -15,7 +15,6 @@ class Timer {
     static double toSeconds(const timespec & tp);
 
   private:
-    bool      m_enabled;
     clockid_t m_clock;
     timespec  m_s;
     timespec  m_f;
