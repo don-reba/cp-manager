@@ -30,8 +30,6 @@ MainServer::MainServer() :
 //------------------------
 
 void MainServer::process(IProtocol & protocol) {
-  cout << "processing..." << endl;
-
   const size_t FAIL_FLAG = 0xFFFFFFFF;
 
   std::string handlerName = protocol.readString();
@@ -40,7 +38,7 @@ void MainServer::process(IProtocol & protocol) {
 
   size_t size = protocol.readUInt32();
 
-  vector<uint8_t> data(size);
+  Data data(size);
   protocol.readData(&data[0], size);
 
   HandlerMap::const_iterator i = m_handlers.find(handlerName);
@@ -84,6 +82,7 @@ void MainServer::start() {
 }
 
 void MainServer::stop() {
+  m_dataQueue.interrupt();
 }
 
 //------------------
@@ -91,7 +90,6 @@ void MainServer::stop() {
 //------------------
 
 void * MainServer::allocVector(size_t size, AllocParam param) {
-  typedef vector<uint8_t> Data;
   Data * data = reinterpret_cast<Data*>(param);
   data->resize(size);
   return &data->at(0);
@@ -111,14 +109,9 @@ string MainServer::createInvalidHandlerMsg(const string & handler) const {
 }
 
 //#include <boost/chrono/duration.hpp>
-#include <boost/version.hpp>
 
 void MainServer::processQueue() {
-  cout << "Boost version: " << BOOST_VERSION << endl;
-  //cout << "sleeping..." << endl;
-  //m_processingThread.sleep(system_time::from_time_t(60));
-  //cout << "awake" << endl;
-
+  // the data queue throws an exception when interrupted
   while (true) {
     DataPacket * packet = m_dataQueue.pop();
 
@@ -142,7 +135,6 @@ void MainServer::processQueue() {
 		packet->SetSeconds(timer.secondsElapsed());
 
     packet->Signal();
-
   }
 }
 
