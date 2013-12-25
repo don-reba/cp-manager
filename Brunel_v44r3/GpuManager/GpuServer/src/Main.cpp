@@ -39,20 +39,20 @@ void doDaemonize() {
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  CommandLine commandLine(false, "/tmp/GpuManager");
-  if (!commandLine.Parse(argc, argv))
+  CommandLine cl(false, "/tmp/GpuManager");
+  if (!cl.parse(argc, argv))
     return EXIT_SUCCESS;
 
-  if (commandLine.daemonize())
+  if (cl.daemonize())
     doDaemonize();
 
-  const bool useStdIO = !commandLine.daemonize();
+  const bool useStdIO = !cl.daemonize();
   Logger logger(useStdIO);
 
-  string adminPath   = commandLine.path() + "-admin";
-  string trackerPath = commandLine.path() + "-tracker";
+  string adminPath   = cl.path() + "-admin";
+  string trackerPath = cl.path() + "-tracker";
 
-  if (commandLine.exit()) {
+  if (cl.exit()) {
     Controller controller(logger, adminPath.c_str());
     controller.stopServer();
   } else {

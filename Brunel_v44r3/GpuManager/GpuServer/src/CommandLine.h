@@ -4,7 +4,7 @@ class CommandLine {
   public:
     CommandLine(bool daemonize, const char * path);
 
-    bool Parse(int argc, char * argv[]);
+    bool parse(int argc, char * argv[]);
 
     bool        daemonize() const { return m_daemonize; }
     bool        exit()      const { return m_exit;      }

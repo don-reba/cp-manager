@@ -14,20 +14,13 @@ CommandLine::CommandLine(bool daemonize, const char * path) :
 		m_path      (path) {
 }
 
-bool CommandLine::Parse(int argc, char * argv[]) {
+bool CommandLine::parse(int argc, char * argv[]) {
   po::options_description desc("Supported options");
   desc.add_options()
-    ("help",
-     "display this help message")
-    ("daemonize",
-     po::value<bool>(&m_daemonize)->default_value(m_daemonize),
-     "run the process as a daemon")
-    ("exit",
-     po::value<bool>(&m_exit)->zero_tokens(),
-     "stop the server with the given path")
-    ("path",
-     po::value<string>(&m_path)->default_value(m_path),
-     "socket path");
+    ("help", "display this help message")
+    ("daemonize", po::value<bool>(&m_daemonize)->default_value(m_daemonize), "run the process as a daemon" )
+    ("exit",      po::value<bool>(&m_exit)->zero_tokens(),                   "stop the server"             )
+    ("path",      po::value<string>(&m_path)->default_value(m_path),         "socket path"                 );
 
   po::variables_map vm;
   try {
