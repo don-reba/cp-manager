@@ -27,7 +27,7 @@ bool CommandLine::parse(int argc, char * argv[]) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
     if (vm.count("help")) {
       cout << desc << '\n';
-      return true;
+      return false;
     }
     po::notify(vm);
   } catch (const std::exception & e) {
