@@ -3,7 +3,6 @@
 #include "BlockingQueue.h"
 #include "DataPacket.h"
 #include "GpuIpc/IProcessor.h"
-#include "PerfLog.h"
 
 #include <map>
 #include <stdint.h>
@@ -13,6 +12,9 @@
 #include <boost/thread/thread.hpp>
 
 class IProtocol;
+class DataLog;
+class PerfLog;
+
 class MainServer : public IProcessor {
 private:
 
@@ -24,7 +26,7 @@ private:
 
 public: // interface
 
-  MainServer();
+  MainServer(PerfLog & perfLog, DataLog & dataLog);
 
   void start();
   void stop();
@@ -55,7 +57,9 @@ private: // handlers
 private:
 
   HandlerMap m_handlers;
-  PerfLog    m_perfLog;
+
+  PerfLog & m_perfLog;
+  DataLog & m_dataLog;
 
   BlockingQueue<DataPacket*>  m_dataQueue;
 

@@ -1,5 +1,7 @@
-#include "MainServer.h"
+#include "DataLog.h"
 #include "GpuIpc/IProtocol.h"
+#include "MainServer.h"
+#include "PerfLog.h"
 #include "Timer.h"
 
 #include "PatPixelSerialization/Serialization.h"
@@ -8,9 +10,9 @@
 #include <algorithm>
 #include <cstring>
 #include <ctime>
-#include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 using namespace boost;
 using namespace std;
@@ -19,8 +21,9 @@ using namespace std;
 // interface
 //----------
 
-MainServer::MainServer() :
-    m_perfLog("perf.log") {
+MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
+    m_perfLog (perfLog),
+    m_dataLog (dataLog) {
   m_handlers["searchByPair"] = &MainServer::process_SearchByPair;
   m_handlers["test"]         = &MainServer::process_Test;
 }
@@ -40,6 +43,8 @@ void MainServer::process(IProtocol & protocol) {
 
   Data data(size);
   protocol.readData(&data[0], size);
+
+  m_dataLog.addRecord(handlerName, data);
 
   HandlerMap::const_iterator i = m_handlers.find(handlerName);
   if (i == m_handlers.end()) {

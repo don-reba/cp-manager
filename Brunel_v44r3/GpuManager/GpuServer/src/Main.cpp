@@ -1,6 +1,8 @@
 #include "App.h"
+#include "DataLog.h"
 #include "CommandLine.h"
 #include "Controller.h"
+#include "PerfLog.h"
 #include "Logger.h"
 
 #include <sys/stat.h>
@@ -39,7 +41,9 @@ void doDaemonize() {
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  CommandLine cl(false, "/tmp/GpuManager");
+  const char * defaultPath = "/tmp/GpuManager";
+
+  CommandLine cl(defaultPath);
   if (!cl.parse(argc, argv))
     return EXIT_SUCCESS;
 
@@ -49,6 +53,11 @@ try {
   const bool useStdIO = !cl.daemonize();
   Logger logger(useStdIO);
 
+  PerfLog perfLog("perf.log");
+
+  const bool recordData = !cl.dataDir().empty();
+  DataLog dataLog(recordData, cl.dataDir());
+
   string adminPath   = cl.path() + "-admin";
   string trackerPath = cl.path() + "-tracker";
 
@@ -56,7 +65,7 @@ try {
     Controller controller(logger, adminPath.c_str());
     controller.stopServer();
   } else {
-    App app(logger, adminPath.c_str(), trackerPath.c_str());
+    App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str());
     app.run();
   }
 

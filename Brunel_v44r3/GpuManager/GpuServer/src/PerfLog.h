@@ -5,6 +5,7 @@
 
 class PerfLog {
   public:
+
     PerfLog(const char * filePath);
 
     void addRecord(
@@ -16,10 +17,12 @@ class PerfLog {
         size_t       outputSize);
 
   private:
+
     static std::string escape(const char * str);
     void prepareStream();
 
   private:
+
     std::string   m_filePath;
     std::ofstream m_out;
 };

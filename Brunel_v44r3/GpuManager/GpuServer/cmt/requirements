@@ -15,6 +15,18 @@ use PatPixelSerialization v* Tf
 application gpuserver -import=Boost *.cpp Api/*.cpp
 
 private
+# remove the application suffix; the default is ".exe"
+macro application_suffix ""
+
+# add link options
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
+macro_append Boost_linkopts " $(Boost_linkopts_threads) "
+macro_append Boost_linkopts " $(Boost_linkopts_filesystem) "
+macro_append Boost_linkopts " $(Boost_linkopts_system) "
+macro_append Boost_linkopts " -lpixeltbb "
+macro_append Boost_linkopts " -L../src/PixelTracker/slc6 "
+
+# tbb-specific link options
 macro_prepend tbb_linkopts " -Wl,--no-as-needed " \
               target-darwin "" \
               target-winxp  ""
@@ -22,6 +34,4 @@ macro_append tbb_linkopts " -Wl,--as-needed " \
              target-darwin "" \
              target-winxp  "" \
              target-icc    ""
-macro application_suffix ""
-macro_append Boost_linkopts " $(Boost_linkopts_program_options) $(Boost_linkopts_threads) -lpixeltbb -L../src/PixelTracker/slc6"
 end_private

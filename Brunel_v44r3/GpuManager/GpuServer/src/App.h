@@ -13,6 +13,9 @@
 
 #include <boost/shared_ptr.hpp>
 
+class DataLog;
+class PerfLog;
+
 /** @class App App.h GpuServer/App.h
  * Application-wide API.
  *
@@ -26,6 +29,8 @@ class App : public IApp {
     /// syslog.
     App(
       Logger     & logger,
+      PerfLog    & perfLog,
+      DataLog    & dataLog,
       const char * adminPath,
       const char * mainPath);
 
@@ -42,7 +47,7 @@ class App : public IApp {
 
   private: // data
 
-    Logger & m_logger;
+    Logger  & m_logger;
 
     SocketServerConnector m_adminConnector;
     SocketServerConnector m_mainConnector;

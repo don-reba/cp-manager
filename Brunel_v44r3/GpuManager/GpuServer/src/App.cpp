@@ -10,14 +10,17 @@ using namespace std;
 
 App::App(
     Logger     & logger,
+    PerfLog    & perfLog,
+    DataLog    & dataLog,
     const char * adminPath,
     const char * mainPath) :
     // initializers
     m_logger         (logger),
     m_adminConnector (adminPath),
     m_mainConnector  (mainPath),
-    m_adminServer    (m_adminConnector,   &App::getProtocol, m_admin),
+    m_adminServer    (m_adminConnector, &App::getProtocol, m_admin),
     m_mainServer     (m_mainConnector, &App::getProtocol, m_main),
+    m_main           (perfLog, dataLog),
     m_admin          (*this) {
 }
 

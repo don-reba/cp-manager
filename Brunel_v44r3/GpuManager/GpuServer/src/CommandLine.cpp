@@ -4,32 +4,32 @@
 
 #include <boost/program_options.hpp>
 
+using namespace boost::program_options;
 using namespace std;
 
-namespace po = boost::program_options;
-
-CommandLine::CommandLine(bool daemonize, const char * path) :
-		m_daemonize (daemonize),
+CommandLine::CommandLine(const char * path) :
+		m_daemonize (false),
 		m_exit      (false),
 		m_path      (path) {
 }
 
 bool CommandLine::parse(int argc, char * argv[]) {
-  po::options_description desc("Supported options");
+  options_description desc("Supported options");
   desc.add_options()
     ("help", "display this help message")
-    ("daemonize", po::value<bool>(&m_daemonize)->default_value(m_daemonize), "run the process as a daemon" )
-    ("exit",      po::value<bool>(&m_exit)->zero_tokens(),                   "stop the server"             )
-    ("path",      po::value<string>(&m_path)->default_value(m_path),         "socket path"                 );
+    ("daemonize", bool_switch(&m_daemonize),                     "run the process as a daemon"    )
+    ("exit",      bool_switch(&m_exit),                          "stop the server"                )
+    ("data_dir",  value<string>(&m_dataDir),                     "save transactions to directory" )
+    ("path",      value<string>(&m_path)->default_value(m_path), "socket path"                    );
 
-  po::variables_map vm;
+  variables_map vm;
   try {
-    po::store(po::parse_command_line(argc, argv, desc), vm);
+    store(parse_command_line(argc, argv, desc), vm);
     if (vm.count("help")) {
       cout << desc << '\n';
       return false;
     }
-    po::notify(vm);
+    notify(vm);
   } catch (const std::exception & e) {
     cerr << e.what() << endl;
     cout << desc << '\n';
