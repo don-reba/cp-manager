@@ -58,8 +58,8 @@ try {
   const bool recordData = !cl.dataDir().empty();
   DataLog dataLog(recordData, cl.dataDir());
 
-  string adminPath   = cl.path() + "-admin";
-  string trackerPath = cl.path() + "-tracker";
+  string adminPath   = cl.servicePath() + "-admin";
+  string trackerPath = cl.servicePath() + "-tracker";
 
   if (cl.exit()) {
     Controller controller(logger, adminPath.c_str());

@@ -8,19 +8,19 @@ using namespace boost::program_options;
 using namespace std;
 
 CommandLine::CommandLine(const char * path) :
-		m_daemonize (false),
-		m_exit      (false),
-		m_path      (path) {
+    m_daemonize   (false),
+    m_exit        (false),
+    m_servicePath (path) {
 }
 
 bool CommandLine::parse(int argc, char * argv[]) {
   options_description desc("Supported options");
   desc.add_options()
     ("help", "display this help message")
-    ("daemonize", bool_switch(&m_daemonize),                     "run the process as a daemon"    )
-    ("exit",      bool_switch(&m_exit),                          "stop the server"                )
-    ("data_dir",  value<string>(&m_dataDir),                     "save transactions to directory" )
-    ("path",      value<string>(&m_path)->default_value(m_path), "socket path"                    );
+    ("service",   value<string>(&m_servicePath)->default_value(m_servicePath), "socket path" )
+    ("daemonize", bool_switch(&m_daemonize), "run the process as a daemon"    )
+    ("exit",      bool_switch(&m_exit),      "stop the server"                )
+    ("data_dir",  value<string>(&m_dataDir), "save transactions to directory" );
 
   variables_map vm;
   try {
@@ -36,5 +36,5 @@ bool CommandLine::parse(int argc, char * argv[]) {
     return false;
   }
 
-	return true;
+  return true;
 }
