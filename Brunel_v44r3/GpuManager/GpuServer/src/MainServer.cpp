@@ -56,8 +56,8 @@ void MainServer::process(IProtocol & protocol) {
 
   // call the handler
   Data result;
-	DataPacket packet(handlerName, &data, &result);
-	m_dataQueue.push(&packet);
+  DataPacket packet(handlerName, &data, &result);
+  m_dataQueue.push(&packet);
 
   Timer timer;
   timer.start();
@@ -134,10 +134,10 @@ void MainServer::processQueue() {
       (this->*handler)(*packet->Data(), allocVector, packet->Result());
       timer.stop();
     } catch (const std::exception & e) {
-			packet->SetExceptionMessage(e.what());
+      packet->SetExceptionMessage(e.what());
     }
 
-		packet->SetSeconds(timer.secondsElapsed());
+    packet->SetSeconds(timer.secondsElapsed());
 
     packet->Signal();
   }
