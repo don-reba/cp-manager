@@ -19,10 +19,10 @@ private
 macro application_suffix ""
 
 # add link options
-macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
-macro_append Boost_linkopts " $(Boost_linkopts_threads) "
 macro_append Boost_linkopts " $(Boost_linkopts_filesystem) "
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
 macro_append Boost_linkopts " $(Boost_linkopts_system) "
+macro_append Boost_linkopts " $(Boost_linkopts_thread) "
 macro_append Boost_linkopts " -lpixeltbb "
 macro_append Boost_linkopts " -L../src/PixelTracker/slc6 "
 

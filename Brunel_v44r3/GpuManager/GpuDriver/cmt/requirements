@@ -6,13 +6,19 @@ author  "Alexey Badalov"
 branches cmt doc src
 
 # dependencies
-use GpuIpc v* GpuManager
-use Boost  v* LCG_Interfaces -no_auto_imports
+use GpuIpc * GpuManager
+use Boost  * LCG_Interfaces -no_auto_imports
 
 # application constituent
-application gpudriver -import=Boost *.cpp Api/*.cpp
+application gpudriver -import=Boost *.cpp
 
 private
+# remove the application suffix; the default is ".exe"
 macro application_suffix ""
-macro_append Boost_linkopts " $(Boost_linkopts_program_options) $(Boost_linkopts_threads) "
+
+# add link options
+macro_append Boost_linkopts " $(Boost_linkopts_thread) "
+macro_append Boost_linkopts " $(Boost_linkopts_filesystem) "
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
+macro_append Boost_linkopts " $(Boost_linkopts_system) "
 end_private
