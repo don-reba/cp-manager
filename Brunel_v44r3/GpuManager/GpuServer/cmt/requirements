@@ -12,7 +12,7 @@ use tbb    v* LCG_Interfaces
 use PatPixelSerialization v* Tf
 
 # application constituent
-application gpuserver -import=Boost *.cpp Api/*.cpp
+application gpuserver -import=Boost *.cpp Api/*.cpp Handlers/*.cpp
 
 private
 # remove the application suffix; the default is ".exe"

@@ -4,8 +4,8 @@
 #include "PerfLog.h"
 #include "Timer.h"
 
-#include "PatPixelSerialization/Serialization.h"
-#include "PixelTracker/PixelImplementation.h"
+#include "Handlers/PatPixel.h"
+#include "Handlers/Test.h"
 
 #include <algorithm>
 #include <cstring>
@@ -24,8 +24,8 @@ using namespace std;
 MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
     m_perfLog (perfLog),
     m_dataLog (dataLog) {
-  m_handlers["searchByPair"] = &MainServer::process_SearchByPair;
-  m_handlers["test"]         = &MainServer::process_Test;
+  m_handlers["searchByPair"] = &Handlers::searchByPair;
+  m_handlers["test"]         = &Handlers::test;
 }
 
 //------------------------
@@ -131,7 +131,7 @@ void MainServer::processQueue() {
     // execute handler
     try {
       timer.start();
-      (this->*handler)(*packet->Data(), allocVector, packet->Result());
+      (*handler)(*packet->Data(), allocVector, packet->Result());
       timer.stop();
     } catch (const std::exception & e) {
       packet->SetExceptionMessage(e.what());
@@ -141,39 +141,4 @@ void MainServer::processQueue() {
 
     packet->Signal();
   }
-}
-
-//---------
-// handlers
-//---------
-
-void MainServer::process_SearchByPair(
-    const Data & data,
-    Alloc        allocResult,
-    AllocParam   allocResultParam) {
-  cout << "'searchByPair' received " << data.size() << " bytes" << endl;
-
-  PixelEvent event;
-  deserializePixelEvent(data, event);
-
-  std::vector<GpuTrack> tracks;
-  pixel_tracker_implementation(event, tracks);
-
-  // TODO: move allocation out of serialization
-  Data result;
-  serializeGpuTracks(tracks, result);
-
-  void * buffer = allocResult(result.size(), allocResultParam);
-  copy(result.begin(), result.end(), (uint8_t*)buffer);
-}
-
-void MainServer::process_Test(
-    const Data & data,
-    Alloc        allocResult,
-    AllocParam   allocResultParam) {
-  cout << "'test' received " << data.size() << " bytes" << endl;
-
-  static uint32_t callCount = 0;
-  *(uint32_t*)allocResult(4, allocResultParam) = callCount;
-  ++callCount;
 }

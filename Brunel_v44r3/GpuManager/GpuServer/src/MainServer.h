@@ -3,6 +3,7 @@
 #include "BlockingQueue.h"
 #include "DataPacket.h"
 #include "GpuIpc/IProcessor.h"
+#include "Handlers/Handler.h"
 
 #include <map>
 #include <stdint.h>
@@ -18,10 +19,6 @@ class PerfLog;
 class MainServer : public IProcessor {
 private:
 
-  typedef void * AllocParam;
-  typedef void * (*Alloc)(size_t size, AllocParam param);
-
-  typedef void (MainServer::*Handler)(const Data & data, Alloc resultAlloc, AllocParam resultAllocParam);
   typedef std::map<std::string, Handler> HandlerMap;
 
 public: // interface
@@ -42,17 +39,6 @@ private: // private functions
   std::string createInvalidHandlerMsg(const std::string & handler) const;
 
   void processQueue();
-
-private: // handlers
-
-  void process_SearchByPair(
-      const Data & data,
-      Alloc        allocResult,
-      AllocParam   allocResultParam);
-  void process_Test(
-      const Data & data,
-      Alloc        allocResult,
-      AllocParam   allocResultParam);
 
 private:
 
