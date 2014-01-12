@@ -113,9 +113,8 @@ string MainServer::createInvalidHandlerMsg(const string & handler) const {
     return msg.str();
 }
 
-//#include <boost/chrono/duration.hpp>
-
-void MainServer::processQueue() {
+void MainServer::processQueue()
+try {
   // the data queue throws an exception when interrupted
   while (true) {
     DataPacket * packet = m_dataQueue.pop();
@@ -141,4 +140,6 @@ void MainServer::processQueue() {
 
     packet->Signal();
   }
+} catch (const Queue::interrupted_error &) {
+  // it's ok
 }

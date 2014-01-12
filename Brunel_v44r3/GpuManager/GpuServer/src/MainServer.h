@@ -21,6 +21,8 @@ private:
 
   typedef std::map<std::string, Handler> HandlerMap;
 
+  typedef BlockingQueue<DataPacket*> Queue;
+
 public: // interface
 
   MainServer(PerfLog & perfLog, DataLog & dataLog);
@@ -47,7 +49,7 @@ private:
   PerfLog & m_perfLog;
   DataLog & m_dataLog;
 
-  BlockingQueue<DataPacket*>  m_dataQueue;
+  Queue m_dataQueue;
 
   boost::thread m_processingThread;
 };

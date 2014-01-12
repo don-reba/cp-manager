@@ -16,6 +16,14 @@ class BlockingQueue
 
   public:
 
+    struct interrupted_error : std::runtime_error {
+      interrupted_error() :
+          std::runtime_error("BlockingQueue was interrupted.") {
+      }
+    };
+
+  public:
+
     BlockingQueue() : m_interrupted(false) {}
 
     void push(const T & item) {
@@ -36,7 +44,7 @@ class BlockingQueue
       while (m_queue.empty() && !m_interrupted)
         m_condition.wait(lock);
       if (m_interrupted)
-        throw std::runtime_error("BlockingQueue was interrupted.");
+        throw interrupted_error();
 
       T item = m_queue.front();
       m_queue.pop();
