@@ -94,8 +94,10 @@ void MainServer::stop() {
 // Private functions
 //------------------
 
-void * MainServer::allocVector(size_t size, AllocParam param) {
-  Data * data = reinterpret_cast<Data*>(param);
+void * MainServer::allocVector(size_t index, size_t size, AllocParam param) {
+  typedef vector<Data*> Batch;
+  Batch * batch = reinterpret_cast<Batch*>(param);
+  Data * data = batch->at(index);
   data->resize(size);
   return &data->at(0);
 }
@@ -117,28 +119,43 @@ void MainServer::processQueue()
 try {
   // the data queue throws an exception when interrupted
   while (true) {
-    DataPacket * packet = m_dataQueue.pop();
+    string              name;
+    vector<DataPacket*> packets;
+    m_dataQueue.pop(name, packets);
 
     Timer timer;
 
     // get handler by name
-    HandlerMap::const_iterator i = m_handlers.find(packet->Name());
+    HandlerMap::const_iterator i = m_handlers.find(name);
     if (i == m_handlers.end())
-      throw runtime_error(createInvalidHandlerMsg(packet->Name()));
+      throw runtime_error(createInvalidHandlerMsg(name));
     Handler handler = i->second;
 
-    // execute handler
-    try {
-      timer.start();
-      (*handler)(*packet->Data(), allocVector, packet->Result());
-      timer.stop();
-    } catch (const std::exception & e) {
-      packet->SetExceptionMessage(e.what());
+    // prepare data
+    vector<const Data*> batch   (packets.size());
+    vector<Data*>       results (packets.size());
+    for (size_t i = 0, size = packets.size(); i != size; ++i) {
+      batch[i]   = packets[i]->Data();
+      results[i] = packets[i]->Result();
     }
 
-    packet->SetSeconds(timer.secondsElapsed());
+    try {
+      // execute handler
+      timer.start();
+      (*handler)(batch, allocVector, &results);
+      timer.stop();
+    } catch (const std::exception & e) {
+      // propagate the exception to all client in the batch
+      for (size_t i = 0, size = packets.size(); i != size; ++i) {
+        packets[i]->SetExceptionMessage(e.what());
+      }
+    }
 
-    packet->Signal();
+    // wake up the clients
+    for (size_t i = 0, size = packets.size(); i != size; ++i) {
+      packets[i]->SetSeconds(timer.secondsElapsed());
+      packets[i]->Signal();
+    }
   }
 } catch (const Queue::interrupted_error &) {
   // it's ok

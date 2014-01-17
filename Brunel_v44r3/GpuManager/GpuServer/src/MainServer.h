@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BlockingQueue.h"
+#include "BlockingBatchQueue.h"
 #include "DataPacket.h"
 #include "GpuIpc/IProcessor.h"
 #include "Handlers/Handler.h"
@@ -21,7 +21,7 @@ private:
 
   typedef std::map<std::string, Handler> HandlerMap;
 
-  typedef BlockingQueue<DataPacket*> Queue;
+  typedef BlockingBatchQueue<DataPacket*> Queue;
 
 public: // interface
 
@@ -36,7 +36,7 @@ public: // IProcess implementation
 
 private: // private functions
 
-  static void * allocVector(size_t size, AllocParam param);
+  static void * allocVector(size_t index, size_t size, AllocParam param);
 
   std::string createInvalidHandlerMsg(const std::string & handler) const;
 

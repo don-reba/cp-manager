@@ -5,8 +5,8 @@
 namespace Handlers {
 
   void searchByPair(
-      const Data & data,
-      Alloc        allocResult,
-      AllocParam   allocResultParam);
+      const Batch & batch,
+      Alloc         allocResult,
+      AllocParam    allocResultParam);
 
 }

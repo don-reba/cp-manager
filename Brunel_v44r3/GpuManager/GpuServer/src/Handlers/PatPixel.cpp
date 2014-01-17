@@ -8,22 +8,36 @@
 
 using namespace std;
 
+namespace {
+	void printBatchInfo(const Batch & batch) {
+		cout << "'searchByPair' received";
+		for (size_t i = 0, size = batch.size(); i != size; ++i)
+			cout << ' ' << batch[i]->size();
+		cout << " bytes" << endl;
+	}
+}
+
 void Handlers::searchByPair(
-    const Data & data,
-    Alloc        allocResult,
-    AllocParam   allocResultParam) {
-  cout << "'searchByPair' received " << data.size() << " bytes" << endl;
+    const Batch & batch,
+    Alloc         allocResult,
+    AllocParam    allocResultParam) {
+	printBatchInfo(batch);
 
-  PixelEvent event;
-  deserializePixelEvent(data, event);
+	// the current PatPixel implementation processes one event at a time
+	for (size_t i = 0, size = batch.size(); i != size; ++i) {
+		const Data & data = *batch[i];
 
-  std::vector<GpuTrack> tracks;
-  pixel_tracker_implementation(event, tracks);
+		PixelEvent event;
+		deserializePixelEvent(data, event);
 
-  // TODO: move allocation out of serialization
-  Data result;
-  serializeGpuTracks(tracks, result);
+		std::vector<GpuTrack> tracks;
+		pixel_tracker_implementation(event, tracks);
 
-  void * buffer = allocResult(result.size(), allocResultParam);
-  copy(result.begin(), result.end(), (uint8_t*)buffer);
+		// TODO: move allocation out of serialization
+		Data result;
+		serializeGpuTracks(tracks, result);
+
+		void * buffer = allocResult(i, result.size(), allocResultParam);
+		copy(result.begin(), result.end(), (uint8_t*)buffer);
+	}
 }

@@ -2,13 +2,18 @@
 
 #include <queue>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 
+// requires:
+// void (*T)::Name()
+
 template <typename T>
-class BlockingQueue
+class BlockingBatchQueue
 {
   private:
 
@@ -18,13 +23,13 @@ class BlockingQueue
 
     struct interrupted_error : std::runtime_error {
       interrupted_error() :
-          std::runtime_error("BlockingQueue was interrupted.") {
+          std::runtime_error("BlockingBatchQueue was interrupted.") {
       }
     };
 
   public:
 
-    BlockingQueue() : m_interrupted(false) {}
+    BlockingBatchQueue() : m_interrupted(false) {}
 
     void push(const T & item) {
       scoped_lock lock(m_mutex);
@@ -38,7 +43,7 @@ class BlockingQueue
       }
     }
 
-    T pop() {
+    void pop(std::string & name, std::vector<T> & batch) {
       scoped_lock lock(m_mutex);
 
       while (m_queue.empty() && !m_interrupted)
@@ -46,9 +51,9 @@ class BlockingQueue
       if (m_interrupted)
         throw interrupted_error();
 
-      T item = m_queue.front();
+			name = m_queue.front()->Name();
+      batch.push_back(m_queue.front());
       m_queue.pop();
-      return item;
     }
 
     void interrupt() {
