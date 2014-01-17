@@ -19,7 +19,7 @@ class PerfLog;
 class MainServer : public IProcessor {
 private:
 
-  typedef std::map<std::string, Handler> HandlerMap;
+  typedef std::map<std::string, Handlers::Handler> HandlerMap;
 
   typedef BlockingBatchQueue<DataPacket*> Queue;
 
@@ -36,7 +36,10 @@ public: // IProcess implementation
 
 private: // private functions
 
-  static void * allocVector(size_t index, size_t size, AllocParam param);
+  static void * allocVector(
+      std::size_t          index,
+      std::size_t          size,
+      Handlers::AllocParam param);
 
   std::string createInvalidHandlerMsg(const std::string & handler) const;
 

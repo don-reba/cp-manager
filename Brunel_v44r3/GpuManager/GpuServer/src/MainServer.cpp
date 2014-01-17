@@ -15,6 +15,7 @@
 #include <stdexcept>
 
 using namespace boost;
+using namespace Handlers;
 using namespace std;
 
 //----------

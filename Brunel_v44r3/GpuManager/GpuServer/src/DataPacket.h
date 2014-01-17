@@ -16,9 +16,9 @@ class DataPacket {
 
     DataPacket(const std::string & name, const ::Data * data, ::Data * result);
 
-    const std::string & Name()    { return m_name; }
-    const ::Data      * Data()    { return m_data; }
-    ::Data            * Result()  { return m_result; }
+    const std::string & Name()    { return m_name;    }
+    const ::Data      * Data()    { return m_data;    }
+    ::Data            * Result()  { return m_result;  }
     double              Seconds() { return m_seconds; }
 
     bool        ExceptionThrown()  { return m_exceptionThrown;  }
