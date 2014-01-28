@@ -7,15 +7,14 @@
 using namespace std;
 
 SystemException::SystemException(const std::string & message) :
-    m_errno (errno) {
-  stringstream msg;
-  msg << message << " (" << m_errno << ") " << strerror(m_errno);
-  m_message = msg.str();
+    runtime_error (makeMessage(errno, message)) {
 }
 
 SystemException::~SystemException() throw() {
 }
 
-const char * SystemException::what() const throw() {
-  return m_message.c_str();
+string SystemException::makeMessage(int error, const string & message) {
+  stringstream msg;
+  msg << message << " (" << error << ") " << strerror(error);
+  return msg.str();
 }
