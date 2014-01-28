@@ -4,25 +4,27 @@
 
 class ITransport;
 
+/// The standard protocol implementation.
 class Protocol : public IProtocol {
   public: // public interface
 
+    /// Construct a protocol instance over a given transport layer.
     Protocol(ITransport & transport);
 
     virtual ~Protocol();
 
   public: // IProtocol implementation
 
-    // Reads a boolean.
+    /// Reads a boolean.
     virtual bool readBool();
 
-    // Writes a boolean.
+    /// Writes a boolean.
     virtual void writeBool(bool b);
 
     /// Reads a double.
     virtual double readDouble();
 
-    // Writes a double.
+    /// Writes a double.
     virtual void writeDouble(double n);
 
     /// Reads an unsigned 32-bit integer.

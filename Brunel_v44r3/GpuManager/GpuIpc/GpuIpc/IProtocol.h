@@ -4,11 +4,7 @@
 #include <string>
 #include <vector>
 
-// The communication protocol.
-
-/** @class IProtocol IProtocol.h GpuIpc/IProtocol.h
- *  Service interface encapsulating the message protocol.
- */
+/// Communications protocol layer interface.
 class IProtocol {
   public:
     virtual ~IProtocol() {}
@@ -22,7 +18,7 @@ class IProtocol {
     /// Reads a double.
     virtual double readDouble() = 0;
 
-    // Writes a double.
+    /// Writes a double.
     virtual void writeDouble(double n) = 0;
 
     /// Reads an unsigned 32-bit integer.

@@ -9,8 +9,9 @@ class IProcessor;
 class IProtocol;
 class ITransport;
 
+/// Multithreading server that creates one thread per connection.
 class ThreadedServer {
-  private: // helper tyeps
+  private: // helper types
 
     class ConnectionHandler {
       public:
@@ -29,15 +30,19 @@ class ThreadedServer {
 
   public: // public interface
 
+    /// Factory for instantiating protocols for multiple connections.
     typedef boost::function<boost::shared_ptr<IProtocol> (ITransport&)> ProtocolFactory;
 
+    /// Create a ThreadedServer instance.
     ThreadedServer(
       IConnector      & connector,
       ProtocolFactory   protocolFactory,
       IProcessor      & processor);
 
+    /// Creates and starts server thread.
     boost::thread * serve();
 
+    /// Halts the server thread.
     void stop();
 
   private: // private functions
