@@ -4,6 +4,7 @@
 #include "SystemException.h"
 
 #include <cstring>
+#include <stdint.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -27,23 +28,23 @@ SocketServer::~SocketServer() {
 //--------------------------
 
 void SocketServer::readBytes(void * data, size_t size) {
-  ssize_t total = 0;
+  size_t total = 0;
   while (total < size) {
-    ssize_t received = read(m_socket, data + total, size - total);
+    ssize_t received = read(m_socket, (uint8_t*)data + total, size - total);
     if (received == 0)
       throw IOException("Received 0 bytes.");
-    if (received == -1)
+    if (received < 0)
       throw SystemException("Read error.");
-    total += received;
+    total += static_cast<size_t>(received);
   }
 }
 
 void SocketServer::writeBytes(const void * data, size_t size) {
-  ssize_t total = 0;
+  size_t total = 0;
   while (total < size) {
-    ssize_t sent = write(m_socket, data + total, size - total);
-    if (sent == -1)
+    ssize_t sent = write(m_socket, (uint8_t*)data + total, size - total);
+    if (sent < 0)
       throw SystemException("Write error.");
-    total += sent;
+    total += static_cast<size_t>(sent);
   }
 }
