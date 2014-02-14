@@ -16,6 +16,7 @@ apply_pattern install_more_includes more=GpuService
 library GpuService *.cpp Api/*.cpp
 apply_pattern component_library library=GpuService
 
+private
 # doxygen documentation compilation
 # we do not use the CG_Interfaces package, because it is often broken
 macro doxygen_home     /usr/bin
@@ -24,6 +25,6 @@ action doxygen "$(doxygen_home)/doxygen $(doxygen_settings)"
 
 macro GpuService_dependencies "doxygen"
 
-private
+# realtime library
 macro_append GpuService_use_linkopts " -lrt "
 end_private

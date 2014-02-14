@@ -70,7 +70,7 @@ void DataSender::operator() () {
       string message = m_protocol->readString();
       ostringstream msg;
       msg << m_index << ": " << path << " | " << handlerName << " | error: " << message << "\n";
-      cout << msg.str();
+      cerr << msg.str();
       return;
     }
 
@@ -82,11 +82,6 @@ void DataSender::operator() () {
 
     // send performance data
     m_protocol->writeDouble(timer.secondsElapsed());
-
-    ostringstream msg;
-    msg << m_index << ": " << path << " | " << handlerName;
-    msg << " | " << data.size() << " / " << result.size() << "\n";
-    cout << msg.str();
   }
 }
 

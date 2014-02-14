@@ -76,9 +76,11 @@ void MainServer::process(IProtocol & protocol) {
   protocol.writeData(&result[0], result.size());
 
   if (isProfiling) {
+    double clientSeconds = protocol.readDouble();
+
     double kernelSeconds = packet.Seconds();
     double idleSeconds   = timer.secondsElapsed() - kernelSeconds;
-    double totalSeconds  = protocol.readDouble() - idleSeconds;
+    double totalSeconds  = clientSeconds - idleSeconds;
     m_perfLog.addRecord(time(0), handlerName.c_str(), totalSeconds, kernelSeconds, size, result.size());
   }
 }

@@ -19,6 +19,7 @@ end_private
 library GpuIpc -no_static -import=Boost *.cpp Api/*.cpp
 apply_pattern linker_library library=GpuIpc
 
+private
 # doxygen documentation compilation
 # we do not use the CG_Interfaces package, because it is often broken
 macro doxygen_home     /usr/bin
@@ -27,6 +28,6 @@ action doxygen "$(doxygen_home)/doxygen $(doxygen_settings)"
 
 macro GpuIpc_dependencies "doxygen"
 
-private
+# boost libraries
 macro_append Boost_linkopts " $(Boost_linkopts_thread) "
 end_private
