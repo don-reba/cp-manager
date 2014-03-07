@@ -22,7 +22,7 @@ void Handlers::searchByPair(
     const Batch & batch,
     Alloc         allocResult,
     AllocParam    allocResultParam) {
-	printBatchInfo(batch);
+	//printBatchInfo(batch);
 
 	// the current PatPixel implementation processes one event at a time
 	for (size_t i = 0, size = batch.size(); i != size; ++i) {
