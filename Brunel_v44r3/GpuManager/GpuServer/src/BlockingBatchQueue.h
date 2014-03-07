@@ -1,6 +1,6 @@
 #pragma once
 
-#include <queue>
+#include <deque>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -34,7 +34,7 @@ class BlockingBatchQueue
     void push(const T & item) {
       scoped_lock lock(m_mutex);
 
-      m_queue.push(item);
+      m_queue.push_back(item);
 
       if (m_queue.size() == 1)
       {
@@ -53,7 +53,7 @@ class BlockingBatchQueue
 
 			name = m_queue.front()->Name();
       batch.push_back(m_queue.front());
-      m_queue.pop();
+      m_queue.pop_front();
     }
 
     void interrupt() {
@@ -66,7 +66,7 @@ class BlockingBatchQueue
 
   private:
 
-    std::queue<T> m_queue;
+    std::deque<T> m_queue;
 
     bool m_interrupted;
 
