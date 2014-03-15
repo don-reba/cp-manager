@@ -31,8 +31,19 @@ void Handlers::searchByPair(
 		PixelEvent event;
 		deserializePixelEvent(data, event);
 
+    // cout << "data:           " << data.size()                 << " B" << endl;
+    // cout << "noSensors:      " << event.noSensors             << endl;
+    // cout << "noHits:         " << event.noHits                << endl;
+    // cout << "sensorZs:       " << event.sensorZs.size()       << endl;
+    // cout << "ensorHitStarts: " << event.sensorHitStarts.size() << endl;
+    // cout << "ensorHitsNums:  " << event.sensorHitsNums.size()  << endl;
+    // cout << "itIDs:          " << event.hitIDs.size()          << endl;
+    // cout << "itXs:           " << event.hitXs.size()           << endl;
+    // cout << "itYs:           " << event.hitYs.size()           << endl;
+    // cout << "itZs:           " << event.hitZs.size()           << endl;
+
 		std::vector<GpuTrack> tracks;
-		pixel_tracker_implementation(event, tracks);
+		//DBG pixel_tracker_implementation(event, tracks);
 
 		// TODO: move allocation out of serialization
 		Data result;

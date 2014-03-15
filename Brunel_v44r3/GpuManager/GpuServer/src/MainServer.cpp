@@ -11,6 +11,7 @@
 #include <cstring>
 #include <ctime>
 #include <iostream>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 
@@ -38,14 +39,12 @@ void MainServer::process(IProtocol & protocol) {
 
   std::string handlerName = protocol.readString();
 
-  bool isProfiling = protocol.readBool();
-
   size_t size = protocol.readUInt32();
 
-  Data data(size);
-  protocol.readData(&data[0], size);
+  Data input(size);
+  protocol.readData(&input[0], size);
 
-  m_dataLog.addRecord(handlerName, data);
+  m_dataLog.addRecord(handlerName, input);
 
   HandlerMap::const_iterator i = m_handlers.find(handlerName);
   if (i == m_handlers.end()) {
@@ -56,8 +55,8 @@ void MainServer::process(IProtocol & protocol) {
   }
 
   // call the handler
-  Data result;
-  DataPacket packet(handlerName, &data, &result);
+  Data output;
+  DataPacket packet(handlerName, &input, &output);
   m_dataQueue.push(&packet);
 
   Timer timer;
@@ -71,18 +70,10 @@ void MainServer::process(IProtocol & protocol) {
     return;
   }
 
-  // return the result to client
-  protocol.writeUInt32(result.size());
-  protocol.writeData(&result[0], result.size());
-
-  if (isProfiling) {
-    double clientSeconds = protocol.readDouble();
-
-    double kernelSeconds = packet.Seconds();
-    double idleSeconds   = timer.secondsElapsed() - kernelSeconds;
-    double totalSeconds  = clientSeconds - idleSeconds;
-    m_perfLog.addRecord(time(0), handlerName.c_str(), totalSeconds, kernelSeconds, size, result.size());
-  }
+  // return the output to client
+  protocol.writeUInt32(output.size());
+  protocol.writeData(&output[0], output.size());
+  protocol.writeDouble(timer.secondsElapsed());
 }
 
 void MainServer::start() {
@@ -96,6 +87,10 @@ void MainServer::stop() {
 //------------------
 // Private functions
 //------------------
+
+size_t MainServer::addSize(size_t total, const Data * data) {
+  return total + data->size();
+}
 
 void * MainServer::allocVector(size_t index, size_t size, AllocParam param) {
   typedef vector<Data*> Batch;
@@ -123,8 +118,8 @@ try {
   // the data queue throws an exception when interrupted
   while (true) {
     string              name;
-    vector<DataPacket*> packets;
-    m_dataQueue.pop(name, packets);
+    vector<DataPacket*> batch;
+    m_dataQueue.pop(name, batch);
 
     Timer timer;
 
@@ -135,31 +130,36 @@ try {
     Handler handler = i->second;
 
     // prepare data
-    vector<const Data*> batch   (packets.size());
-    vector<Data*>       results (packets.size());
-    for (size_t i = 0, size = packets.size(); i != size; ++i) {
-      batch[i]   = packets[i]->Data();
-      results[i] = packets[i]->Result();
+    vector<const Data*> input  (batch.size());
+    vector<Data*>       output (batch.size());
+    for (size_t i = 0, size = batch.size(); i != size; ++i) {
+      input[i]  = batch[i]->Input();
+      output[i] = batch[i]->Output();
     }
 
     try {
       // execute handler
       timer.start();
-      (*handler)(batch, allocVector, &results);
+      (*handler)(input, allocVector, &output);
       timer.stop();
     } catch (const std::exception & e) {
       // propagate the exception to all client in the batch
-      for (size_t i = 0, size = packets.size(); i != size; ++i) {
-        packets[i]->SetExceptionMessage(e.what());
+      for (size_t i = 0, size = batch.size(); i != size; ++i) {
+        batch[i]->SetExceptionMessage(e.what());
       }
     }
 
+    // gather statistics
+    double secondsElapsed  = timer.secondsElapsed();
+    size_t totalInputSize  = accumulate(input.begin(),  input.end(),  0u, addSize);
+    size_t totalOutputSize = accumulate(output.begin(), output.end(), 0u, addSize);
+    m_perfLog.addRecord(
+        time(0), name.c_str(), secondsElapsed, totalInputSize, totalOutputSize, batch.size());
+
     // wake up the clients
-    for (size_t i = 0, size = packets.size(); i != size; ++i) {
-      packets[i]->SetSeconds(timer.secondsElapsed());
-      packets[i]->Signal();
-    }
+    for (size_t i = 0, size = batch.size(); i != size; ++i)
+      batch[i]->Signal();
   }
-} catch (const Queue::interrupted_error &) {
+} catch (const Queue::InterruptedError &) {
   // it's ok
 }

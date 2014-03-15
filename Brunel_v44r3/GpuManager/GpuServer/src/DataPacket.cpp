@@ -5,11 +5,10 @@
 using namespace boost;
 using namespace std;
 
-DataPacket::DataPacket(const string & name, const ::Data * data, ::Data * result) :
+DataPacket::DataPacket(const string & name, const Data * input, Data * output) :
     m_name            (name),
-    m_data            (data),
-    m_result          (result),
-    m_seconds         (0.0),
+    m_input           (input),
+    m_output          (output),
     m_exceptionThrown (false),
     m_signalled       (false) {
 }

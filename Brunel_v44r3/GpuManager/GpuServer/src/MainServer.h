@@ -36,6 +36,8 @@ public: // IProcess implementation
 
 private: // private functions
 
+  static size_t addSize(size_t total, const Data * data);
+
   static void * allocVector(
       std::size_t          index,
       std::size_t          size,

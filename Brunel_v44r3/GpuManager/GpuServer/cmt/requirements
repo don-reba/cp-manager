@@ -23,10 +23,11 @@ macro_append Boost_linkopts " $(Boost_linkopts_filesystem) "
 macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
 macro_append Boost_linkopts " $(Boost_linkopts_system) "
 macro_append Boost_linkopts " $(Boost_linkopts_thread) "
-macro_append Boost_linkopts " -lpixeltbb "
-macro_append Boost_linkopts " -L../src/PixelTracker/slc6 "
 
 # tbb-specific link options
+macro_append tbb_linkopts " -lpixeltbb "
+macro_append tbb_linkopts " -L`pwd`/../src/Handlers/PixelTracker/slc6 "
+
 macro_prepend tbb_linkopts " -Wl,--no-as-needed " \
               target-darwin "" \
               target-winxp  ""
@@ -34,4 +35,8 @@ macro_append tbb_linkopts " -Wl,--as-needed " \
              target-darwin "" \
              target-winxp  "" \
              target-icc    ""
+
+# there should be a way of adding ../src/Handlers/PixelTracker/slc6 to
+# LD_LIBRARY_PATH, but I don't know what it is
+
 end_private

@@ -7,7 +7,6 @@
 
 from Configurables import GpuService
 GpuService().SocketPath = "/tmp/GpuManager"
-GpuService().IsProfiling = True
 
 from GaudiKernel.ProcessJobOptions import importOptions
 importOptions("$APPCONFIGOPTS/Brunel/MC-WithTruth.py")

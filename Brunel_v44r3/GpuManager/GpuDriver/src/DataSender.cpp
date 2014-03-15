@@ -53,9 +53,6 @@ void DataSender::operator() () {
     // send the name of the addressee
     m_protocol->writeString(handlerName);
 
-    // send a flag indicating whether profiling is eanbled
-    m_protocol->writeBool(true);
-
     // send the data package
     m_protocol->writeUInt32(data.size());
     if (!data.empty())
@@ -80,8 +77,8 @@ void DataSender::operator() () {
 
     timer.stop();
 
-    // send performance data
-    m_protocol->writeDouble(timer.secondsElapsed());
+    // receive performance data
+    double kernelSeconds = m_protocol->readDouble();
   }
 }
 

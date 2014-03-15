@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <deque>
 #include <stdexcept>
 #include <string>
@@ -19,10 +20,18 @@ class BlockingBatchQueue
 
     typedef boost::mutex::scoped_lock scoped_lock;
 
+    typedef std::deque<T> Queue;
+
+    struct NotHasName {
+      const std::string & name;
+      NotHasName(const std::string & name) : name(name) {}
+      bool operator() (const T & item) { return item->Name() != name; }
+    };
+
   public:
 
-    struct interrupted_error : std::runtime_error {
-      interrupted_error() :
+    struct InterruptedError : std::runtime_error {
+      InterruptedError() :
           std::runtime_error("BlockingBatchQueue was interrupted.") {
       }
     };
@@ -49,11 +58,14 @@ class BlockingBatchQueue
       while (m_queue.empty() && !m_interrupted)
         m_condition.wait(lock);
       if (m_interrupted)
-        throw interrupted_error();
+        throw InterruptedError();
 
 			name = m_queue.front()->Name();
-      batch.push_back(m_queue.front());
-      m_queue.pop_front();
+
+      // move all items of this name from the queue and into the batch
+      typename Queue::iterator p = stable_partition(m_queue.begin(), m_queue.end(), NotHasName(name));
+      batch.assign(p, m_queue.end());
+      m_queue.erase(p, m_queue.end());
     }
 
     void interrupt() {
@@ -66,7 +78,7 @@ class BlockingBatchQueue
 
   private:
 
-    std::deque<T> m_queue;
+    Queue m_queue;
 
     bool m_interrupted;
 

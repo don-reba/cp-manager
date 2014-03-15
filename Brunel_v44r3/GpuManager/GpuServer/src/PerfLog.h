@@ -11,10 +11,10 @@ class PerfLog {
     void addRecord(
         time_t       timestamp,
         const char * kernelName,
-        double       totalSeconds,
-        double       kernelSeconds,
-        size_t       inputSize,
-        size_t       outputSize);
+        double       seconds,
+        size_t       inputBytes,
+        size_t       outputBytes,
+				size_t       batchCount);
 
   private:
 

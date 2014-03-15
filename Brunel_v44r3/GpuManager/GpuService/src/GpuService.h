@@ -38,5 +38,4 @@ class GpuService :
     IProtocol  * m_protocol;
 
     StringProperty  m_socketPath;
-    BooleanProperty m_isProfiling;
 };
