@@ -43,7 +43,7 @@ void Handlers::searchByPair(
     // cout << "itZs:           " << event.hitZs.size()           << endl;
 
 		std::vector<GpuTrack> tracks;
-		//DBG pixel_tracker_implementation(event, tracks);
+		pixel_tracker_implementation(event, tracks);
 
 		// TODO: move allocation out of serialization
 		Data result;

@@ -12,7 +12,7 @@ use tbb    v* LCG_Interfaces
 use PatPixelSerialization v* Tf
 
 # application constituent
-application gpuserver -import=Boost *.cpp Api/*.cpp Handlers/*.cpp
+application gpuserver -import=Boost *.cpp Api/*.cpp Handlers/*.cpp Handlers/PixelTracker/*.cpp
 
 private
 # remove the application suffix; the default is ".exe"
@@ -25,8 +25,8 @@ macro_append Boost_linkopts " $(Boost_linkopts_system) "
 macro_append Boost_linkopts " $(Boost_linkopts_thread) "
 
 # tbb-specific link options
-macro_append tbb_linkopts " -lpixeltbb "
-macro_append tbb_linkopts " -L`pwd`/../src/Handlers/PixelTracker/slc6 "
+# macro_append tbb_linkopts " -lpixeltbb "
+# macro_append tbb_linkopts " -L`pwd`/../src/Handlers/PixelTracker/slc6 "
 
 macro_prepend tbb_linkopts " -Wl,--no-as-needed " \
               target-darwin "" \
