@@ -1,0 +1,41 @@
+package GpuServer
+version v1r1
+author  "Alexey Badalov / Daniel Campora"
+
+# structure
+branches cmt doc src
+
+# dependencies
+use GpuIpc v* GpuManager
+use Boost  v* LCG_Interfaces -no_auto_imports
+use tbb    v* LCG_Interfaces
+use PatPixelSerialization v* Tf
+use PrPixelSerialization  v* Pr
+
+# application constituent
+application gpuserver -import=Boost *.cpp Api/*.cpp Handlers/*.cpp Handlers/PixelTracker/*.cpp
+
+private
+# remove the application suffix; the default is ".exe"
+macro application_suffix ""
+
+# add link options
+macro_append Boost_linkopts " $(Boost_linkopts_filesystem) "
+macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
+macro_append Boost_linkopts " $(Boost_linkopts_system) "
+macro_append Boost_linkopts " $(Boost_linkopts_thread) "
+
+macro_append gpuserver_linkopts " -lpixeltbb "
+macro_append gpuserver_linkopts " -lpixelcuda "
+macro_append gpuserver_linkopts " -L../src/Handlers/PixelTracker/slc6 "
+
+# tbb-specific link options
+macro_prepend tbb_linkopts " -Wl,--no-as-needed " \
+              target-darwin "" \
+              target-winxp  ""
+macro_append tbb_linkopts " -Wl,--as-needed " \
+             target-darwin "" \
+             target-winxp  "" \
+             target-icc    ""
+
+end_private

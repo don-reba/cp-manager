@@ -1,7 +1,0 @@
-project GPU
-
-use BRUNEL BRUNEL_v44r3 
-use GAUDI  *
-
-build_strategy with_installarea
-structure_strategy without_version_directory

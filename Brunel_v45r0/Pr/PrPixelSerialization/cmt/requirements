@@ -1,0 +1,19 @@
+package PrPixelSerialization
+version v1r1
+author "Alexey Badalov/Daniel Campora"
+
+# structure
+branches PrPixelSerialization cmt src
+
+# dependencies
+use GaudiPolicy *
+
+# exported includes
+apply_pattern install_more_includes more=PrPixelSerialization
+private
+include_dirs ../PrPixelSerialization
+end_private
+
+# PrPixelSerialization library constituent
+library PrPixelSerialization *.cpp
+apply_pattern linker_library library=PrPixelSerialization
