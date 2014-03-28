@@ -7,8 +7,11 @@
 
 #include "PrPixelSerializer.h"
 
+#include <algorithm>
+#include <iterator>
+
 void PrPixelSerializer::cleanEvent(){
-    lastAddedSensor = 0;
+    lastAddedSensor = -1;
 
     event.noSensors = 0;
     event.noHits = 0;
@@ -29,7 +32,7 @@ void PrPixelSerializer::addHit(int sensorNum, int hitID, float hitX, float hitY,
         event.sensorHitsNums.push_back(1);
         event.sensorZs.push_back(hitZ);
     }
-    else   
+    else
         event.sensorHitsNums[sensorNum]++;
 
     event.hitIDs.push_back(hitID);
@@ -50,19 +53,15 @@ void PrPixelSerializer::serialize(){
         + event.hitXs.size() * sizeof(float)
         + event.hitYs.size() * sizeof(float)
         + event.hitZs.size() * sizeof(int);
-    s->init(totalSize);
+    s.reserve(totalSize);
 
     // Add stuff to it
-    s->add(&(event.noSensors), sizeof(int));
-    s->add(&(event.noHits), sizeof(int));
-    s->add(&(event.sensorZs), event.sensorZs.size() * sizeof(int));
-    s->add(&(event.sensorHitStarts), event.sensorHitStarts.size() * sizeof(int));
-    s->add(&(event.hitIDs), event.hitIDs.size() * sizeof(int));
-    s->add(&(event.hitXs), event.hitXs.size() * sizeof(float));
-    s->add(&(event.hitYs), event.hitYs.size() * sizeof(float));
-    s->add(&(event.hitZs), event.hitZs.size() * sizeof(int));
+    std::copy_n((const uint8_t *)&event.noSensors,       sizeof(int),                                std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.noHits,          sizeof(int),                                std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.sensorZs,        event.sensorZs.size() * sizeof(int),        std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.sensorHitStarts, event.sensorHitStarts.size() * sizeof(int), std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.hitIDs,          event.hitIDs.size() * sizeof(int),          std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.hitXs,           event.hitXs.size() * sizeof(float),         std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.hitYs,           event.hitYs.size() * sizeof(float),         std::back_inserter(s));
+    std::copy_n((const uint8_t *)&event.hitZs,           event.hitZs.size() * sizeof(int),           std::back_inserter(s));
 }
-
-// void* PrPixelSerializer::allocTracks(size_t size, void* param){
-//     return (void*) malloc(size * sizeof(uint8_t));
-// }

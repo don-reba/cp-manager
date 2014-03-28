@@ -17,7 +17,6 @@
 #include "PrPixelHitManager.h"
 #include "PrPixelTrack.h"
 
-#include "Serializer.h"
 #include "Serialization.h"
 
 #include <stdint.h>
@@ -113,7 +112,5 @@ private:
   int m_timeFinal;
 
   SmartIF<IGpuService> gpuService;
-  Serializer* serializedEvent;
-
 };
 #endif

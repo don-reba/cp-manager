@@ -18,7 +18,7 @@ namespace {
   }
 }
 
-void Handlers::searchByPair(
+void Handlers::searchByPair2(
     const Batch & batch,
     Alloc         allocResult,
     AllocParam    allocResultParam) {

@@ -105,6 +105,7 @@ StatusCode PrPixelTracking::initialize() {
 /// returns a pointer to the start of that memory.
 void * allocTracks(size_t size, void * param)
 {
+  std::cout << "receiving results (" << size << ")" << std::endl;
   typedef std::vector<uint8_t> Data;
   Data & tracks = *reinterpret_cast<Data*>(param);
   tracks.resize(size);
@@ -148,36 +149,35 @@ StatusCode PrPixelTracking::execute() {
 
   if (m_doTiming) m_timerTool->start(m_timePairs);
 
-  // Do some typecasting into a format understandable by GPU
-  serializedEvent = m_hitManager->m_serializer.s; // m_hitManager->getSerialized();
-  
-  // Perform search on the GPU
-  // gpuService->submitData("searchByPair", serializedInput->getPointer(), serializedInput->getSize());
+  const std::vector<uint8_t> & serializedEvent = m_hitManager->m_serializer.s;
+  if (!serializedEvent.empty()) {
+    // Perform search on the GPU
+    std::vector<GpuTrack> solution;
 
-  std::vector<GpuTrack> solution;
+    std::vector<uint8_t> serializedTracks;
+    gpuService->submitData("searchByPair2", &serializedEvent[0], serializedEvent.size(), allocTracks, &serializedTracks);
+    deserializeGpuTracks(serializedTracks, solution);
 
-  std::vector<uint8_t> serializedTracks;
-  gpuService->submitData("searchByPair", serializedEvent->getPointer(), serializedEvent->getSize(), allocTracks, &serializedTracks);
-  deserializeGpuTracks(serializedTracks, solution);
+    // Additional minor things, which should be left out afterwards
+    
+    // Conversion from track to PrPixelTrack
+    PrPixelTrack ppTrack;
+    if(solution.size() > 0){
+      for(size_t i=0; i<solution.size(); i++){
+        ppTrack.setTrack(solution[i], m_hitManager->m_indexedHits, m_hitManager->m_serializer.event.hitIDs);
+        m_tracks.push_back( ppTrack );
+      }
+    }
 
-  // Additional minor things, which should be left out afterwards
-  
-  // Conversion from track to PrPixelTrack
-  std::cout << "Converting to output_tracks" << std::endl;
-  PrPixelTrack ppTrack;
-  if(solution.size() > 0){
-    for(size_t i=0; i<solution.size(); i++){
-      ppTrack.setTrack(solution[i], m_hitManager->m_indexedHits, m_hitManager->m_serializer.event.hitIDs);
-      m_tracks.push_back( ppTrack );
+    for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
+       if ( it->hits().size() > 3 )
+            it->tagUsedHits();
     }
   }
-
-  std::cout << "Tagging used hits for >3" << std::endl;
-  for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
-     if ( it->hits().size() > 3 )
-          it->tagUsedHits();
+  else
+  {
+    std::cout << "empty event" << std::endl;
   }
-
 
   if (m_doTiming) m_timerTool->stop(m_timePairs);
 
