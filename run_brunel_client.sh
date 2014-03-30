@@ -1,5 +1,5 @@
 #!/bin/bash
 
 . init.sh
-gaudirun.py Brunel-SftPixel.py
+gaudirun.py Brunel-Default.py
 

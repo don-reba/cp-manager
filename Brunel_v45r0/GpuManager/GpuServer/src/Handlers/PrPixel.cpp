@@ -11,14 +11,14 @@ using namespace std;
 
 namespace {
   void printBatchInfo(const Batch & batch) {
-    cout << "'searchByPair' received";
+    cout << "'tripletSearchGPU' received";
     for (size_t i = 0, size = batch.size(); i != size; ++i)
       cout << ' ' << batch[i]->size();
     cout << " bytes" << endl;
   }
 }
 
-void Handlers::searchByPair2(
+void Handlers::tripletSearchGPU(
     const Batch & batch,
     Alloc         allocResult,
     AllocParam    allocResultParam) {
@@ -28,19 +28,21 @@ void Handlers::searchByPair2(
   for (size_t i = 0, size = batch.size(); i != size; ++i) {
     const Data & data = *batch[i];
 
+    cout << "hi there" << endl;
+    cout << "data:           " << data.size()                 << " B" << endl;
+
     PixelEvent event;
     deserializePixelEvent(data, event);
 
-    // cout << "data:           " << data.size()                 << " B" << endl;
-    // cout << "noSensors:      " << event.noSensors             << endl;
-    // cout << "noHits:         " << event.noHits                << endl;
-    // cout << "sensorZs:       " << event.sensorZs.size()       << endl;
-    // cout << "ensorHitStarts: " << event.sensorHitStarts.size() << endl;
-    // cout << "ensorHitsNums:  " << event.sensorHitsNums.size()  << endl;
-    // cout << "itIDs:          " << event.hitIDs.size()          << endl;
-    // cout << "itXs:           " << event.hitXs.size()           << endl;
-    // cout << "itYs:           " << event.hitYs.size()           << endl;
-    // cout << "itZs:           " << event.hitZs.size()           << endl;
+    cout << "noSensors:      " << event.noSensors             << endl;
+    cout << "noHits:         " << event.noHits                << endl;
+    cout << "sensorZs:       " << event.sensorZs.size()       << endl;
+    cout << "ensorHitStarts: " << event.sensorHitStarts.size() << endl;
+    cout << "ensorHitsNums:  " << event.sensorHitsNums.size()  << endl;
+    cout << "itIDs:          " << event.hitIDs.size()          << endl;
+    cout << "itXs:           " << event.hitXs.size()           << endl;
+    cout << "itYs:           " << event.hitYs.size()           << endl;
+    cout << "itZs:           " << event.hitZs.size()           << endl;
 
     std::vector<GpuTrack> tracks;
     pixel_tracker_implementation(event, tracks);

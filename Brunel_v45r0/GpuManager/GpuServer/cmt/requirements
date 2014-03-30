@@ -9,7 +9,6 @@ branches cmt doc src
 use GpuIpc v* GpuManager
 use Boost  v* LCG_Interfaces -no_auto_imports
 use tbb    v* LCG_Interfaces
-use PatPixelSerialization v* Tf
 use PrPixelSerialization  v* Pr
 
 # application constituent
@@ -25,7 +24,7 @@ macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
 macro_append Boost_linkopts " $(Boost_linkopts_system) "
 macro_append Boost_linkopts " $(Boost_linkopts_thread) "
 
-macro_append gpuserver_linkopts " -lpixeltbb "
+# macro_append gpuserver_linkopts " -lpixeltbb "
 macro_append gpuserver_linkopts " -lpixelcuda "
 macro_append gpuserver_linkopts " -L../src/Handlers/PixelTracker/slc6 "
 

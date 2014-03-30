@@ -4,7 +4,6 @@
 #include "PerfLog.h"
 #include "Timer.h"
 
-#include "Handlers/PatPixel.h"
 #include "Handlers/PrPixel.h"
 #include "Handlers/Test.h"
 
@@ -27,8 +26,7 @@ using namespace std;
 MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
     m_perfLog (perfLog),
     m_dataLog (dataLog) {
-  m_handlers["searchByPair"]  = &Handlers::searchByPair;
-  m_handlers["searchByPair2"] = &Handlers::searchByPair2;
+  m_handlers["tripletSearchGPU"] = &Handlers::tripletSearchGPU;
   m_handlers["test"]          = &Handlers::test;
 }
 

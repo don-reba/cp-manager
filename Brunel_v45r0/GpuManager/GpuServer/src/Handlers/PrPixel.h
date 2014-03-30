@@ -4,7 +4,7 @@
 
 namespace Handlers {
 
-  void searchByPair2(
+  void tripletSearchGPU(
       const Batch & batch,
       Alloc         allocResult,
       AllocParam    allocResultParam);

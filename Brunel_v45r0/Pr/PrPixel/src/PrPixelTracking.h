@@ -112,5 +112,6 @@ private:
   int m_timeFinal;
 
   SmartIF<IGpuService> gpuService;
+  std::shared_ptr<std::vector<std::uint8_t>> serializedEvent;
 };
 #endif

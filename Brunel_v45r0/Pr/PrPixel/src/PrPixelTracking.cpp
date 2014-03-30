@@ -149,45 +149,67 @@ StatusCode PrPixelTracking::execute() {
 
   if (m_doTiming) m_timerTool->start(m_timePairs);
 
-  const std::vector<uint8_t> & serializedEvent = m_hitManager->m_serializer.s;
-  if (!serializedEvent.empty()) {
-    // Perform search on the GPU
-    std::vector<GpuTrack> solution;
+  // Do some typecasting into a format understandable by GPU
+  // TODO: This step is unnecesary, since we do it in buildHits :)
+  // Perhaps, move semantics? :)
+  serializedEvent = m_hitManager->m_serializer.serialize();
+  
+  if (m_isDebug){
+    info() << "--- Submitting data to gpuService" << endmsg;
+    info() << "--- serializedEvent: 0x" << std::hex << (long long int) &(*serializedEvent)[0] << std::dec << ", size " << serializedEvent->size() << endmsg;
+    // info() << "--- serializedEvent: 0x" << std::hex << (long long int) serializedEvent->getPointer() << std::dec << ", " << serializedEvent->getSize() << endmsg;
+  }
 
-    std::vector<uint8_t> serializedTracks;
-    gpuService->submitData("searchByPair2", &serializedEvent[0], serializedEvent.size(), allocTracks, &serializedTracks);
-    deserializeGpuTracks(serializedTracks, solution);
+  if (serializedEvent->empty())
+    info() << "--- Serialized event is empty! This shouldn't happen!" << endmsg;
 
-    // Additional minor things, which should be left out afterwards
-    
-    // Conversion from track to PrPixelTrack
-    PrPixelTrack ppTrack;
-    if(solution.size() > 0){
-      for(size_t i=0; i<solution.size(); i++){
-        ppTrack.setTrack(solution[i], m_hitManager->m_indexedHits, m_hitManager->m_serializer.event.hitIDs);
-        m_tracks.push_back( ppTrack );
-      }
+  // Perform search on the GPU
+  std::vector<GpuTrack> solution;
+  std::vector<uint8_t> serializedTracks;
+
+  // int* int_pointer = (int*) &((*serializedEvent)[0]);
+  // info() << "--- serializedEvent contents:" << endmsg;
+  // for (int i=0; i<serializedEvent->size() / 4; ++i)
+  //   std::cout << (int) int_pointer[i] << ", ";
+  // std::cout << std::endl;
+
+  gpuService->submitData("tripletSearchGPU", &(*serializedEvent)[0], serializedEvent->size(), allocTracks, &serializedTracks);
+  
+  // TODO: There should be no need to deserialize the tracks,
+  // and then convert them to "CPU" tracks (done below). These two
+  // can be done in one go (that's what "deserializeTracks" should do, and
+  // it's PrPixel dependent)
+  if (m_isDebug)
+    info() << "--- Deserializing gpu tracks" << endmsg;
+
+  deserializeGpuTracks(serializedTracks, solution);
+
+  // Additional minor things, which should be left out afterwards
+  
+  // Conversion from track to PrPixelTrack
+  PrPixelTrack ppTrack;
+  if(solution.size() > 0){
+    for(size_t i=0; i<solution.size(); i++){
+      // TODO: Refactor event.hitIDs
+      ppTrack.setTrack(solution[i], m_hitManager->m_indexedHits, m_hitManager->m_serializer.event.hitIDs);
+      m_tracks.push_back( ppTrack );
     }
-
-    for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
-       if ( it->hits().size() > 3 )
-            it->tagUsedHits();
-    }
-  }
-  else
-  {
-    std::cout << "empty event" << std::endl;
   }
 
-  if (m_doTiming) m_timerTool->stop(m_timePairs);
-
-  // Convert temporary tracks to LHCb tracks.
-  if (m_doTiming) m_timerTool->start(m_timeFinal);
-  makeLHCbTracks();
-  if (m_doTiming) {
-    m_timerTool->stop(m_timeFinal);
-    m_timerTool->stop(m_timeTotal);
+  for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
+     if ( it->hits().size() > 3 )
+          it->tagUsedHits();
   }
+
+if (m_doTiming) m_timerTool->stop(m_timePairs);
+
+// Convert temporary tracks to LHCb tracks.
+if (m_doTiming) m_timerTool->start(m_timeFinal);
+makeLHCbTracks();
+if (m_doTiming) {
+  m_timerTool->stop(m_timeFinal);
+  m_timerTool->stop(m_timeTotal);
+}
 
 
 #ifdef DEBUG_HISTO

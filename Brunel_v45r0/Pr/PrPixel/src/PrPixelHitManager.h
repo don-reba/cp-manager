@@ -80,9 +80,6 @@ public:
   /// Sort hits by X within every module (to speed up the search).
   void sortByX();                                                
 
-  // Get serialized event
-  // Serializer* getSerialized(){ return m_serializer.s; }
-
   // Datatypes for GPU connectivity
   PrPixelSerializer m_serializer;
 

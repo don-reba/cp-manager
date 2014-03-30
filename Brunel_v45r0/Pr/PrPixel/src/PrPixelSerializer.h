@@ -9,20 +9,22 @@
 
 #include "../PrPixel/PixelEvent.h" // TODO
 
+#include <cstdint>
 #include <vector>
-
-#include <stdint.h>
+#include <memory>
 
 class PrPixelSerializer {
 private:
 	int lastAddedSensor;
+    std::shared_ptr<std::vector<uint8_t>> s;
 
 public:
-  std::vector<uint8_t> s;
-  PixelEvent event;
+    // TODO: Make std::shared_ptr
+    PixelEvent event;
 
-  void cleanEvent();
-  void addHit(int sensorNum, int hitID, float hitX, float hitY, int hitZ);
-  void serialize();
-  // void* allocTracks(size_t size, void* param);
+    PrPixelSerializer() : s(new std::vector<uint8_t>) {}
+
+    void cleanEvent();
+    void addHit(int sensorNum, int hitID, float hitX, float hitY, int hitZ);
+    std::shared_ptr<std::vector<std::uint8_t>> serialize();
 };
