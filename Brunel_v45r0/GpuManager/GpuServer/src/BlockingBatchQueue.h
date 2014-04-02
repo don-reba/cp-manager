@@ -60,7 +60,7 @@ class BlockingBatchQueue
       if (m_interrupted)
         throw InterruptedError();
 
-			name = m_queue.front()->Name();
+      name = m_queue.front()->Name();
 
       // move all items of this name from the queue and into the batch
       typename Queue::iterator p = stable_partition(m_queue.begin(), m_queue.end(), NotHasName(name));

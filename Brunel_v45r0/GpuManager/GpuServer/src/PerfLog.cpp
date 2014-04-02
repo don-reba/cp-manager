@@ -12,7 +12,7 @@ void PerfLog::addRecord(
     double       seconds,
     size_t       inputBytes,
     size_t       outputBytes,
-		size_t       batchCount) {
+    size_t       batchCount) {
   prepareStream();
 
   m_out << timestamp          << '\t';

@@ -580,14 +580,14 @@ void PrPixelTracking::makeLHCbTracks() {
       (*itt).fitKalman(upstreamstate, backward ? 1 : -1 , scat2);
       // Add this state as state at first measurement if requested
       if (m_addStateFirstLastMeasurementKalmanFit) {
-	upstreamstate.setLocation(LHCb::State::FirstMeasurement);
-	newTrack->addToStates(upstreamstate);
+        upstreamstate.setLocation(LHCb::State::FirstMeasurement);
+        newTrack->addToStates(upstreamstate);
       }
       // Transport the state to the closestToBeam position
       if (m_stateClosestToBeamKalmanFit) {
-	upstreamstate.setLocation(LHCb::State::ClosestToBeam);
-	upstreamstate.linearTransportTo(zBeam);
-	newTrack->addToStates(upstreamstate);
+        upstreamstate.setLocation(LHCb::State::ClosestToBeam);
+        upstreamstate.linearTransportTo(zBeam);
+        newTrack->addToStates(upstreamstate);
       }
     }
     if (!m_stateClosestToBeamKalmanFit) {
@@ -599,11 +599,11 @@ void PrPixelTracking::makeLHCbTracks() {
       LHCb::State downstreamstate;
       (*itt).fitKalman(downstreamstate, backward ? -1 : +1 , scat2);
       if(m_addStateFirstLastMeasurementKalmanFit) {
-	downstreamstate.setLocation(LHCb::State::LastMeasurement);
-	newTrack->addToStates(downstreamstate);
+        downstreamstate.setLocation(LHCb::State::LastMeasurement);
+        newTrack->addToStates(downstreamstate);
       }
       if (m_stateEndVeloKalmanFit) {
-	state = downstreamstate;
+        state = downstreamstate;
       }
     } 
     

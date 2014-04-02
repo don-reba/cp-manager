@@ -38,9 +38,9 @@ using namespace tbb;
 
 
 typedef struct {
-	int startPosition;
-	int hitsNum;
-	double z;
+  int startPosition;
+  int hitsNum;
+  double z;
 } sensorInfo;
 
 
@@ -49,27 +49,26 @@ extern vector< vector<int> > hits;
 
 class TBBSearchByPair {
 public:
-	void operator() (const blocked_range<int>& r) const;
+  void operator() (const blocked_range<int>& r) const;
 };
 
 // void searchByPair_tbb(const blocked_range<int>& r);
 
 double zBeam(GpuTrack *tr);
-double r2AtZ( double z , GpuTrack *tr);
+double r2AtZ(double z , GpuTrack *tr);
 void solve (GpuTrack *tr);
-inline double chi2Hit( double x, double y, double hitX, double hitY, double hitW);
-inline double xAtHit(GpuTrack *tr, double z );
-inline double yAtHit( GpuTrack *tr, double z  );
+inline double chi2Hit(double x, double y, double hitX, double hitY, double hitW);
+inline double xAtHit(GpuTrack *tr, double z);
+inline double yAtHit(GpuTrack *tr, double z);
 inline double chi2Track(GpuTrack *tr, int offset);
 inline double chi2(GpuTrack *t);
-inline bool addHitsOnSensor( sensorInfo sensor, double xTol, double maxChi2,
-							 GpuTrack *tr, int threadId );
+inline bool addHitsOnSensor(sensorInfo sensor, double xTol, double maxChi2, GpuTrack *tr, int threadId);
 inline void removeHit(GpuTrack *t, int worstHitOffset);
 inline void removeWorstHit(GpuTrack* t);
 inline bool all3SensorsAreDifferent(GpuTrack t);
 inline int nbUnused(GpuTrack t);
 
-void addHit ( GpuTrack *tr, int offset);
+void addHit (GpuTrack *tr, int offset);
 void setTrack(GpuTrack *tr, int hit0offset, int hit1offset);
 
 void searchByPair(int event_no, vector<GpuTrack>& vector_tracks);

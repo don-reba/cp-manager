@@ -184,10 +184,11 @@ namespace
   } ;
 
   /// Helper function to filter one hit
-  inline double filter( double z,
-			double& x, double& tx,
-			double& covXX, double& covXTx, double& covTxTx,
-			double zhit, double xhit, double whit )
+  inline double filter(
+      double z,
+      double& x, double& tx,
+      double& covXX, double& covXTx, double& covTxTx,
+      double zhit, double xhit, double whit )
   {
     // compute the prediction
     double dz = zhit - z ;

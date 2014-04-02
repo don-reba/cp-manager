@@ -7,35 +7,35 @@
 using namespace std;
 
 enum verbosity {
-	DEBUG,
-	NO_DEBUG
+  DEBUG,
+  NO_DEBUG
 };
 
 class Debug : public ostream {
 private:
-	verbosity _mode;
+  verbosity _mode;
 
 public:
 
-	Debug() : _mode (NO_DEBUG){}
+  Debug() : _mode (NO_DEBUG){}
 
-	void setMode(verbosity mode){
-		_mode = mode;
-	}
+  void setMode(verbosity mode){
+    _mode = mode;
+  }
 
-	template <class T>
-	Debug& operator<<(T t){
-		if(_mode==DEBUG) cout << t;
-		return (*this);
-	}
+  template <class T>
+  Debug& operator<<(T t){
+    if(_mode==DEBUG) cout << t;
+    return (*this);
+  }
 
-	typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
-	typedef CoutType& (*StandardEndLine)(CoutType&);
-	Debug& operator<<(StandardEndLine)
-	{
-		if(_mode==DEBUG) cout << endl;
-		return (*this);
-	}
+  typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
+  typedef CoutType& (*StandardEndLine)(CoutType&);
+  Debug& operator<<(StandardEndLine)
+  {
+    if(_mode==DEBUG) cout << endl;
+    return (*this);
+  }
 };
 
 

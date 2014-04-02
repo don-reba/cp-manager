@@ -16,12 +16,12 @@
 class EventBuilder {
 public:
 
-	void cleanEvent();
-	void addHit(int sensorNum, int hitID, float hitX, float hitY, int hitZ);
+  void cleanEvent();
+  void addHit(int sensorNum, int hitID, float hitX, float hitY, int hitZ);
 
-	const PixelEvent & getEvent() { return m_event; }
+  const PixelEvent & getEvent() { return m_event; }
 
 private:
-	PixelEvent m_event;
-	int m_lastAddedSensor;
+  PixelEvent m_event;
+  int m_lastAddedSensor;
 };

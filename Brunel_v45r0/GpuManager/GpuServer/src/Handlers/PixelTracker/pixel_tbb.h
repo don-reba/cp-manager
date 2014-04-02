@@ -17,25 +17,25 @@ struct PixelEvent {
 };
 
 struct GpuTrack {
-	float m_x0;
-	float m_tx;
-	float m_y0;
-	float m_ty;
+  float m_x0;
+  float m_tx;
+  float m_y0;
+  float m_ty;
 
-	float m_s0;
-	float m_sx;
-	float m_sz;
-	float m_sxz;
-	float m_sz2;
+  float m_s0;
+  float m_sx;
+  float m_sz;
+  float m_sxz;
+  float m_sz2;
 
-	float m_u0;
-	float m_uy;
-	float m_uz;
-	float m_uyz;
-	float m_uz2;
-	
-	int trackHitsNum;
-	std::vector<int> hits;
+  float m_u0;
+  float m_uy;
+  float m_uz;
+  float m_uyz;
+  float m_uz2;
+  
+  int trackHitsNum;
+  std::vector<int> hits;
 };
 
 void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>& result);

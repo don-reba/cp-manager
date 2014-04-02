@@ -14,7 +14,7 @@ class PerfLog {
         double       seconds,
         size_t       inputBytes,
         size_t       outputBytes,
-				size_t       batchCount);
+        size_t       batchCount);
 
   private:
 
