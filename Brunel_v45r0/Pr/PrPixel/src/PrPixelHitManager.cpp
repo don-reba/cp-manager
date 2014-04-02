@@ -149,7 +149,7 @@ void PrPixelHitManager::clearHits() {
   m_eventReady = false;
 
   // Clean the previous event (GPU)
-  m_serializer.cleanEvent();
+  m_eventBuilder.cleanEvent();
 }
 
 //=========================================================================
@@ -194,8 +194,12 @@ void PrPixelHitManager::buildHits() {
     m_indexedHits[(int) (*itc).channelID()] = hit;
     
     // TODO: At some point, we may need to add the hit resolution (wx, wy)
-    m_serializer.addHit(m_modules[module]->number(), itc->channelID(),
-        float(point.x()), float(point.y()), m_modules[module]->z());
+    m_eventBuilder.addHit(
+        m_modules[module]->number(),
+        itc->channelID(),
+        static_cast<float>(point.x()),
+        static_cast<float>(point.y()),
+        m_modules[module]->z());
   }
 }
 

@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stdint.h>
 #include <vector>
+
+#include <stdint.h>
 
 struct PixelEvent {
   int32_t              noSensors;

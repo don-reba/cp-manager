@@ -6,7 +6,7 @@
 // Local 
 #include "PrPixelHit.h"
 
-#include "../PrPixel/GpuTrack.h" // TODO
+#include "PrPixelSerialization/GpuTrack.h" // TODO
 
 namespace LHCb {
   class State;
@@ -116,9 +116,9 @@ public:
 
   // Creates a track from indexed data
   void setTrack(
-      GpuTrack                    & t,
-      std::map<int, PrPixelHit*>  & indexedHits,
-      std::vector<int>            & eventHitIDs);
+      const GpuTrack                    & t,
+      const std::map<int, PrPixelHit*>  & indexedHits,
+      const std::vector<int>            & eventHitIDs);
 
 private:
   /// Backward or forward track

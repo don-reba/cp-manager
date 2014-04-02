@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GpuTrack.h"
-#include "PixelEvent.h"
+#include "PrPixel/GpuTrack.h"
+#include "PrPixel/PixelEvent.h"
 
 #include <vector>
 #include <stdint.h>

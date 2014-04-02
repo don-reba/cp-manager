@@ -54,9 +54,9 @@ void PrPixelTrack::set(PrPixelHit* h1, PrPixelHit* h2) {
 
 // Creates a track from indexed data
 void PrPixelTrack::setTrack(
-  GpuTrack                    & t,
-  std::map<int, PrPixelHit*>  & indexedHits,
-  std::vector<int>            & eventHitIDs)
+  const GpuTrack                    & t,
+  const std::map<int, PrPixelHit*>  & indexedHits,
+  const std::vector<int>            & eventHitIDs)
 {
   m_backward = false;
   m_x0 = t.x0;
@@ -65,8 +65,8 @@ void PrPixelTrack::setTrack(
   m_ty = t.ty;
 
   m_hits.clear();
-  for (std::vector<int>::iterator it = t.hits.begin(); it != t.hits.end(); it++) {
-    m_hits.push_back(indexedHits[eventHitIDs[(*it)]]);
+  for (std::vector<int>::const_iterator it = t.hits.begin(); it != t.hits.end(); it++) {
+    m_hits.push_back(indexedHits.at(eventHitIDs[*it]));
   }
 }
 

@@ -14,9 +14,9 @@
 #include "PrPixelHit.h"
 #include "PrPixelModule.h"
 
-#include "../PrPixel/GpuTrack.h" // TODO
-#include "../PrPixel/PixelEvent.h"
-#include "PrPixelSerializer.h"
+#include "PrPixelSerialization/GpuTrack.h" // TODO
+#include "PrPixelSerialization/PixelEvent.h"
+#include "EventBuilder.h"
 
 static const InterfaceID IID_PrPixelHitManager("PrPixelHitManager", 1, 0);
 
@@ -81,7 +81,7 @@ public:
   void sortByX();                                                
 
   // Datatypes for GPU connectivity
-  PrPixelSerializer m_serializer;
+  EventBuilder m_eventBuilder;
 
 private:
   /// Detector element
