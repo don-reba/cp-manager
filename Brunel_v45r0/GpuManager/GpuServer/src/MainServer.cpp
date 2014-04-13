@@ -121,8 +121,6 @@ try {
     vector<DataPacket*> batch;
     m_dataQueue.pop(name, batch);
 
-    Timer timer;
-
     // get handler by name
     HandlerMap::const_iterator i = m_handlers.find(name);
     if (i == m_handlers.end())
@@ -136,6 +134,8 @@ try {
       input[i]  = batch[i]->Input();
       output[i] = batch[i]->Output();
     }
+
+    Timer timer;
 
     try {
       // execute handler

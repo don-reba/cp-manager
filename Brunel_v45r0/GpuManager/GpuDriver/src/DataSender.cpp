@@ -29,7 +29,8 @@ DataSender::DataSender(
     m_protocol  (new Protocol(*m_transport)) {
 }
 
-void DataSender::operator() () {
+void DataSender::operator() ()
+try {
   Timer timer(true);
   timer.start();
 
@@ -78,8 +79,12 @@ void DataSender::operator() () {
     timer.stop();
 
     // receive performance data
-    double kernelSeconds = m_protocol->readDouble();
+    m_protocol->readDouble();
   }
+} catch (const std::exception & e) {
+  cout << "Unrecoverable error: " << e.what() << endl;
+} catch (...) {
+  cout << "Unkonwn unrecoverable error." << endl;
 }
 
 void DataSender::readData(

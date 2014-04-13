@@ -41,12 +41,19 @@ SocketClient::~SocketClient() {
 //--------------------------
 
 void SocketClient::readBytes(void * data, size_t size) {
-  size_t received = read(m_socket, data, size);
-  if (received == static_cast<size_t>(-1))
-    throw SystemException("Read error.");
-  if (received != size) {
+  size_t total = 0u;
+  while (total < size) {
+    size_t received = read(m_socket, data, size);
+    if (received == static_cast<size_t>(-1)) {
+      std::stringstream msg;
+      msg << "Read error; " << total << " bytes received.";
+      throw std::runtime_error(msg.str().c_str());
+    }
+    total += received;
+  }
+  if (total > size) {
     std::stringstream msg;
-    msg << "Asked for " << size << " bytes; received " << received << ".";
+    msg << "Asked for " << size << " bytes; received " << total << ".";
     throw std::runtime_error(msg.str().c_str());
   }
 }

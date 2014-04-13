@@ -24,8 +24,8 @@ using namespace std;
 bool DirectoryCompare(const directory_entry & d1, const directory_entry & d2) {
   string f1 = d1.path().stem().string();
   string f2 = d2.path().stem().string();
-  int n1 = atoi(f1.c_str());
-  int n2 = atoi(f2.c_str());
+  int n1 = atoi(f1.c_str()); // 0 for non-numeric
+  int n2 = atoi(f2.c_str()); // 0 for non-numeric
   return n2 < n1; // reverse-sort
 }
 
