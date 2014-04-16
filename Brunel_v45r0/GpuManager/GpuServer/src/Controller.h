@@ -4,7 +4,7 @@
 
 #include "Admin.h"
 
-#include "GpuIpc/SocketClient.h"
+#include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
 
 class Controller {
@@ -20,7 +20,7 @@ class Controller {
 
     Logger & m_logger;
 
-    SocketClient m_transport;
-    Protocol     m_protocol;
-    Admin        m_admin;
+    LocalSocketClient m_transport;
+    Protocol          m_protocol;
+    Admin             m_admin;
 };

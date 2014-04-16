@@ -2,6 +2,8 @@
 
 #include "ITransport.h"
 
+#include <memory>
+
 #include <boost/shared_ptr.hpp>
 
 /// Helper interface used by the server to handle incoming connections.
@@ -10,7 +12,7 @@ class IConnector {
     virtual ~IConnector() {}
 
     /// Block until a client connects or throw an exception.
-    virtual boost::shared_ptr<ITransport> accept() = 0;
+    virtual std::shared_ptr<ITransport> accept() = 0;
 
     /// Called when the server is halted.
     virtual void close() = 0;

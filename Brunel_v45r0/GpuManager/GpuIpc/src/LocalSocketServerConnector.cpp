@@ -1,9 +1,8 @@
 #include "IOException.h"
 #include "SocketServer.h"
-#include "SocketServerConnector.h"
+#include "LocalSocketServerConnector.h"
 #include "SystemException.h"
 
-#include <boost/make_shared.hpp>
 #include <cstring>
 #include <stdexcept>
 #include <sys/socket.h>
@@ -13,7 +12,7 @@
 // public interface
 //-----------------
 
-SocketServerConnector::SocketServerConnector(const char * path) :
+LocalSocketServerConnector::LocalSocketServerConnector(const char * path) :
     m_path   (path),
     m_socket (-1) {
   m_socket = ::socket(AF_LOCAL, SOCK_STREAM, 0);
@@ -38,7 +37,7 @@ SocketServerConnector::SocketServerConnector(const char * path) :
     throw SystemException("Could not listen to socket.");
 }
 
-SocketServerConnector::~SocketServerConnector() {
+LocalSocketServerConnector::~LocalSocketServerConnector() {
   if (m_socket != -1) {
     ::unlink(m_path.c_str());
     ::close(m_socket);
@@ -49,13 +48,13 @@ SocketServerConnector::~SocketServerConnector() {
 // IConnector implementation
 //--------------------------
 
-boost::shared_ptr<ITransport> SocketServerConnector::accept() {
+std::shared_ptr<ITransport> LocalSocketServerConnector::accept() {
   int accepted = ::accept(m_socket, NULL, NULL);
   if (-1 == accepted)
     throw IOException("Could not accept incoming connection.");
-  return boost::make_shared<SocketServer>(accepted);
+  return std::make_shared<SocketServer>(accepted);
 }
 
-void SocketServerConnector::close() {
+void LocalSocketServerConnector::close() {
   shutdown(m_socket, SHUT_RDWR);
 }

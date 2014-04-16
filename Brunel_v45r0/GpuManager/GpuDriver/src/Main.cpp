@@ -1,7 +1,6 @@
 #include "CommandLine.h"
 #include "DataSender.h"
 
-#include "GpuIpc/SocketClient.h"
 #include "GpuIpc/IProtocol.h"
 
 #include <algorithm>

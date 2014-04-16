@@ -5,18 +5,18 @@
 #include "IConnector.h"
 
 /// Connector for the SocketServer.
-class SocketServerConnector : public IConnector {
+class LocalSocketServerConnector : public IConnector {
   public: // public interface
 
     /// Create a connector for a socket with the given path.
-    SocketServerConnector(const char * path);
+    LocalSocketServerConnector(const char * path);
 
-    virtual ~SocketServerConnector();
+    virtual ~LocalSocketServerConnector();
 
   public: // IConnector implementation
 
     /// Block until a client connects or throw an exception.
-    virtual boost::shared_ptr<ITransport> accept();
+    virtual std::shared_ptr<ITransport> accept();
 
     /// Called when the server is halted.
     virtual void close();

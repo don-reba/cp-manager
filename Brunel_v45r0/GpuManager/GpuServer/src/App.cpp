@@ -1,7 +1,8 @@
 #include "App.h"
 
+#include <memory>
+
 #include <boost/bind.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/ref.hpp>
 #include <boost/thread.hpp>
 
@@ -24,8 +25,8 @@ App::App(
 }
 
 void App::run() {
-  boost::shared_ptr<boost::thread> adminServer(m_adminServer.serve());
-  boost::shared_ptr<boost::thread> mainServer(m_mainServer.serve());
+  shared_ptr<boost::thread> adminServer(m_adminServer.serve());
+  shared_ptr<boost::thread> mainServer(m_mainServer.serve());
 
   m_main.start();
 
@@ -39,6 +40,6 @@ void App::exit() {
   m_main.stop();
 }
 
-boost::shared_ptr<IProtocol> App::getProtocol(ITransport & transport) {
-  return boost::make_shared<Protocol>(ref(transport));
+shared_ptr<IProtocol> App::getProtocol(ITransport & transport) {
+  return make_shared<Protocol>(ref(transport));
 }

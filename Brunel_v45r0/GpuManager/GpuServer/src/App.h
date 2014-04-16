@@ -8,10 +8,10 @@
 #include "MainServer.h"
 
 #include "GpuIpc/Protocol.h"
-#include "GpuIpc/SocketServerConnector.h"
+#include "GpuIpc/LocalSocketServerConnector.h"
 #include "GpuIpc/ThreadedServer.h"
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 class DataLog;
 class PerfLog;
@@ -43,14 +43,14 @@ class App : public IApp {
 
   private: // private functions
 
-    static boost::shared_ptr<IProtocol> getProtocol(ITransport & transport);
+    static std::shared_ptr<IProtocol> getProtocol(ITransport & transport);
 
   private: // data
 
     Logger  & m_logger;
 
-    SocketServerConnector m_adminConnector;
-    SocketServerConnector m_mainConnector;
+    LocalSocketServerConnector m_adminConnector;
+    LocalSocketServerConnector m_mainConnector;
 
     ThreadedServer m_adminServer;
     ThreadedServer m_mainServer;

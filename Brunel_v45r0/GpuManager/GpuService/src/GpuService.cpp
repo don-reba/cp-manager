@@ -1,6 +1,6 @@
 #include "GpuService.h"
 
-#include "GpuIpc/SocketClient.h"
+#include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
 
 #include <GaudiKernel/SvcFactory.h>
@@ -113,6 +113,6 @@ void GpuService::cleanup() {
 
 void GpuService::initIO() {
   string socketPath = m_socketPath.value() + "-tracker";
-  m_transport = new SocketClient(socketPath.c_str());
+  m_transport = new LocalSocketClient(socketPath.c_str());
   m_protocol  = new Protocol(*m_transport);
 }

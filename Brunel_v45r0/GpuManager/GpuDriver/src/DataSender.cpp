@@ -1,7 +1,7 @@
 #include "DataSender.h"
 #include "Timer.h"
 
-#include "GpuIpc/SocketClient.h"
+#include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
 
 #include <fstream>
@@ -25,7 +25,7 @@ DataSender::DataSender(
     m_index     (index),
     m_paths     (paths),
     m_mutex     (pathsMutex),
-    m_transport (new SocketClient(servicePath)),
+    m_transport (new LocalSocketClient(servicePath)),
     m_protocol  (new Protocol(*m_transport)) {
 }
 

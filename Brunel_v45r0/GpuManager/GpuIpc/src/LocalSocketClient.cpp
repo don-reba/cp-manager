@@ -1,4 +1,4 @@
-#include "SocketClient.h"
+#include "LocalSocketClient.h"
 #include "SystemException.h"
 
 #include <cstring>
@@ -13,10 +13,10 @@
 // construction
 //-------------
 
-SocketClient::SocketClient(const char * path) :
+LocalSocketClient::LocalSocketClient(const char * path) :
     m_path   (path),
     m_socket (-1) {
-  m_socket = socket(AF_LOCAL, SOCK_STREAM, 0);
+  m_socket = socket(AF_UNIX, SOCK_STREAM, 0);
   if (m_socket == -1)
     throw SystemException("Could not create socket.");
 
@@ -31,7 +31,7 @@ SocketClient::SocketClient(const char * path) :
     throw SystemException("Could not connect to socket.");
 }
 
-SocketClient::~SocketClient() {
+LocalSocketClient::~LocalSocketClient() {
   if (m_socket != -1)
     close(m_socket);
 }
@@ -40,7 +40,7 @@ SocketClient::~SocketClient() {
 // ITransport implementation
 //--------------------------
 
-void SocketClient::readBytes(void * data, size_t size) {
+void LocalSocketClient::readBytes(void * data, size_t size) {
   size_t total = 0u;
   while (total < size) {
     size_t received = read(m_socket, data, size);
@@ -58,7 +58,7 @@ void SocketClient::readBytes(void * data, size_t size) {
   }
 }
 
-void SocketClient::writeBytes(const void * data, size_t size) {
+void LocalSocketClient::writeBytes(const void * data, size_t size) {
   size_t sent = write(m_socket, data, size);
   if (sent == static_cast<size_t>(-1))
     throw SystemException("Write error.");

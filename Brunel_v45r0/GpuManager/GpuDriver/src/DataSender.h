@@ -1,9 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -14,6 +14,7 @@ class DataSender {
   private:
 
     typedef boost::mutex::scoped_lock scoped_lock;
+    typedef std::vector<boost::filesystem::directory_entry> directory_entry_vector;
 
   public:
 
@@ -35,11 +36,11 @@ class DataSender {
 
   private:
 
-    int                                               m_index;
-    std::vector<boost::filesystem::directory_entry> & m_paths;
-    boost::mutex                                    & m_mutex;
+    int                      m_index;
+    directory_entry_vector & m_paths;
+    boost::mutex           & m_mutex;
 
     // pointers are used to make sure DataSender could be copied
-    boost::shared_ptr<ITransport> m_transport;
-    boost::shared_ptr<IProtocol>  m_protocol;
+    std::shared_ptr<ITransport> m_transport;
+    std::shared_ptr<IProtocol>  m_protocol;
 };

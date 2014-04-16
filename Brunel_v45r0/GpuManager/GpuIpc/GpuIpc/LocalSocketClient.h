@@ -5,12 +5,12 @@
 #include <string>
 
 /// Transport over a named socket.
-class SocketClient : public ITransport {
+class LocalSocketClient : public ITransport {
   public:
     /// Connect to the socket with the given path.
-    SocketClient(const char * path);
+    LocalSocketClient(const char * path);
 
-    virtual ~SocketClient();
+    virtual ~LocalSocketClient();
 
   public: // ITransport implementation
 

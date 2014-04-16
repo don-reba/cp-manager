@@ -1,7 +1,8 @@
 #pragma once
 
+#include <memory>
+
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 
 class IConnector;
@@ -17,21 +18,21 @@ class ThreadedServer {
       public:
         ConnectionHandler (
           ThreadedServer                & server,
-          boost::shared_ptr<ITransport>   transport,
-          boost::shared_ptr<IProtocol>    protocol,
+          std::shared_ptr<ITransport>   transport,
+          std::shared_ptr<IProtocol>    protocol,
           IProcessor                    & processor);
         void operator () ();
       private:
         ThreadedServer                & m_server;
-        boost::shared_ptr<ITransport>   m_transport;
-        boost::shared_ptr<IProtocol>    m_protocol;
+        std::shared_ptr<ITransport>   m_transport;
+        std::shared_ptr<IProtocol>    m_protocol;
         IProcessor                    & m_processor;
     };
 
   public: // public interface
 
     /// Factory for instantiating protocols for multiple connections.
-    typedef boost::function<boost::shared_ptr<IProtocol> (ITransport&)> ProtocolFactory;
+    typedef boost::function<std::shared_ptr<IProtocol> (ITransport&)> ProtocolFactory;
 
     /// Create a ThreadedServer instance.
     ThreadedServer(

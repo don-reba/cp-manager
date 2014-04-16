@@ -41,8 +41,8 @@ void ThreadedServer::stop() {
 void ThreadedServer::serveConnector() {
   try {
     for (;;) { // until an exception is thrown
-      boost::shared_ptr<ITransport> transport = m_connector.accept();
-      boost::shared_ptr<IProtocol>  protocol  = m_protocolFactory(*transport);
+      std::shared_ptr<ITransport> transport = m_connector.accept();
+      std::shared_ptr<IProtocol>  protocol  = m_protocolFactory(*transport);
       // TODO: create a new processor for each thread
       m_connections.create_thread(ConnectionHandler(*this, transport, protocol, m_processor));
     }
@@ -58,8 +58,8 @@ void ThreadedServer::serveConnector() {
 
 ThreadedServer::ConnectionHandler::ConnectionHandler(
     ThreadedServer         & server,
-    boost::shared_ptr<ITransport>   transport,
-    boost::shared_ptr<IProtocol>    protocol,
+    std::shared_ptr<ITransport>   transport,
+    std::shared_ptr<IProtocol>    protocol,
     IProcessor             & processor) :
     // initializers
     m_server    (server),
