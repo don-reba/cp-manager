@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <boost/filesystem.hpp>
@@ -11,34 +12,54 @@ class ITransport;
 class IProtocol;
 
 class DataSender {
+	public:
+
+		struct DiffMessage {
+			std::string path;
+			std::string message;
+
+			DiffMessage(const std::string & path, const std::string & message)
+				: path(path), message(message)
+			{}
+		};
+
+    typedef std::vector<boost::filesystem::directory_entry> directory_entry_vector;
+
   private:
 
     typedef boost::mutex::scoped_lock scoped_lock;
-    typedef std::vector<boost::filesystem::directory_entry> directory_entry_vector;
 
   public:
 
     DataSender(
-        int                                               index,
-        const char                                      * servicePath,
-        std::vector<boost::filesystem::directory_entry> & paths,
-        boost::mutex                                    & pathsMutex);
+        int                        index,
+        const char               * servicePath,
+        directory_entry_vector   & paths,
+				std::vector<DiffMessage> & diffMessages,
+        boost::mutex             & pathsMutex,
+				bool                       verifyOutput);
 
     void operator() ();
 
   private:
 
-    static void readData
-      ( const char           * path
-      , std::string          & handlerName
-      , std::vector<uint8_t> & data
-      );
+		std::string diff(
+				const std::vector<uint8_t> & data,
+				const std::vector<uint8_t> & reference);
+
+    static void readData(
+      const char           * path,
+      std::string          & handlerName,
+      std::vector<uint8_t> & input,
+      std::vector<uint8_t> & output);
 
   private:
 
-    int                      m_index;
-    directory_entry_vector & m_paths;
-    boost::mutex           & m_mutex;
+    int                        m_index;
+    directory_entry_vector   & m_paths;
+		std::vector<DiffMessage> & m_diffMessages;
+    boost::mutex             & m_mutex;
+		bool                       m_verifyOutput;
 
     // pointers are used to make sure DataSender could be copied
     std::shared_ptr<ITransport> m_transport;

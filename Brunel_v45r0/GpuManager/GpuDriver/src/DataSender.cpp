@@ -1,9 +1,9 @@
 #include "DataSender.h"
-#include "Timer.h"
 
 #include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -18,22 +18,23 @@ void readStream(ifstream & stream, void * data, size_t size) {
 }
 
 DataSender::DataSender(
-    int                       index,
-    const char              * servicePath,
-    vector<directory_entry> & paths,
-    mutex                   & pathsMutex) :
-    m_index     (index),
-    m_paths     (paths),
-    m_mutex     (pathsMutex),
+    int                      index,
+    const char             * servicePath,
+    directory_entry_vector & paths,
+		vector<DiffMessage>    & diffMessages,
+    mutex                  & pathsMutex,
+		bool                     verifyOutput) :
+    m_index        (index),
+    m_paths        (paths),
+		m_diffMessages (diffMessages),
+    m_mutex        (pathsMutex),
+    m_verifyOutput (verifyOutput),
     m_transport (new LocalSocketClient(servicePath)),
     m_protocol  (new Protocol(*m_transport)) {
 }
 
 void DataSender::operator() ()
 try {
-  Timer timer(true);
-  timer.start();
-
   for (;;) {
     // load and send the next item from the paths collection
     string path;
@@ -48,21 +49,21 @@ try {
     ifstream stream(path.c_str(), ios_base::binary);
 
     string handlerName;
-    vector<uint8_t> data;
-    readData(path.c_str(), handlerName, data);
+    vector<uint8_t> recordedInput;
+    vector<uint8_t> recordedOutput;
+    readData(path.c_str(), handlerName, recordedInput, recordedOutput);
 
     // send the name of the addressee
     m_protocol->writeString(handlerName);
 
-    // send the data package
-    m_protocol->writeUInt32(data.size());
-    if (!data.empty())
-      m_protocol->writeData(&data[0], data.size());
+    // send recorded input
+    m_protocol->writeUInt32(recordedInput.size());
+    if (!recordedInput.empty())
+      m_protocol->writeData(recordedInput.data(), recordedInput.size());
 
-    // receive the result
+    // receive the result and handle errors
     size_t resultSize = m_protocol->readUInt32();
 
-    // handle errors
     const size_t FAIL_FLAG = 0xFFFFFFFF;
     if (resultSize == FAIL_FLAG) {
       string message = m_protocol->readString();
@@ -74,11 +75,18 @@ try {
 
     vector<uint8_t> result(resultSize);
     if (!result.empty())
-      m_protocol->readData(&result[0], resultSize);
+      m_protocol->readData(result.data(), resultSize);
 
-    timer.stop();
+		// verify output
+		if (m_verifyOutput) {
+			string message = diff(result, recordedOutput);
+			if (!message.empty()) {
+				scoped_lock lock(m_mutex);
+				m_diffMessages.push_back(DiffMessage(path, message));
+			}
+		}
 
-    // receive performance data
+    // receive performance information
     m_protocol->readDouble();
   }
 } catch (const std::exception & e) {
@@ -87,23 +95,55 @@ try {
   cout << "Unkonwn unrecoverable error." << endl;
 }
 
+string DataSender::diff(
+		const vector<uint8_t> & data,
+		const vector<uint8_t> & reference) {
+  // check size
+	if (data.size() != reference.size()) {
+		ostringstream message;
+		message << "size mismatch: " << data.size() << " B instead of " << reference.size() << " B";
+		return message.str();
+	}
+
+  // check contents
+  size_t mismatchCount = 0;
+  for (size_t i = 0, size = data.size(); i != size; ++i)
+    mismatchCount += (data[i] != reference[i]);
+	if (mismatchCount > 0) {
+    ostringstream message;
+    message << "data mismatch on " << mismatchCount << " bytes";
+    return message.str();
+  }
+
+	return "";
+}
+
 void DataSender::readData(
     const char      * path,
     string          & handlerName,
-    vector<uint8_t> & data) {
+    vector<uint8_t> & input,
+		vector<uint8_t> & output) {
   ifstream stream(path, ios_base::binary);
 
   uint32_t handlerSize;
   readStream(stream, &handlerSize, 4);
 
+	// read name
   vector<char> handlerChars(handlerSize + 1); // +1 for terminating zero
-  readStream(stream, &handlerChars[0], handlerSize);
-  handlerName = &handlerChars[0];
+  readStream(stream, handlerChars.data(), handlerSize);
+  handlerName = handlerChars.data();
 
-  uint32_t dataSize;
-  readStream(stream, &dataSize, 4);
+	// read input
+  uint32_t inputSize;
+  readStream(stream, &inputSize, 4);
 
-  data.resize(dataSize);
-  if (!data.empty())
-    readStream(stream, &data[0], dataSize);
+  input.resize(inputSize);
+	readStream(stream, input.data(), inputSize);
+
+	// read output
+  uint32_t outputSize;
+  readStream(stream, &outputSize, 4);
+
+  output.resize(outputSize);
+	readStream(stream, output.data(), outputSize);
 }

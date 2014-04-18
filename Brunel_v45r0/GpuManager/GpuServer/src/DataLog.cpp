@@ -19,7 +19,10 @@ DataLog::DataLog(bool enabled, const string & dir) :
     m_counter (0) {
 }
 
-void DataLog::addRecord(const string & handlerName, const Data & data) {
+void DataLog::addRecord(
+    const string & handlerName,
+    const Data   & input,
+    const Data   & output) {
   if (!m_enabled)
     return;
 
@@ -27,19 +30,24 @@ void DataLog::addRecord(const string & handlerName, const Data & data) {
 
   string   path   (makePath(m_dir, m_counter++));
   ofstream stream (path.c_str(), ios::binary | ios::trunc);
-  if (!data.empty() && stream) {
-    uint32_t handlerSize = handlerName.size();
-    writeStream(stream, &handlerSize, 4);
-    writeStream(stream, handlerName.c_str(), handlerSize);
+  if (!stream)
+    return;
 
-    uint32_t dataSize = data.size();
-    writeStream(stream, &dataSize, 4);
-    writeStream(stream, &data[0], dataSize);
-  }
+  const uint32_t handlerSize = handlerName.size();
+  writeStream(stream, &handlerSize, 4);
+  writeStream(stream, handlerName.c_str(), handlerSize);
+
+  const uint32_t inputSize = input.size();
+  writeStream(stream, &inputSize, 4);
+  writeStream(stream, input.data(), inputSize);
+
+  const uint32_t outputSize = output.size();
+  writeStream(stream, &outputSize, 4);
+  writeStream(stream, output.data(), outputSize);
 }
 
 string DataLog::makePath(const string & dir, int counter) {
   ostringstream path;
-  path << dir << '/' << counter << ".dat"; // WARN: OS-specific path separator
+  path << dir << path::preferred_separator << counter << ".dat";
   return path.str();
 }

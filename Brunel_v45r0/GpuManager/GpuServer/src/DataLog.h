@@ -16,7 +16,12 @@ class DataLog {
     // - utf-8 handler name
     // - uint32: input data size
     // - input data
-    void addRecord(const std::string & handlerName, const Data & data);
+    // - uint32: output data size
+    // - output data
+    void addRecord(
+        const std::string & handlerName,
+        const Data        & input,
+        const Data        & output);
 
   private: // private functions
 

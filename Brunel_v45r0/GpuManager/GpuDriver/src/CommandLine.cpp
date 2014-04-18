@@ -8,16 +8,18 @@ using namespace boost::program_options;
 using namespace std;
 
 CommandLine::CommandLine(const char * servicePath) :
-    m_servicePath (servicePath) {
+    m_servicePath  (servicePath),
+    m_verifyOutput (false) {
 }
 
 bool CommandLine::parse(int argc, char * argv[]) {
   options_description desc("Supported options");
   desc.add_options()
-    ("help", "display this help message"                                                                     )
-    ("service", value<string>(&m_servicePath)->default_value(m_servicePath), "socket path"                   )
-    ("threads", value<int>(&m_threadCount)->default_value(1), "the number of requests to run concurrently"   )
-    ("data",    value<string>(&m_dataPath)->required(),       "directory with input gpuserver input records" );
+    ("help", "display this help message"                                                              )
+    ("service", value(&m_servicePath)->default_value(m_servicePath), "socket path"                    )
+    ("threads", value(&m_threadCount)->default_value(1), "the number of requests to run concurrently" )
+    ("verify",  value(&m_verifyOutput)->zero_tokens(),  "verify received output"                      )
+    ("data",    value(&m_dataPath)->required(),       "directory with input gpuserver input records"  );
 
   variables_map vm;
   try {

@@ -44,8 +44,6 @@ void MainServer::process(IProtocol & protocol) {
   Data input(size);
   protocol.readData(&input[0], size);
 
-  m_dataLog.addRecord(handlerName, input);
-
   HandlerMap::const_iterator i = m_handlers.find(handlerName);
   if (i == m_handlers.end()) {
     // when a handler is not found, inform the client
@@ -64,11 +62,14 @@ void MainServer::process(IProtocol & protocol) {
   packet.Wait();
   timer.stop();
 
+  // forward exceptions to client
   if (packet.ExceptionThrown()) {
     protocol.writeUInt32(FAIL_FLAG);
     protocol.writeString(packet.ExceptionMessage());
     return;
   }
+
+  m_dataLog.addRecord(handlerName, input, output);
 
   // return the output to client
   protocol.writeUInt32(output.size());

@@ -29,12 +29,26 @@ bool DirectoryCompare(const directory_entry & d1, const directory_entry & d2) {
 }
 
 // Load data input records from the given paths and send them using the given thread count.
-void sendData(const char * servicePath, int threadCount, vector<directory_entry> & paths) {
+void sendData(
+		const char              * servicePath,
+		int                       threadCount,
+		bool                      verifyOutput,
+		vector<directory_entry> & paths) {
+	vector<DataSender::DiffMessage> diffMessages;
+
   mutex pathsMutex;
   thread_group group;
   for (int i = 0; i != threadCount; ++i)
-    group.create_thread(DataSender(i, servicePath, paths, pathsMutex));
+    group.create_thread(DataSender(i, servicePath, paths, diffMessages, pathsMutex, verifyOutput));
   group.join_all();
+
+	if (!diffMessages.empty()) {
+		cout << "output mismatch:\n";
+		for (size_t i = 0, size = diffMessages.size(); i != size; ++i) {
+			cout << (i+1) << ". " << diffMessages[i].path << '\n';
+			cout << "  " << diffMessages[i].message << '\n';
+		}
+	}
 }
 
 int main(int argc, char * argv[])
@@ -53,7 +67,7 @@ try {
 
   string socketPath = cl.servicePath() + "-tracker";
 
-  sendData(socketPath.c_str(), cl.threadCount(), paths);
+  sendData(socketPath.c_str(), cl.threadCount(), cl.verifyOutput(), paths);
 
   return EXIT_SUCCESS;
 } catch (const std::exception & e) {

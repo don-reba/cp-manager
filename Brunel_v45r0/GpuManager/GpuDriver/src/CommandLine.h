@@ -9,13 +9,15 @@ class CommandLine {
 
     bool parse(int argc, char * argv[]);
 
-    int         threadCount() const { return m_threadCount; }
-    std::string dataPath()    const { return m_dataPath;    }
-    std::string servicePath() const { return m_servicePath; }
+    std::string dataPath()     const { return m_dataPath;     }
+    std::string servicePath()  const { return m_servicePath;  }
+    int         threadCount()  const { return m_threadCount;  }
+    bool        verifyOutput() const { return m_verifyOutput; }
 
   private:
 
-    int         m_threadCount;
     std::string m_dataPath;
     std::string m_servicePath;
+    int         m_threadCount;
+    bool        m_verifyOutput;
 };
