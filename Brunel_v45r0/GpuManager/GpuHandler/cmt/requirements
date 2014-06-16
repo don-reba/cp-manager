@@ -1,0 +1,11 @@
+package GpuHandler
+version v1r1
+
+branches cmt src
+
+use GaudiPolicy *
+
+pattern gpu_handler \
+  macro_append gpu_handlers " <type> <name>"
+
+apply_pattern install_more_includes more=GpuHandler

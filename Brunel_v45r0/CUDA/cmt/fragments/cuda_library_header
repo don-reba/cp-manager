@@ -1,0 +1,46 @@
+#-- start of cuda_library_hdeader --------------------------------
+
+cuda_echo = $(echo) compiling
+
+install_dir = ${CMTINSTALLAREA}/$(tag)/lib
+$(CONSTITUENT)_output = $(bin)
+$(CONSTITUENT)installname = lib$(CONSTITUENT).$(shlibsuffix)
+
+.PHONY: $(CONSTITUENT) install
+$(CONSTITUENT) install :: $(install_dir)/$(${CONSTITUENT}installname)
+ifdef CMTINSTALLAREA
+	$(echo) "installation done"
+endif
+
+$(install_dir)/$(${CONSTITUENT}installname) :: $($(CONSTITUENT)_output)$(${CONSTITUENT}installname)
+ifdef CMTINSTALLAREA
+	$(silent) $(cmt_install_action)        \
+		-source "`(cd $(bin); pwd)`"         \
+		-name "$(${CONSTITUENT}installname)" \
+		-out "$(install_dir)"                \
+		-cmd "$(cmt_installarea_command)"    \
+		-cmtpath "$($(package)_cmtpath)"
+endif
+
+$($(CONSTITUENT)_output)$($(CONSTITUENT)installname) :: $(OBJS)
+	$(echo) linking CUDA library...
+	$(cuda_bin) --shared --compiler-bindir $(cpp) --output-file $@ --link $^
+
+.PHONY: $(CONSTITUENT)clean
+$(CONSTITUENT)clean ::
+	$(cleanup_echo) $($(CONSTITUENT)installname)
+	$(cleanup_silent) /bin/rm -f $($(CONSTITUENT)installname)
+	$(cleanup_echo) $(OBJS)
+	$(cleanup_silent) /bin/rm -f $(OBJS)
+
+.PHONY: ${CONSTITUENT}uninstall uninstall
+${CONSTITUENT}uninstall uninstall ::
+ifdef CMTINSTALLAREA
+	$(cleanup_silent) $(cmt_uninstall_action) \
+		-source "`(cd $(bin); pwd)`"            \
+		-name "$(${CONSTITUENT}installname)"    \
+		-out "$(install_dir)"                   \
+		-cmtpath "$($(package)_cmtpath)"
+endif
+
+#-- end of cuda_library_header -----------------------------------

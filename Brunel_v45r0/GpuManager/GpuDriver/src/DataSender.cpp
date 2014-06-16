@@ -2,6 +2,7 @@
 
 #include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
+#include "Timer.h"
 
 #include <algorithm>
 #include <fstream>
@@ -53,6 +54,9 @@ try {
     vector<uint8_t> recordedOutput;
     readData(path.c_str(), handlerName, recordedInput, recordedOutput);
 
+    Timer timer;
+    timer.start();
+
     // send the name of the addressee
     m_protocol->writeString(handlerName);
 
@@ -62,7 +66,7 @@ try {
       m_protocol->writeData(recordedInput.data(), recordedInput.size());
 
     // receive the result and handle errors
-    size_t resultSize = m_protocol->readUInt32();
+    const size_t resultSize = m_protocol->readUInt32();
 
     const size_t FAIL_FLAG = 0xFFFFFFFF;
     if (resultSize == FAIL_FLAG) {
@@ -87,7 +91,11 @@ try {
 		}
 
     // receive performance information
-    m_protocol->readDouble();
+    const double serverSecondsElapsed = m_protocol->readDouble();
+
+    timer.stop();
+
+    perfLog.addRecord(path, handlerName, timer.secondsElapsed(), serverSecondsElapsed);
   }
 } catch (const std::exception & e) {
   cout << "Unrecoverable error: " << e.what() << endl;

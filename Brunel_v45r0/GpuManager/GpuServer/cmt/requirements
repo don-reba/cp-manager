@@ -6,10 +6,12 @@ author  "Alexey Badalov / Daniel Campora"
 branches cmt doc src
 
 # dependencies
-use GpuIpc v* GpuManager
-use Boost  v* LCG_Interfaces -no_auto_imports
-use tbb    v* LCG_Interfaces
-use PrPixelSerialization  v* Pr
+use GpuIpc               * GpuManager
+use Boost                * LCG_Interfaces -no_auto_imports
+use tbb                  * LCG_Interfaces
+use PrPixelSerialization * Pr
+# handlers
+use PrPixelCuda          * Pr
 
 # application constituent
 application gpuserver -import=Boost *.cpp Api/*.cpp Handlers/*.cpp Handlers/PixelTracker/*.cpp
@@ -19,20 +21,19 @@ private
 macro application_suffix ""
 
 # add link options
-macro_append Boost_linkopts " $(Boost_linkopts_filesystem) "
-macro_append Boost_linkopts " $(Boost_linkopts_program_options) "
-macro_append Boost_linkopts " $(Boost_linkopts_system) "
-macro_append Boost_linkopts " $(Boost_linkopts_thread) "
+macro_append Boost_linkopts " $(Boost_linkopts_filesystem)"
+macro_append Boost_linkopts " $(Boost_linkopts_program_options)"
+macro_append Boost_linkopts " $(Boost_linkopts_system)"
+macro_append Boost_linkopts " $(Boost_linkopts_thread)"
+macro_append Boost_linkopts " $(Boost_linkopts_thread)"
+macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED"
 
 # macro_append gpuserver_linkopts " -lpixeltbb "
-macro_append gpuserver_linkopts " -lpixelcuda "
-macro_append gpuserver_linkopts " -L../src/Handlers/PixelTracker/slc6 "
+#macro_append GpuServer_linkopts " -lserverpixelcuda "
+#macro_append GpuServer_linkopts " -L../src/Handlers/PrPixel/slc6 "
 
 # tbb-specific link options
-macro_prepend tbb_linkopts " -Wl,--no-as-needed " \
-              target-darwin "" \
-              target-winxp  ""
-macro_append tbb_linkopts " -Wl,--as-needed " \
+macro_prepend tbb_linkopts "-Wl,--as-needed " \
              target-darwin "" \
              target-winxp  "" \
              target-icc    ""

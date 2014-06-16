@@ -38,10 +38,19 @@ void doDaemonize() {
     throw runtime_error("Failed to change the current working directory.");
 }
 
+class PrPixelCudaHandler
+{
+  public:
+    PrPixelCudaHandler();
+};
+
 // Main entry point.
 int main(int argc, char * argv[])
 try {
   const char * defaultPath = "/tmp/GpuManager";
+
+  // DBG
+  new PrPixelCudaHandler();
 
   CommandLine cl(defaultPath);
   if (!cl.parse(argc, argv))
