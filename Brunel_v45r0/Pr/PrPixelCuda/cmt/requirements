@@ -1,0 +1,22 @@
+package PrPixelCuda
+version v1r1
+
+# structure
+branches PrPixelCuda cmt src
+
+# dependencies
+use GaudiPolicy *
+use CUDA        *
+use GpuHandler  * GpuManager
+
+document cuda_library PrPixelCuda \
+  main.cpp         \
+  kernel.cu        \
+  kernelInvoker.cu \
+  Tools.cpp
+
+apply_pattern linker_library library=PrPixelCuda
+
+apply_pattern gpu_handler type=PrPixelCudaHandler name=pr-pixel
+
+macro_prepend PrPixelCuda_linkopts "-Wl,--no-as-needed "
