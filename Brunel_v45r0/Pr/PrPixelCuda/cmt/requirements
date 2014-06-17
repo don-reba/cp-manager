@@ -10,13 +10,13 @@ use CUDA        *
 use GpuHandler  * GpuManager
 
 document cuda_library PrPixelCuda \
-  main.cpp         \
-  kernel.cu        \
-  kernelInvoker.cu \
+  main.cpp                        \
+  kernel.cu                       \
+  kernelInvoker.cu                \
   Tools.cpp
 
 apply_pattern linker_library library=PrPixelCuda
 
-apply_pattern gpu_handler type=PrPixelCudaHandler name=pr-pixel
+apply_pattern gpu_handler type=PrPixelCudaHandler name=pr-pixel -path=PrPixelCuda/PrPixelCuda.h
 
 macro_prepend PrPixelCuda_linkopts "-Wl,--no-as-needed "

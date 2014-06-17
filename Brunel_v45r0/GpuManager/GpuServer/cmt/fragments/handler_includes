@@ -1,0 +1,11 @@
+# start of handler_includes
+
+$(CONSTITUENT) :: ../src/Handlers/instances.h ../src/Handlers/includes.h
+
+../src/Handlers/instances.h ::
+	python ../python/code_gen.py inst $(gpu_handlers) > $@
+
+../src/Handlers/includes.h ::
+	python ../python/code_gen.py incl $(gpu_handlers) > $@
+
+# end of handler_includes
