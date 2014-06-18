@@ -5,7 +5,9 @@
 #include "Timer.h"
 
 //#include "Handlers/PrPixel.h"
-#include "Handlers/Test.h"
+//#include "Handlers/Test.h"
+
+#include "Handlers/includes.h"
 
 #include <algorithm>
 #include <cstring>
@@ -16,8 +18,17 @@
 #include <stdexcept>
 
 using namespace boost;
-using namespace Handlers;
 using namespace std;
+
+//--------
+// helpers
+//--------
+
+template <typename T, size_t Size>
+size_t arraySize(const T (&)[Size])
+{
+  return Size;
+}
 
 //----------
 // interface
@@ -26,8 +37,17 @@ using namespace std;
 MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
     m_perfLog (perfLog),
     m_dataLog (dataLog) {
-  //m_handlers["tripletSearchGPU"] = &Handlers::tripletSearchGPU;
-  m_handlers["test"]          = &Handlers::test;
+  pair<const char *, IGpuHandler*> handlers[] =
+    #include "Handlers/instances.h"
+
+  for (size_t i = 0, size = ::arraySize(handlers); i != size; ++i)
+    m_handlers[handlers[i].first] = std::move(handlers[i].second);
+}
+
+MainServer::~MainServer()
+{
+    for (HandlerMap::iterator i = m_handlers.begin(), end = m_handlers.end(); i != end; ++i)
+      delete i->second;
 }
 
 //------------------------
@@ -93,7 +113,10 @@ size_t MainServer::addSize(size_t total, const Data * data) {
   return total + data->size();
 }
 
-void * MainServer::allocVector(size_t index, size_t size, AllocParam param) {
+void * MainServer::allocVector(
+    size_t index,
+    size_t size,
+    IGpuHandler::AllocParam param) {
   typedef vector<Data*> Batch;
   Batch * batch = reinterpret_cast<Batch*>(param);
   Data * data = batch->at(index);
@@ -126,7 +149,7 @@ try {
     HandlerMap::const_iterator i = m_handlers.find(name);
     if (i == m_handlers.end())
       throw runtime_error(createInvalidHandlerMsg(name));
-    Handler handler = i->second;
+    IGpuHandler * handler = i->second;
 
     // prepare data
     vector<const Data*> input  (batch.size());

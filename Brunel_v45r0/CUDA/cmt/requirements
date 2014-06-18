@@ -4,9 +4,6 @@ version v1r1
 # structure
 branches cmt
 
-# dependencies
-#use Boost       * LCG_Interfaces -no_auto_imports
-
 macro cuda_bin nvcc
 macro cuda_arch sm_30
 make_fragment cuda_library -header=cuda_library_header -suffix=o

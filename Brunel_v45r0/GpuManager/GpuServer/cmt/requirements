@@ -13,6 +13,7 @@ use tbb         * LCG_Interfaces
 use PrPixelCuda * Pr
 
 # add code generation
+macro code_gen "../python/code_gen.py"
 make_fragment handler_includes -header=handler_includes
 document handler_includes HandlerIncludes
 

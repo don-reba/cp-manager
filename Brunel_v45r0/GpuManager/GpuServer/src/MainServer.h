@@ -3,7 +3,8 @@
 #include "BlockingBatchQueue.h"
 #include "DataPacket.h"
 #include "GpuIpc/IProcessor.h"
-#include "Handlers/Handler.h"
+
+#include "GpuHandler/IGpuHandler.h"
 
 #include <map>
 #include <stdint.h>
@@ -19,13 +20,14 @@ class PerfLog;
 class MainServer : public IProcessor {
 private:
 
-  typedef std::map<std::string, Handlers::Handler> HandlerMap;
+  typedef std::map<std::string, IGpuHandler*> HandlerMap;
 
   typedef BlockingBatchQueue<DataPacket*> Queue;
 
 public: // interface
 
   MainServer(PerfLog & perfLog, DataLog & dataLog);
+  ~MainServer();
 
   void start();
   void stop();
@@ -39,9 +41,9 @@ private: // private functions
   static size_t addSize(size_t total, const Data * data);
 
   static void * allocVector(
-      std::size_t          index,
-      std::size_t          size,
-      Handlers::AllocParam param);
+      std::size_t             index,
+      std::size_t             size,
+      IGpuHandler::AllocParam param);
 
   std::string createInvalidHandlerMsg(const std::string & handler) const;
 

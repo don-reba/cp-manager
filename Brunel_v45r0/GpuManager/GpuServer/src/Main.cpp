@@ -49,9 +49,6 @@ int main(int argc, char * argv[])
 try {
   const char * defaultPath = "/tmp/GpuManager";
 
-  // DBG
-  new PrPixelCudaHandler();
-
   CommandLine cl(defaultPath);
   if (!cl.parse(argc, argv))
     return EXIT_SUCCESS;

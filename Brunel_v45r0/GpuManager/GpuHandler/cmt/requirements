@@ -6,6 +6,6 @@ branches cmt src
 use GaudiPolicy *
 
 pattern gpu_handler \
-  macro_append gpu_handlers " <type> <name> <path>"
+  macro_append gpu_handlers " <type> <name> <include>"
 
 apply_pattern install_more_includes more=GpuHandler

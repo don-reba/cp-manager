@@ -1,29 +1,13 @@
-#include <GpuHandler/IGpuHandler.h>
-
 #include "Definitions.cuh"
 #include "kernel.cuh"
 
 #include "Tools.h"
 #include "kernelInvoker.cuh"
 
+#include "PrPixelCudaHandler.h"
+
 // DBG
 #include <iostream>
-
-#pragma GCC visibility push(default)
-class PrPixelCudaHandler : IGpuHandler
-{
-  public:
-    PrPixelCudaHandler()
-    {
-      std::cout << "In PrPixelCudaHandler::PrPixelCudaHandler!" << std::endl;
-    }
-
-    virtual void operator() ()
-    {
-      std::cout << "In PrPixelCudaHandler::operator()!" << std::endl;
-    }
-};
-#pragma GCC visiblity pop
 
 // TODO: debug purposes only
 extern float* h_hit_Xs;
@@ -172,7 +156,10 @@ void printToFile(int num_tracks, int* track_indexes, Track* tracks, int event_no
 int main()
 {
   // XXX
-  delete new PrPixelCudaHandler();
+  PrPixelCudaHandler * dbgHandler = new PrPixelCudaHandler();
+  PrPixelCudaHandler::Batch batch;
+  (*dbgHandler)(batch, NULL, 0);
+  delete dbgHandler;
 
 	// Read file (s)
 	char* input;

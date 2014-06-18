@@ -29,9 +29,9 @@ for i in range(2, len(sys.argv)-1, 3):
 if outputType == 'inst':
   def toInst(arg):
     t, n, p = arg
-    return 'make_pair(unique_ptr<IGpuHandler>(new {0}()), {1})'.format(t, n)
+    return 'make_pair("{0}", new {1}())'.format(n, t)
   body = '\n, '.join(map(toInst, params))
-  print '{{ {0}\n}}'.format(body)
+  print '{{ {0}\n}};'.format(body)
 
 if outputType == 'incl':
   def toDecl(arg):

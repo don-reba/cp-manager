@@ -9,14 +9,25 @@ use GaudiPolicy *
 use CUDA        *
 use GpuHandler  * GpuManager
 
+# main constituent
 document cuda_library PrPixelCuda \
   main.cpp                        \
   kernel.cu                       \
   kernelInvoker.cu                \
+  PrPixelCudaHandler.cpp          \
   Tools.cpp
 
+include_dirs ../PrPixelCuda
+apply_pattern install_more_includes more=PrPixelCuda
+
+# temporary option for link testing
+macro_prepend PrPixelCuda_linkopts "-Wl,--no-as-needed "
+
+# declare the constituent as a linker library
 apply_pattern linker_library library=PrPixelCuda
 
-apply_pattern gpu_handler type=PrPixelCudaHandler name=pr-pixel -path=PrPixelCuda/PrPixelCuda.h
-
-macro_prepend PrPixelCuda_linkopts "-Wl,--no-as-needed "
+# register the GPU handler
+apply_pattern gpu_handler                   \
+  type=PrPixelCudaHandler                   \
+  name=tripletSearchGPU                     \
+  include=PrPixelCuda/PrPixelCudaHandler.h
