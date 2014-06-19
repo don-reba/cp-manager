@@ -38,6 +38,8 @@ macro_append Boost_linkopts " $(Boost_linkopts_system)"
 macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED"
+#macro_append gpuserver_use_linkopts " -L/usr/local/cuda-5.5/lib64"
+#macro_append gpuserver_use_linkopts " -lcudart"
 
 # macro_append gpuserver_linkopts " -lpixeltbb "
 #macro_append GpuServer_linkopts " -lserverpixelcuda "

@@ -155,12 +155,6 @@ void printToFile(int num_tracks, int* track_indexes, Track* tracks, int event_no
 
 int main()
 {
-  // XXX
-  PrPixelCudaHandler * dbgHandler = new PrPixelCudaHandler();
-  PrPixelCudaHandler::Batch batch;
-  (*dbgHandler)(batch, NULL, 0);
-  delete dbgHandler;
-
 	// Read file (s)
 	char* input;
 	int size;

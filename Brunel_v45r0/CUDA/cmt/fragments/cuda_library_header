@@ -22,9 +22,13 @@ ifdef CMTINSTALLAREA
 		-cmtpath "$($(package)_cmtpath)"
 endif
 
-$($(CONSTITUENT)_output)$($(CONSTITUENT)installname) :: $(OBJS)
+$($(CONSTITUENT)_output)$($(CONSTITUENT)installname) :: $($(CONSTITUENT)_output)$(CONSTITUENT)_device.o $(OBJS)
 	$(echo) linking CUDA library...
-	$(cuda_bin) --shared --compiler-bindir $(cpp) --output-file $@ --link $^
+	$(cpp) --shared -L/usr/local/cuda-5.5/lib64 -lcudart -o $@ $^
+
+$($(CONSTITUENT)_output)$(CONSTITUENT)_device.o :: $(OBJS)
+	$(echo) generating CUDA device object file...
+	$(cuda_bin) --compiler-bindir $(cpp) --compiler-options '$(includes) -fPIC' --gpu-architecture $(cuda_arch) --output-file $@ --device-link $^
 
 .PHONY: $(CONSTITUENT)clean
 $(CONSTITUENT)clean ::

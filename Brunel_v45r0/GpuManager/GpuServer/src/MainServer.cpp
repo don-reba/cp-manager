@@ -37,17 +37,18 @@ size_t arraySize(const T (&)[Size])
 MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
     m_perfLog (perfLog),
     m_dataLog (dataLog) {
+  // instantiate handlers from an automatically generated header
   pair<const char *, IGpuHandler*> handlers[] =
     #include "Handlers/instances.h"
-
+  // copy the handlers into an internal map
   for (size_t i = 0, size = ::arraySize(handlers); i != size; ++i)
     m_handlers[handlers[i].first] = std::move(handlers[i].second);
 }
 
 MainServer::~MainServer()
 {
-    for (HandlerMap::iterator i = m_handlers.begin(), end = m_handlers.end(); i != end; ++i)
-      delete i->second;
+  for (auto & i : m_handlers)
+    delete i.second;
 }
 
 //------------------------
@@ -128,10 +129,13 @@ string MainServer::createInvalidHandlerMsg(const string & handler) const {
     ostringstream msg;
     msg << "invalid handler name: " << handler << "; ";
     msg << "valid handlers: ";
-    for (HandlerMap::const_iterator i = m_handlers.begin(), end = m_handlers.end(); i != end; ++i) {
-      if (i != m_handlers.begin())
+    bool first = true;
+    for (const auto & i : m_handlers) {
+      if (first)
+        first = false;
+      else
         msg << ", ";
-      msg << i->first;
+      msg << i.first;
     }
     msg << ".";
     return msg.str();
@@ -164,7 +168,9 @@ try {
     try {
       // execute handler
       timer.start();
+      cout << "about to call the handler!" << endl;
       (*handler)(input, allocVector, &output);
+      cout << "called the handler!" << endl;
       timer.stop();
     } catch (const std::exception & e) {
       // propagate the exception to all client in the batch
@@ -178,11 +184,14 @@ try {
     size_t totalInputSize  = accumulate(input.begin(),  input.end(),  0u, addSize);
     size_t totalOutputSize = accumulate(output.begin(), output.end(), 0u, addSize);
     m_perfLog.addRecord(
-        time(0), name.c_str(), secondsElapsed, totalInputSize, totalOutputSize, batch.size());
+        time(0), name.c_str(), secondsElapsed,
+        totalInputSize, totalOutputSize, batch.size());
 
     // wake up the clients
     for (size_t i = 0, size = batch.size(); i != size; ++i)
       batch[i]->Signal();
+
+    // wait for them to finish before moving onto the next batch
   }
 } catch (const Queue::InterruptedError &) {
   // it's ok
