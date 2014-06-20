@@ -11,6 +11,8 @@
 
 #include "Definitions.cuh"
 
+#include "PrPixelSerialization/Serialization.h"
+
 void setHPointersFromPixelEvent(const PixelEvent& event);
 void setHPointersFromInput(char*& input);
 void readFile(std::string filename, char*& input, int& size);
