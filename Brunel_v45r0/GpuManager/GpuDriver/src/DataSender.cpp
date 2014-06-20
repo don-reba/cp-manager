@@ -54,9 +54,6 @@ try {
     vector<uint8_t> recordedOutput;
     readData(path.c_str(), handlerName, recordedInput, recordedOutput);
 
-    Timer timer;
-    timer.start();
-
     // send the name of the addressee
     m_protocol->writeString(handlerName);
 
@@ -90,12 +87,8 @@ try {
 			}
 		}
 
-    // receive performance information
-    const double serverSecondsElapsed = m_protocol->readDouble();
-
-    timer.stop();
-
-    perfLog.addRecord(path, handlerName, timer.secondsElapsed(), serverSecondsElapsed);
+    // receive performance information ­ seconds elapsed
+    m_protocol->readDouble();
   }
 } catch (const std::exception & e) {
   cout << "Unrecoverable error: " << e.what() << endl;

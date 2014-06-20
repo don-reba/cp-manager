@@ -34,6 +34,6 @@ class IGpuHandler
 
     virtual void operator() (
         const Batch & batch,
-        Alloc         resultAlloc,
-        AllocParam    resultAllocParam) = 0;
+        Alloc         allocResult,
+        AllocParam    allocResultParam) = 0;
 };

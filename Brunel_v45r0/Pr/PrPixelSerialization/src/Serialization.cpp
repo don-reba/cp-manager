@@ -1,8 +1,5 @@
 #include "Serialization.h"
 
-#define DEBUG
-#undef NDEBUG
-
 #include <algorithm>
 #include <cassert>
 #include <iterator>

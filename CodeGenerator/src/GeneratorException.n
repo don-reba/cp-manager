@@ -1,9 +1,0 @@
-using System;
-
-public class GeneratorException : Exception
-{
-	public this(msg : string)
-	{
-		base(msg);
-	}
-}
