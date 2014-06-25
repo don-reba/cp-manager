@@ -6,6 +6,8 @@
 
 using namespace std;
 
+DECLARE_COMPONENT(PrPixelCudaHandler)
+
 void PrPixelCudaHandler::operator() (
     const Batch & batch,
     Alloc         allocResult,

@@ -21,14 +21,10 @@ document cuda_library PrPixelCuda \
 include_dirs ../PrPixelCuda
 apply_pattern install_more_includes more=PrPixelCuda
 
-# temporary option for link testing
-macro_prepend PrPixelCuda_linkopts "-Wl,--no-as-needed "
+# this should be done by the CUDA package
+macro_remove use_linkopts "$(PrPixelCuda_linkopts)"
+macro_append use_linkopts " $(PrPixelCuda_use_linkopts)"
 
-# declare the constituent as a linker library
-apply_pattern linker_library library=PrPixelCuda
-
-# register the GPU handler
-apply_pattern gpu_handler                   \
-  type=PrPixelCudaHandler                   \
-  name=tripletSearchGPU                     \
-  include=PrPixelCuda/PrPixelCudaHandler.h
+# the server uses Gaudi components to load handlers
+# declare the constituent as a component library
+apply_pattern component_library library=PrPixelCuda

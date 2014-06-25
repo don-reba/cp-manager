@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Logger.h"
-
 #include "Admin.h"
+#include "Logger.h"
 
 #include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
@@ -10,11 +9,10 @@
 class Controller {
   public: // interface
 
-    Controller(
-      Logger     & logger,
-      const char * adminPath);
+    Controller(Logger & logger, const char * adminPath);
 
     void stopServer();
+		void loadHandler(const std::string & handlerName);
 
   public: // data
 

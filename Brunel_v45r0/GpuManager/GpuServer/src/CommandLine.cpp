@@ -20,6 +20,7 @@ bool CommandLine::parse(int argc, char * argv[]) {
     ("service",   value(&m_servicePath)->default_value(m_servicePath), "socket path" )
     ("daemonize", bool_switch(&m_daemonize), "run the process as a daemon"    )
     ("exit",      bool_switch(&m_exit),      "stop the server"                )
+		("load",      value(&m_handlerToLoad),   "load a handler component"       )
     ("datadir",   value(&m_dataDir),         "save transactions to directory" );
 
   variables_map vm;

@@ -1,14 +1,17 @@
 #pragma once
 
+#include <string>
+
 class IProtocol;
+
 class Admin {
-public:
-  // interface
-  Admin(IProtocol & protocol);
-public:
-  // service function wrappers
-  void Exit();
-private:
-  // data
-  IProtocol & protocol;
+	public:
+		Admin(IProtocol & protocol);
+
+	public:
+		void exit();
+		void loadHandler(const std::string & handlerName);
+
+	private:
+		IProtocol & protocol;
 };

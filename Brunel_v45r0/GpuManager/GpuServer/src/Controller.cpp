@@ -1,5 +1,7 @@
 #include "Controller.h"
 
+using namespace std;
+
 Controller::Controller(
     Logger     & logger,
     const char * adminPath) :
@@ -11,5 +13,9 @@ Controller::Controller(
 }
 
 void Controller::stopServer() {
-  m_admin.Exit();
+  m_admin.exit();
+}
+
+void Controller::loadHandler(const string & handlerName) {
+	m_admin.loadHandler(handlerName);
 }

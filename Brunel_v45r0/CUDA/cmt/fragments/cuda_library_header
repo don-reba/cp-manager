@@ -12,6 +12,8 @@ ifdef CMTINSTALLAREA
 	$(echo) "installation done"
 endif
 
+# library installation
+
 $(install_dir)/$(${CONSTITUENT}installname) :: $($(CONSTITUENT)_output)$(${CONSTITUENT}installname)
 ifdef CMTINSTALLAREA
 	$(silent) $(cmt_install_action)        \
@@ -22,13 +24,19 @@ ifdef CMTINSTALLAREA
 		-cmtpath "$($(package)_cmtpath)"
 endif
 
+# library linking
+
 $($(CONSTITUENT)_output)$($(CONSTITUENT)installname) :: $($(CONSTITUENT)_output)$(CONSTITUENT)_device.o $(OBJS)
 	$(echo) linking CUDA library...
-	$(cpp) --shared -L/usr/local/cuda-5.5/lib64 -lcudart -o $@ $^
+	$(cpp) --shared -L/usr/local/cuda-5.5/lib64 -lcudart $(use_linkopts) -o $@ $^
+
+# device object file creation
 
 $($(CONSTITUENT)_output)$(CONSTITUENT)_device.o :: $(OBJS)
 	$(echo) generating CUDA device object file...
 	$(cuda_bin) --compiler-bindir $(cpp) --compiler-options '$(includes) -fPIC' --gpu-architecture $(cuda_arch) --output-file $@ --device-link $^
+
+# cleanup
 
 .PHONY: $(CONSTITUENT)clean
 $(CONSTITUENT)clean ::
@@ -36,6 +44,8 @@ $(CONSTITUENT)clean ::
 	$(cleanup_silent) /bin/rm -f $($(CONSTITUENT)installname)
 	$(cleanup_echo) $(OBJS)
 	$(cleanup_silent) /bin/rm -f $(OBJS)
+
+# uninstall
 
 .PHONY: ${CONSTITUENT}uninstall uninstall
 ${CONSTITUENT}uninstall uninstall ::

@@ -1,13 +1,10 @@
 #include "DataLog.h"
-#include "GpuIpc/IProtocol.h"
 #include "MainServer.h"
 #include "PerfLog.h"
 #include "Timer.h"
 
-//#include "Handlers/PrPixel.h"
-//#include "Handlers/Test.h"
-
-#include "Handlers/includes.h"
+#include "GpuIpc/IProtocol.h"
+#include "GpuHandler/IGpuHandler.h"
 
 #include <algorithm>
 #include <cstring>
@@ -16,6 +13,8 @@
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
+
+#include <Gaudi/PluginService.h>
 
 using namespace boost;
 using namespace std;
@@ -37,12 +36,6 @@ size_t arraySize(const T (&)[Size])
 MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
     m_perfLog (perfLog),
     m_dataLog (dataLog) {
-  // instantiate handlers from an automatically generated header
-  pair<const char *, IGpuHandler*> handlers[] =
-    #include "Handlers/instances.h"
-  // copy the handlers into an internal map
-  for (size_t i = 0, size = ::arraySize(handlers); i != size; ++i)
-    m_handlers[handlers[i].first] = std::move(handlers[i].second);
 }
 
 MainServer::~MainServer()
@@ -104,6 +97,18 @@ void MainServer::start() {
 
 void MainServer::stop() {
   m_dataQueue.interrupt();
+}
+
+void MainServer::loadHandler(const string & handlerName) {
+  IGpuHandler * handler = IGpuHandler::Factory::create(handlerName);
+  if (!handler) {
+    ostringstream msg;
+    msg << "could not load handler '" << handlerName << "'";
+    throw runtime_error(msg.str());
+  }
+  // XXX needs to be synchronized with the processor thread
+  m_handlers[handlerName] = handler;
+  cout << "loaded handler '" << handlerName << "'\n";
 }
 
 //------------------
@@ -168,9 +173,7 @@ try {
     try {
       // execute handler
       timer.start();
-      cout << "about to call the handler!" << endl;
       (*handler)(input, allocVector, &output);
-      cout << "called the handler!" << endl;
       timer.stop();
     } catch (const std::exception & e) {
       // propagate the exception to all client in the batch
@@ -195,4 +198,5 @@ try {
   }
 } catch (const Queue::InterruptedError &) {
   // it's ok
+  // someone wants us to terminate quickly
 }

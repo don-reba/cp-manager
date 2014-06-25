@@ -32,6 +32,8 @@ public: // interface
   void start();
   void stop();
 
+  void loadHandler(const std::string & handlerName);
+
 public: // IProcess implementation
 
   virtual void process(IProtocol & protocol);

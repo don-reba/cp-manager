@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <string>
 
+//#include <Gaudi/PluginService.h>
+
 using namespace boost;
 using namespace std;
 
@@ -47,6 +49,34 @@ class PrPixelCudaHandler
 // Main entry point.
 int main(int argc, char * argv[])
 try {
+
+  /*
+  using Gaudi::PluginService::Details::Registry;
+  cout << "getting the registry..." << endl;
+  const Registry             & registry  = Registry::instance();
+  cout << "getting the factories..." << endl;
+  const Registry::FactoryMap & factories = registry.factories();
+
+  const char * offset = "    ";
+
+  cout << factories.size() << " plugins found" << endl;
+  for (const auto & entry : factories) {
+    const string                & name = entry.first;
+    const Registry::FactoryInfo & info = entry.second;
+    cout << "* " << name << endl;
+    if (!info.library.empty())   cout << offset << "library   = " << info.library   << '\n';
+    if (!info.type.empty())      cout << offset << "type      = " << info.type      << '\n';
+    if (!info.rtype.empty())     cout << offset << "rtype     = " << info.rtype     << '\n';
+    if (!info.className.empty()) cout << offset << "className = " << info.className << '\n';
+    if (!info.properties.empty()) {
+      cout << "    properties:\n";
+      for (const auto & entry : info.properties)
+        cout << offset << offset << entry.first << ": " << entry.second << '\n';
+    }
+  }
+  */
+
+
   const char * defaultPath = "/tmp/GpuManager";
 
   CommandLine cl(defaultPath);
@@ -70,10 +100,18 @@ try {
   if (cl.exit()) {
     Controller controller(logger, adminPath.c_str());
     controller.stopServer();
-  } else {
-    App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str());
-    app.run();
+    return EXIT_SUCCESS;
   }
+
+  if (!cl.handlerToLoad().empty()) {
+    cout << "got handler '" << cl.handlerToLoad() << "'\n";
+    Controller controller(logger, adminPath.c_str());
+    controller.loadHandler(cl.handlerToLoad());
+    return EXIT_SUCCESS;
+  }
+
+  App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str());
+  app.run();
 
   return EXIT_SUCCESS;
 } catch (const std::exception & e) {

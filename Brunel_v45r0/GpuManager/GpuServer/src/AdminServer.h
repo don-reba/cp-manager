@@ -1,4 +1,5 @@
 #pragma once
+
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -14,14 +15,15 @@ class AdminServer : public IProcessor {
     AdminServer(IApp & app);
 
   public:
-    // IProcess implementation
     virtual void process(IProtocol & protocol);
 
-  private:
-    void Exit();
+    void processExit        (IProtocol & protocol);
+		void processLoadHandler (IProtocol & protocol);
 
-  private: // generated wrappers
-    void process_Exit(IProtocol & protocol);
+  private:
+    void exit();
+
+  private:
 
   private:
     IApp & m_app;

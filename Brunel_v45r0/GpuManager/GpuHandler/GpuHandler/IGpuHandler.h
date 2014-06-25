@@ -1,6 +1,9 @@
 #pragma once
 
+#include <Gaudi/PluginService.h>
+
 #include <stdint.h>
+#include <string>
 #include <vector>
 
 // The handler is an object that takes a batch of input data sets
@@ -10,7 +13,7 @@ class IGpuHandler
 {
   public:
 
-    virtual ~IGpuHandler() {}
+    virtual ~IGpuHandler();
 
     // Data is processed in batches. A batch consists of input data sets
     // from multiple clients.
@@ -36,4 +39,7 @@ class IGpuHandler
         const Batch & batch,
         Alloc         allocResult,
         AllocParam    allocResultParam) = 0;
+
+    // Factory for plugin support.
+    typedef Gaudi::PluginService::Factory0<IGpuHandler*> Factory;
 };
