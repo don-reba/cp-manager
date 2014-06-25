@@ -16,8 +16,7 @@ use tbb         * LCG_Interfaces
 application gpuserver -import=Boost \
   *.cpp                             \
   Api/*.cpp                         \
-  Handlers/*.cpp                    \
-  Handlers/PixelTracker/*.cpp
+  Handlers/*.cpp
 
 # plugin support
 macro_append gpuserver_use_linkopts " -lGaudiPluginService"
@@ -25,7 +24,7 @@ macro_append gpuserver_use_linkopts " -lGaudiPluginService"
 private
 
 # remove the application suffix; the default is ".exe"
-macro application_suffix ""
+macro application_suffix target-linux ""
 
 # add link options
 macro_append Boost_linkopts " $(Boost_linkopts_filesystem)"
@@ -34,11 +33,5 @@ macro_append Boost_linkopts " $(Boost_linkopts_system)"
 macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED"
-
-# tbb-specific link options
-#macro_prepend tbb_linkopts "-Wl,--as-needed " \
-#  target-darwin "" \
-#  target-winxp  "" \
-#  ttarget-icc   ""
 
 end_private
