@@ -104,7 +104,6 @@ try {
   }
 
   if (!cl.handlerToLoad().empty()) {
-    cout << "got handler '" << cl.handlerToLoad() << "'\n";
     Controller controller(logger, adminPath.c_str());
     controller.loadHandler(cl.handlerToLoad());
     return EXIT_SUCCESS;
