@@ -106,8 +106,16 @@ void MainServer::loadHandler(const string & handlerName) {
     msg << "could not load handler '" << handlerName << "'";
     throw runtime_error(msg.str());
   }
-  // XXX needs to be synchronized with the processor thread
-  m_handlers[handlerName] = handler;
+  {
+    scoped_lock lock(m_mutex);
+
+    // handle repeated loading of the same handler
+    HandlerMap::const_iterator i = m_handlers.find(handlerName);
+    if (i != m_handlers.end())
+      delete i->second;
+
+    m_handlers[handlerName] = handler;
+  }
   cout << "loaded handler '" << handlerName << "'\n";
 }
 
@@ -146,6 +154,14 @@ string MainServer::createInvalidHandlerMsg(const string & handler) const {
     return msg.str();
 }
 
+IGpuHandler * MainServer::getHandlerByName(const std::string & name) {
+  scoped_lock lock(m_mutex);
+  HandlerMap::const_iterator i = m_handlers.find(name);
+  if (i == m_handlers.end())
+    throw runtime_error(createInvalidHandlerMsg(name));
+  return i->second;
+}
+
 void MainServer::processQueue()
 try {
   // the data queue throws an exception when interrupted
@@ -154,11 +170,7 @@ try {
     vector<DataPacket*> batch;
     m_dataQueue.pop(name, batch);
 
-    // get handler by name
-    HandlerMap::const_iterator i = m_handlers.find(name);
-    if (i == m_handlers.end())
-      throw runtime_error(createInvalidHandlerMsg(name));
-    IGpuHandler * handler = i->second;
+    IGpuHandler * handler = getHandlerByName(name);
 
     // prepare data
     vector<const Data*> input  (batch.size());

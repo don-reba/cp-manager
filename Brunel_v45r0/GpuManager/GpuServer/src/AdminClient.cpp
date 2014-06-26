@@ -1,17 +1,17 @@
-#include "Admin.h"
+#include "AdminClient.h"
 #include "AdminID.h"
 #include "GpuIpc/IProtocol.h"
 
 using namespace std;
 
-Admin::Admin(IProtocol & protocol) : protocol(protocol) {
+AdminClient::AdminClient(IProtocol & protocol) : protocol(protocol) {
 }
 
-void Admin::exit() {
+void AdminClient::exit() {
   protocol.writeUInt32(AdminID_Exit);
 }
 
-void Admin::loadHandler(const string & handlerName) {
+void AdminClient::loadHandler(const string & handlerName) {
 	protocol.writeUInt32(AdminID_LoadHandler);
 	protocol.writeString(handlerName);
 }

@@ -38,18 +38,18 @@ Build instructions
 Package Descriptions
 --------------------
 
-Brunel_v45r0
-├── CUDA - cuda_library document type for using CUDA within CMT
-├── GpuManager
-│   ├── GpuAlgorithm     - Gaudi interface to SampleGpuHandler
-│   ├── GpuDriver        - plays recorded data back to the GPU Manager
-│   ├── GpuHandler       - base class for GPU Manager handlers
-│   ├── GpuIpc           - inter-process communication library
-│   ├── GpuServer        - main GPU Manager executable
-│   ├── GpuService       - Gaudi service communicating with GPU Manager
-│   └── SampleGpuHandler - very simple GPU Manager handler
-└── Pr
-    ├── PrPixel              - Gaudi algorithm for PrPixel
-    ├── PrPixelCuda          - GPU Manager handler for PrPixel
-    ├── PrPixelSerialization - shared serialization code
-    └── PrPixelTest          - unit tests
+	Brunel_v46r0
+	├── CUDA - cuda_library document type for using CUDA within CMT
+	├── GpuManager
+	│   ├── GpuAlgorithm     - Gaudi interface to SampleGpuHandler
+	│   ├── GpuDriver        - plays recorded data back to the GPU Manager
+	│   ├── GpuHandler       - base class for GPU Manager handlers
+	│   ├── GpuIpc           - inter-process communication library
+	│   ├── GpuServer        - main GPU Manager executable
+	│   ├── GpuService       - Gaudi service communicating with GPU Manager
+	│   └── SampleGpuHandler - very simple GPU Manager handler
+	└── Pr
+	    ├── PrPixel              - Gaudi algorithm for PrPixel
+	    ├── PrPixelCuda          - GPU Manager handler for PrPixel
+	    ├── PrPixelSerialization - shared serialization code
+	    └── PrPixelTest          - unit tests

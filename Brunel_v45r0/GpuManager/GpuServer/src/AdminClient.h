@@ -4,9 +4,9 @@
 
 class IProtocol;
 
-class Admin {
+class AdminClient {
 	public:
-		Admin(IProtocol & protocol);
+		AdminClient(IProtocol & protocol);
 
 	public:
 		void exit();

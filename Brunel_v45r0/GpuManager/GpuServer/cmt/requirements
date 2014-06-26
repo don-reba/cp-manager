@@ -3,7 +3,7 @@ version v1r1
 author  "Alexey Badalov"
 
 # structure
-branches cmt doc src python
+branches cmt src
 
 # dependencies
 use GaudiPolicy *
