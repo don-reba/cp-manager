@@ -18,10 +18,6 @@ document cuda_library PrPixelCuda \
   PrPixelCudaHandler.cpp          \
   Tools.cpp
 
-# TODO this should be done by the CUDA package
-macro_remove use_linkopts "$(PrPixelCuda_linkopts)"
-macro_append use_linkopts " $(PrPixelCuda_use_linkopts)"
-
 # the server uses Gaudi components to load handlers
 # declare the constituent as a component library
 apply_pattern component_library library=PrPixelCuda
