@@ -1,33 +1,29 @@
-Last updated: 2013-07-11
+GPU Manager
+===========
+
+The purpose of this project is in integration of accelerator hardware for
+massively parallel computation with Gaudi. The GPU Manager is a process that
+runs outside of Gaudi and manages execution of dedicated algorithms on the
+hardware. It is capable of receiving  multiple concurrent data streams from
+Gaudi and other sources.
 
 
-GpuManager
-==========
-
-The GpuManager project provides GPU/TBB-accelerated routines for Gaudi
-algorithms. The routines run on a central daemon process, called GpuServer.
-This process communicates with Gaudi clients via the GpuService Gaudi service.
-There is a sample algorithm called GpuAlgorithm demonstrating the use of this
-service.
-
-
-What is there
+What's inside
 -------------
 
-Brunel v44r3 is shipped with this release, alongside with a modified version of the
-Tf/PatPixel project (pixel VELO tracking).
-
-A separate implementation of the pixel with TBB is included in the
-tbbpixel_library folder.
+Brunel v45r0 is shipped with this release, alongside a modified version of the
+Fast VELO Pixel tracking algorithm running on the GPU Manager. There is  a
+number of supporting packages and several sample projects demonstrating how to
+extend GPU Manager yourself.
 
 
 Build instructions
 ------------------
 
-* To compile Brunel:
+* To compile everything:
 
 	. init.sh
-	cd Brunel_v44r3
+	cd Brunel_v45r0
 	make
 
 * To run the server daemon:
@@ -42,16 +38,18 @@ Build instructions
 Package Descriptions
 --------------------
 
-* CodeGenerator - A code generator for inter-process communication.  Outputs
-                  routine serialization, IO, and profiling code enabling easy
-                  data exchange between GpuServer and GpuService.
-* Brunel_v44r3 - The Brunel framework.
-	* GpuManager
-		* GpuAlgorithm - A test Gaudi algorithm making use of GpuService.
-		* GpuServer - The central server daemon handling the GPU.
-		* GpuIpc - A shared interprocess communication library for
-		           GpuService and GpuServer.
-		* GpuService - A Gaudi service wrapping a GpuServer client.
-	* Tf/PatPixel - Modified implementation of pixel VELO tracking.
-* tbbpixel_library - A implementation of pixel library with TBB independent of
-                     Brunel.
+Brunel_v45r0
+├── CUDA - cuda_library document type for using CUDA within CMT
+├── GpuManager
+│   ├── GpuAlgorithm     - Gaudi interface to SampleGpuHandler
+│   ├── GpuDriver        - plays recorded data back to the GPU Manager
+│   ├── GpuHandler       - base class for GPU Manager handlers
+│   ├── GpuIpc           - inter-process communication library
+│   ├── GpuServer        - main GPU Manager executable
+│   ├── GpuService       - Gaudi service communicating with GPU Manager
+│   └── SampleGpuHandler - very simple GPU Manager handler
+└── Pr
+    ├── PrPixel              - Gaudi algorithm for PrPixel
+    ├── PrPixelCuda          - GPU Manager handler for PrPixel
+    ├── PrPixelSerialization - shared serialization code
+    └── PrPixelTest          - unit tests
