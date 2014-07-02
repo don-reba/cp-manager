@@ -149,12 +149,16 @@ void PrPixelHitManager::clearHits() {
   m_eventReady = false;
 
   // Clean the previous event (GPU)
-  m_eventBuilder.cleanEvent();
+  m_serializer.cleanEvent();
 }
 
 //=========================================================================
 //  Convert the LiteClusters to PrPixelHits
 //=========================================================================
+/**
+ * Slightly modified version of buildHits, prepares data
+ * for conversion to AoS
+ */
 void PrPixelHitManager::buildHits() {
   Gaudi::XYZPoint point;
 
@@ -162,15 +166,14 @@ void PrPixelHitManager::buildHits() {
   if (m_eventReady) return;
   m_eventReady = true;
 
-  // Get the clusters.
+  // Get the clusters
   LHCb::VPLiteCluster::VPLiteClusters* liteClusters =
     GaudiTool::get<LHCb::VPLiteCluster::VPLiteClusters>(LHCb::VPLiteClusterLocation::Default);
   
-  // Assume binary resolution of hit position.
-  // TODO: In the future, add this
+  // Assume binary resolution of hit position
   const double dx = 0.055 / sqrt(12.0);
 
-  // Loop over clusters.
+  // Loop over clusters
   LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc; 
   LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc_end(liteClusters->end());
   for (itc = liteClusters->begin(); itc_end != itc; ++itc) {
@@ -188,13 +191,10 @@ void PrPixelHitManager::buildHits() {
     // Set our hit data (DEBUG purposes)
     hit->setHit(LHCb::LHCbID((*itc).channelID()), point, dx, dx, module);
     m_modules[module]->addHit(hit);
-
-    // Populate the map
-    // std::cout << (int) (*itc).channelID() << " - " << hit << std::endl;
-    m_indexedHits[(int) (*itc).channelID()] = hit;
     
     // TODO: At some point, we may need to add the hit resolution (wx, wy)
-    m_eventBuilder.addHit(
+    m_serializer.addHit(
+        hit,
         m_modules[module]->number(),
         itc->channelID(),
         static_cast<float>(point.x()),
@@ -202,40 +202,6 @@ void PrPixelHitManager::buildHits() {
         m_modules[module]->z());
   }
 }
-
-// void PrPixelHitManager::buildHits() {
-
-//   if (m_eventReady) return;
-//   m_eventReady = true;
-
-//   // Get the clusters.
-//   LHCb::VPLiteCluster::VPLiteClusters* liteClusters =
-//     GaudiTool::get<LHCb::VPLiteCluster::VPLiteClusters>(LHCb::VPLiteClusterLocation::Default);
-//   // If necessary adjust the size of the hit pool.
-//   if (liteClusters->size() > m_pool.size()) {
-//     m_pool.resize(liteClusters->size() + 100);
-//     m_nextInPool = m_pool.begin();
-//   }
-//   // Assume binary resolution of hit position.
-//   const double dx = 0.055 / sqrt(12.0);
-//   // Loop over clusters.
-//   LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc; 
-//   LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc_end(liteClusters->end());
-//   for (itc = liteClusters->begin(); itc_end != itc; ++itc) {
-//     const unsigned int module = itc->channelID().module();
-//     if (module >= m_modules.size()) break;
-//     // Get the next object in the pool => here we store the new hit
-//     PrPixelHit* hit = &(*(m_nextInPool++));
-//     // Calculate the 3-D position for this cluster.
-//     Gaudi::XYZPoint point = position((*itc).channelID(),
-//                                      (*itc).interPixelFractionX(), 
-//                                      (*itc).interPixelFractionY());
-//     // Set our hit data
-//     hit->setHit(LHCb::LHCbID((*itc).channelID()), point, dx, dx, module);
-//     m_modules[module]->addHit(hit);
-//   }
-
-// }
 
 //=========================================================================
 // Calculate global position of a cluster.

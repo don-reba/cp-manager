@@ -1,7 +1,5 @@
 
-#include "kernelInvoker.cuh"
-#include "kernel.cuh"
-
+#include "KernelInvoker.cuh"
 
 extern int* h_no_sensors;
 extern int* h_no_hits;
@@ -13,25 +11,29 @@ extern float* h_hit_Xs;
 extern float* h_hit_Ys;
 extern int* h_hit_Zs;
 
-#define cudaCheck(stmt) do {										\
-        cudaError_t err = stmt;										\
-        if (err != cudaSuccess) {									\
-            std::cerr << "Failed to run " << #stmt << std::endl;    \
-            return err;										        \
-        }															\
-    } while(0)
-
-// Helper function for using CUDA to add vectors in parallel.
 cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
-	char* input, int size, Track*& tracks, int*& num_tracks, int*& h_track_indexes){
+	const std::vector<unsigned char> & input, std::vector<unsigned char>& solution, std::ostream& logger){
     
+    // For now, just perform what we did before
+    // (backwards compatibility)
+	int* h_track_indexes;
+	int* num_tracks;
+	Track* tracks;
+
+	logger << "Input pointer: " 
+        << std::hex << "0x" << (long long int) &(input[0])
+        << std::dec << std::endl;
+
+	setHPointersFromInput(&(input[0]));
+	printInfo(logger);
+
 	// int* h_prevs, *h_nexts;
 	// Histo histo;
 
-	char *dev_input = 0;
+	char* dev_input = 0;
 	int* dev_num_tracks = 0;
 	int* dev_track_indexes = 0;
-	Track *dev_tracks = 0;
+	Track* dev_tracks = 0;
 	bool* dev_track_holders = 0;
 	int* dev_prevs = 0;
 	int* dev_nexts = 0;
@@ -39,11 +41,13 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
     cudaError_t cudaStatus = cudaSuccess;
 
     // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaCheck(cudaSetDevice(0));
+    cudaCheck( cudaSetDevice(0) );
     
 	// Allocate memory
 	// Allocate CPU buffers
-	tracks = (Track*) malloc(MAX_TRACKS * sizeof(Track));
+	// tracks = (Track*) malloc(MAX_TRACKS * sizeof(Track));
+	solution.resize(MAX_TRACKS * sizeof(Track));
+	tracks = (Track*) &(solution[0]);
 	num_tracks = (int*) malloc(sizeof(int));
 
 	int* h_prevs = (int*) malloc(h_no_hits[0] * sizeof(int));
@@ -61,17 +65,17 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
 	cudaCheck(cudaMalloc((void**)&dev_nexts, h_no_hits[0] * sizeof(int)));
     
     // Copy input file from host memory to GPU buffers
-    cudaCheck(cudaMalloc((void**)&dev_input, size));
+    cudaCheck(cudaMalloc((void**)&dev_input, input.size()));
     cudaCheck(cudaMalloc((void**)&dev_num_tracks, sizeof(int)));
     
 	// memcpys
-    cudaCheck(cudaMemcpy(dev_input, input, size, cudaMemcpyHostToDevice));
+    cudaCheck(cudaMemcpy(dev_input, &(input[0]), input.size(), cudaMemcpyHostToDevice));
 
 	// Launch a kernel on the GPU with one thread for each element.
 	prepareData<<<1, 1>>>(dev_input, dev_prevs, dev_nexts, dev_track_holders);
 
 	// gpuKalman
-	std::cout << "gpuKalman" << std::endl;
+	logger << "gpuKalman" << std::endl;
 	cudaEvent_t start_kalman, start_postprocess, stop;
 	float t0, t1, t2;
 
@@ -81,7 +85,7 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
 
 	cudaEventRecord(start_kalman, 0 );
 
-	gpuKalman<<<46, 32>>>(dev_tracks, dev_track_holders);
+	gpuKalman<<<numBlocks, numThreads>>>(dev_tracks, dev_track_holders);
 
 	cudaEventRecord(start_postprocess);
 	
@@ -98,8 +102,8 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
 	// histo.plotChi2("after-kalman.root", h_track_holders, tracks, h_no_hits[0]);
 	*/
 
-	std::cout << "postProcess" << std::endl;
-	postProcess<<<1, 32>>>(dev_tracks, dev_track_holders, dev_track_indexes, dev_num_tracks, dev_tracks_to_process);
+	logger << "postProcess" << std::endl;
+	postProcess<<<1, numThreads>>>(dev_tracks, dev_track_holders, dev_track_indexes, dev_num_tracks, dev_tracks_to_process);
 	
 	cudaEventRecord( stop, 0 );
 	cudaEventSynchronize( stop );
@@ -141,10 +145,10 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
 
 
 	for(int i=0; i<num_tracks[0]; ++i){
-		printTrack(tracks, h_track_indexes[i]);
+		printTrack(tracks, h_track_indexes[i], logger);
 	}
 	// std::cout << "postProcess: " << num_tracks[0] << " tracks" << std::endl << std::endl;
-	std::cout << "Processed " << num_tracks[0] << " tracks" << std::endl;
+	logger << "Processed " << num_tracks[0] << " tracks" << std::endl;
 
 	free(h_prevs);
 	free(h_nexts);
@@ -157,7 +161,7 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
 	// Visualize results
 	// cudaCheck(cudaMemcpy(h_prevs, dev_prevs, h_no_hits[0] * sizeof(int), cudaMemcpyDeviceToHost));
 	// cudaCheck(cudaMemcpy(h_nexts, dev_nexts, h_no_hits[0] * sizeof(int), cudaMemcpyDeviceToHost));
-	// printOutSensorHits(2, h_prevs, h_nexts);
+	// printOutSensorHits(2, h_prevs, h_nexts, logger);
 
 	/*
 	out = std::ofstream("prevnexts.out");
@@ -188,15 +192,15 @@ cudaError_t invokeParallelSearch(dim3 numBlocks, dim3 numThreads,
 }
 
 // #track, h0, h1, h2, h3, ..., hn, length, chi2
-void printTrack(Track* tracks, int track_no){
-	std::cout << track_no << ": ";
+void printTrack(Track* tracks, int track_no, std::ostream& logger){
+	logger << track_no << ": ";
 
 	Track t = tracks[track_no];
 	for(int i=0; i<t.hitsNum; ++i){
-		std::cout << h_hit_IDs[t.hits[i]] << ", ";
+		logger << h_hit_IDs[t.hits[i]] << ", ";
 	}
 
-	std::cout << "length: " << (int) t.hitsNum << std::endl;
+	logger << "length: " << (int) t.hitsNum << std::endl;
 }
 
 /*
@@ -214,8 +218,8 @@ float f_chi2(Track& t)
 }
 */
 
-void printOutAllSensorHits(int* prevs, int* nexts){
-	std::cout << "All valid sensor hits: " << std::endl;
+void printOutAllSensorHits(int* prevs, int* nexts, std::ostream& logger){
+	logger << "All valid sensor hits: " << std::endl;
 	for(int i=0; i<h_no_sensors[0]; ++i){
 		for(int j=0; j<h_sensor_hitNums[i]; ++j){
 			int hit = h_sensor_hitStarts[i] + j;
@@ -227,12 +231,34 @@ void printOutAllSensorHits(int* prevs, int* nexts){
 	}
 }
 
-void printOutSensorHits(int sensorNumber, int* prevs, int* nexts){
+void printOutSensorHits(int sensorNumber, int* prevs, int* nexts, std::ostream& logger){
 	for(int i=0; i<h_sensor_hitNums[sensorNumber]; ++i){
 		int hstart = h_sensor_hitStarts[sensorNumber];
 
-		std::cout << hstart + i << ": " << prevs[hstart + i] << ", " << nexts[hstart + i] << std::endl;
+		logger << hstart + i << ": " << prevs[hstart + i] << ", " << nexts[hstart + i] << std::endl;
 	}
+}
+
+void printInfo(std::ostream& logger){
+    logger << "Read info:" << std::endl
+        << " no sensors: " << h_no_sensors[0] << std::endl
+        << " no hits: " << h_no_hits[0] << std::endl
+        << "First 5 sensors: " << std::endl;
+
+    for (int i=0; i<5; ++i){
+        logger << " Zs: " << h_sensor_Zs[i] << std::endl
+            << " hitStarts: " << h_sensor_hitStarts[i] << std::endl
+            << " hitNums: " << h_sensor_hitNums[i] << std::endl << std::endl;
+    }
+
+    logger << "First 5 hits: " << std::endl;
+
+    for (int i=0; i<5; ++i){
+        logger << " hit_id: " << h_hit_IDs[i] << std::endl
+            << " hit_X: " << h_hit_Xs[i] << std::endl
+            << " hit_Y: " << h_hit_Ys[i] << std::endl
+            << " hit_Z: " << h_hit_Zs[i] << std::endl << std::endl;
+    }
 }
 
 void getMaxNumberOfHits(char*& input, int& maxHits){

@@ -14,9 +14,8 @@
 #include "PrPixelHit.h"
 #include "PrPixelModule.h"
 
-#include "PrPixelSerialization/GpuTrack.h" // TODO
-#include "PrPixelSerialization/PixelEvent.h"
-#include "EventBuilder.h"
+#include "PrPixelTypes.h"
+#include "PrPixelSerialization.h"
 
 static const InterfaceID IID_PrPixelHitManager("PrPixelHitManager", 1, 0);
 
@@ -29,9 +28,6 @@ static const InterfaceID IID_PrPixelHitManager("PrPixelHitManager", 1, 0);
 
 class PrPixelHitManager : public GaudiTool, public IIncidentListener {
 public: 
-  // Temporal translation of hits into Gaudi tracks
-  std::map<int, PrPixelHit*> m_indexedHits;
-
   // Return the interface ID
   static const InterfaceID& interfaceID() {return IID_PrPixelHitManager;}
 
@@ -81,7 +77,7 @@ public:
   void sortByX();                                                
 
   // Datatypes for GPU connectivity
-  EventBuilder m_eventBuilder;
+  PrPixelSerialization m_serializer;
 
 private:
   /// Detector element

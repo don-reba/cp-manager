@@ -6,7 +6,7 @@
 // Local 
 #include "PrPixelHit.h"
 
-#include "PrPixelSerialization/GpuTrack.h" // TODO
+#include "PrPixelTypes.h"
 
 namespace LHCb {
   class State;
@@ -24,6 +24,11 @@ class PrPixelTrack {
 public: 
   /// Standard constructor
   PrPixelTrack(); 
+  // Creates a track from indexed data
+  PrPixelTrack(PixelTrack * const t,
+      const std::map<int, PrPixelHit*>  & indexedHits,
+      const std::vector<int>            & eventHitIDs);
+
   /// Destructor
   virtual ~PrPixelTrack() {}
   /// Start a seed track from the two given hits
@@ -113,12 +118,6 @@ public:
 
   // Number of hits assigned to the track
   int size(void) const {return m_hits.size();} 
-
-  // Creates a track from indexed data
-  void setTrack(
-      const GpuTrack                    & t,
-      const std::map<int, PrPixelHit*>  & indexedHits,
-      const std::vector<int>            & eventHitIDs);
 
 private:
   /// Backward or forward track

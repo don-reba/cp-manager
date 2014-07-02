@@ -1,12 +1,23 @@
-#pragma once
 
+#ifndef PRPIXEL_TYPES
+#define PRPIXEL_TYPES 1
+
+#include <cstdint>
 #include <vector>
 
-#include <stdint.h>
+#define MAX_TRACK_SIZE 24
+struct PixelTrack {
+  float x0;
+  float tx;
+  float y0;
+  float ty;
+  int32_t hitsNum;
+  int32_t hits[MAX_TRACK_SIZE];
+};
 
 struct PixelEvent {
-  int32_t              noSensors;
-  int32_t              noHits;
+  int32_t noSensors;
+  int32_t noHits;
   std::vector<int32_t> sensorZs;
   std::vector<int32_t> sensorHitStarts;
   std::vector<int32_t> sensorHitsNums;
@@ -15,3 +26,5 @@ struct PixelEvent {
   std::vector<float>   hitYs;
   std::vector<int32_t> hitZs;
 };
+
+#endif

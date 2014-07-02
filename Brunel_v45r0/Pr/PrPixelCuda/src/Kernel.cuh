@@ -1,4 +1,7 @@
 
+#ifndef CUDA_KERNEL
+#define CUDA_KERNEL 1
+
 #include "Definitions.cuh"
 
 #define HITS_SHARED 32
@@ -23,9 +26,9 @@ float   f_w						= 0.050 / sqrt( 12. );
 
 __device__ float fitHits(Hit& h0, Hit& h1, Sensor& s0, Sensor& s1);
 __device__ float fitHitToTrack(Track& t, Hit& h1, Sensor& s1);
-__device__ void acceptTrack(Track& t, Hit& h0, Hit& h1, Sensor& s0, Sensor& s1, int h0_num, int h1_num);
-__device__ void updateTrack(Track& t, Hit& h1, Sensor& s1, int h1_num);
-__device__ void updateTrackCoords(Track& t);
+__device__ void acceptTrack(Track& t, TrackFit& fit, Hit& h0, Hit& h1, Sensor& s0, Sensor& s1, int h0_num, int h1_num);
+__device__ void updateTrack(Track& t, TrackFit& fit, Hit& h1, Sensor& s1, int h1_num);
+__device__ void updateTrackCoords(Track& t, TrackFit& fit);
 __device__ float trackChi2(Track& t);
 __device__ float hitChi2(Track& t, Hit& h, int hit_z);
 
@@ -40,17 +43,4 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 // __device__ int max_hits;
 // __device__ int hits_num;
 
-__device__ __constant__ int sens_num = 48;
-
-__device__ int* no_sensors;
-__device__ int* no_hits;
-__device__ int* sensor_Zs;
-__device__ int* sensor_hitStarts;
-__device__ int* sensor_hitNums;
-__device__ int* hit_IDs;
-__device__ float* hit_Xs;
-__device__ float* hit_Ys;
-__device__ int* hit_Zs;
-
-__device__ int* prevs;
-__device__ int* nexts;
+#endif

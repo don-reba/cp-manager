@@ -5,7 +5,7 @@
 #include "Event/StateParameters.h"
 // Local
 #include "PrPixelTracking.h"
-#include "PrPixelSerialization/Serialization.h"
+#include "PrPixelSerialization.h"
 
 //-----------------------------------------------------------------------------
 // Implementation file for class : PrPixelTracking
@@ -102,7 +102,7 @@ StatusCode PrPixelTracking::initialize() {
 // Main execution
 //=============================================================================
 
-/// Callback function used with GpuService::SubmitData.
+/// Callback function used with GpuService::submitData.
 /// allocTracks takes the size of received data and a pointer to a GpuTrack
 /// vector. The received data is assumed to consist of an array of GpuTrack
 /// objects. allocTracks reserves enough space to store the received tracks and
@@ -126,81 +126,49 @@ StatusCode PrPixelTracking::execute() {
   }
 
   // Clean and build hits from clusters
-  // Creates a GPU-compatible type
+  // From what PrPixel has:
+  //  PrPixel format -> SoA (done alongside buildHits) -> AoS
   if (m_clearHits) m_hitManager->clearHits();
   m_hitManager->buildHits();
 
-  /*
-  if (m_isDebug) {
-    for (unsigned int i = m_hitManager->firstModule(); m_hitManager->lastModule() >= i; ++i) {
-      PrPixelHits::const_iterator ith;
-      for (ith = m_hitManager->hits(i).begin(); m_hitManager->hits(i).end() != ith; ++ith) {
-        printHit(*ith);
-      }
-    }
+  // Do some typecasting into a format understandable by GPU
+  m_hitManager->m_serializer.serializeEvent(m_serializedEvent);
+  
+  if (m_serializedEvent.empty())
+    info() << "--- Serialized event is empty! This should not happen!" << endmsg;
+  
+  if (m_isDebug){
+    info() << "--- Submitting data to gpuService" << endmsg;
+    info() << "--- serializedEvent: 0x" << std::hex << (long long)&m_serializedEvent[0] <<
+      std::dec << ", size " << m_serializedEvent.size() << endmsg;
   }
-  if (0 <= m_wantedKey) {
-    info() << "--- Looking for track " << m_wantedKey << endmsg;
-    for (unsigned int i = m_hitManager->firstModule(); m_hitManager->lastModule() >= i; ++i) {
-      PrPixelHits::const_iterator ith;
-      for (ith = m_hitManager->hits(i).begin(); m_hitManager->hits(i).end() != ith; ++ith) {
-        if (matchKey(*ith)) printHit(*ith);
-      }
-    }
-  }
-  */
 
   if (m_doTiming) m_timerTool->stop(m_timePrepare);
 
   if (m_doTiming) m_timerTool->start(m_timePairs);
 
-  // Do some typecasting into a format understandable by GPU
-  // TODO: This step is unnecesary, since we do it in buildHits :)
-  // Perhaps, move semantics? :)
-  std::vector<uint8_t> serializedEvent;
-  serializeEvent(m_hitManager->m_eventBuilder.getEvent(), serializedEvent);
-
-  if (serializedEvent.empty())
-    info() << "--- Serialized event is empty! This should not happen!" << endmsg;
-  
-  if (m_isDebug){
-    info() << "--- Submitting data to gpuService" << endmsg;
-    info() << "--- serializedEvent: 0x" << std::hex << (long long)&serializedEvent[0] <<
-      std::dec << ", size " << serializedEvent.size() << endmsg;
-  }
-
   // Perform search on the GPU
-  std::vector<GpuTrack> solution;
-  std::vector<uint8_t> serializedTracks;
+  std::vector<uint8_t> trackCollection;
 
   try {
-    gpuService->submitData("tripletSearchGPU", &serializedEvent[0], serializedEvent.size(), allocTracks, &serializedTracks);
+    gpuService->submitData("PrPixelCudaHandler", &m_serializedEvent[0], m_serializedEvent.size(), allocTracks, &trackCollection);
 
-    // TODO: There should be no need to deserialize the tracks,
-    // and then convert them to "CPU" tracks (done below). These two
+    // There is no need to deserialize the tracks,
+    // and then convert them to "CPU" tracks. These two
     // can be done in one go (that's what "deserializeTracks" should do, and
     // it's PrPixel dependent)
-    if (m_isDebug)
-      info() << "--- Deserializing gpu tracks" << endmsg;
+    // if (m_isDebug)
+    //   info() << "--- Deserializing gpu tracks" << endmsg;
 
-    deserializeGpuTracks(serializedTracks, solution);
-
-    // Additional minor things, which should be left out afterwards
 
     // Conversion from track to PrPixelTrack
-    PrPixelTrack ppTrack;
-    if(!solution.empty()) {
-      for(size_t i = 0; i < solution.size(); i++){
-        // TODO: Refactor event.hitIDs
-        ppTrack.setTrack(solution[i], m_hitManager->m_indexedHits, m_hitManager->m_eventBuilder.getEvent().hitIDs);
-        m_tracks.push_back(ppTrack);
-      }
-    }
+    m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
 
-    for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
-      if ( it->hits().size() > 3 )
-        it->tagUsedHits();
-    }
+    // Additional minor things, which should be left out afterwards
+    // for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
+    //   if ( it->hits().size() > 3 )
+    //     it->tagUsedHits();
+    // }
   } catch (const std::exception & e) {
     error() << "submission failed; " << e.what() << std::endl;
   } catch (...) {
@@ -263,96 +231,6 @@ StatusCode PrPixelTracking::execute() {
 
   return StatusCode::SUCCESS;
 }
-
-// StatusCode PrPixelTracking::execute() {
-//   // Build hits from clusters and sort them by global x within each module. 
-//   if (m_doTiming) {
-//     m_timerTool->start(m_timeTotal);
-//     m_timerTool->start(m_timePrepare);
-//   }
-//   if (m_clearHits) m_hitManager->clearHits();
-//   m_hitManager->buildHits();
-//   m_hitManager->sortByX();
-
-//   if (m_isDebug) {
-//     for (unsigned int i = m_hitManager->firstModule(); m_hitManager->lastModule() >= i; ++i) {
-//       PrPixelHits::const_iterator ith;
-//       for (ith = m_hitManager->hits(i).begin(); m_hitManager->hits(i).end() != ith; ++ith) {
-//         printHit(*ith);
-//       }
-//     }
-//   }
-//   if (0 <= m_wantedKey) {
-//     info() << "--- Looking for track " << m_wantedKey << endmsg;
-//     for (unsigned int i = m_hitManager->firstModule(); m_hitManager->lastModule() >= i; ++i) {
-//       PrPixelHits::const_iterator ith;
-//       for (ith = m_hitManager->hits(i).begin(); m_hitManager->hits(i).end() != ith; ++ith) {
-//         if (matchKey(*ith)) printHit(*ith);
-//       }
-//     }
-//   }
-
-//   if (m_doTiming) m_timerTool->stop(m_timePrepare);
-
-//   // Search for tracks by finding a pair of hits, then extrapolating.
-//   if (m_doTiming) m_timerTool->start(m_timePairs);
-//   searchByPair();                                                    
-//   if (m_doTiming) m_timerTool->stop(m_timePairs);
-
-//   // Convert temporary tracks to LHCb tracks.
-//   if (m_doTiming) m_timerTool->start(m_timeFinal);
-//   makeLHCbTracks();
-//   if (m_doTiming) {
-//     m_timerTool->stop(m_timeFinal);
-//     m_timerTool->stop(m_timeTotal);
-//   }
-
-// #ifdef DEBUG_HISTO
-//   for (unsigned int i = m_hitManager->firstModule(); i < m_hitManager->lastModule(); ++i) {
-//     PrPixelHits::iterator ith;
-//     for (ith = m_hitManager->hits(i).begin(); ith != m_hitManager->hits(i).end(); ++ith) {
-//       PrPixelHit* iC = *ith;
-//       const double x = iC->x();
-//       const double y = iC->y();
-//       const double z = iC->z();
-//       const double r = sqrt(x * x + y * y);
-//       if (!iC->isUsed()) {
-//         plot3D(x, y, z, "UnusedHits3D", "Distribution of UnusedHits",-50.0,50.0,-50.0,50.0,-500.0,800.0,100,100,200);
-//         plot2D(r, z, "UnusedHits_rz", "Distribution of Unused Hits", 0.0, 60.0,-500.0,800.0,100,100);
-//         plot2D(x, y, "UnusedHits2D", "Distribution of Unused Hits",-50.0,50.0,-50.0,50.0,100,100);
-//       }
-//       plot3D(x, y, z, "Hits_3D", "3D Distribution of Hits",-50.0,50.0,-50.0,50.0,-500.0,800.0,100,100,200);
-//       plot2D(r, z, "Hits_RZ", "RZ Distribution of Hits", 0.0, 60.0,-500.0,800.0,100,100);
-//       plot2D(x, y, "Hits_2D", "2D Distribution of Hits",-50.0,50.0,-50.0,50.0,100,100);
-//     }
-//   }
-
-//   const unsigned int nbHits = m_hitManager->nbHits();
-//   plot(nbHits, "HitsPerEvent", "Number of hits per event", 0.0, 8000.0, 80);
-//   plot(m_tracks.size(), "TracksPerEvent", "Number of tracks per event", 0.0,  800.0, 80);
-//   if (nbHits > 0) {
-//     const unsigned int nbHitsUsed = m_hitManager->nbHitsUsed();
-//     plot((100.0*nbHitsUsed)/nbHits, "PercentUsedHitsPerEvent", "Percent of hits assigned to tracks", 0.0, 100.0, 100);
-//   }
-//   for (PrPixelTracks::const_iterator itT = m_tracks.begin(); itT != m_tracks.end(); ++itT) {
-//     if ((*itT).size() <= 3) continue;
-//     // Calculate radius at first and last hit (assume that hits are sorted by module)
-//     const double x1 = (*itT).hits.front()->x();
-//     const double y1 = (*itT).hits.front()->y();
-//     const double r1 = sqrt(x1 * x1 + y1 * y1);
-//     const double x2 = (*itT).hits.back()->x();
-//     const double y2 = (*itT).hits.back()->y();
-//     const double r2 = sqrt(x2 * x2 + y2 * y2);
-//     const double minR = r1 > r2 ? r2 : r1;
-//     const double maxR = r1 > r2 ? r1 : r2;
-//     plot(minR, "MinHitRadiusPerTrack", "Smallest hit radius [mm] per track (of 4 or more hits)", 0.0, 50.0, 100);
-//     plot(maxR, "MaxHitRadiusPerTrack", "Largest hit radius [mm] per track (of 4 or more hits)",  0.0, 50.0, 100);
-//   }
-// #endif
-
-//   return StatusCode::SUCCESS;
-
-// }
 
 //=============================================================================
 // Extend track towards smaller z, 

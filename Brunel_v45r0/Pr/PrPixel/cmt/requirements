@@ -1,6 +1,9 @@
 #=====================================================================
 # Created    : 2011-12-16
-# Maintainer : Heinrich Schindler
+# Original Maintainer : Heinrich Schindler
+#
+# Modified version for CUDA offload
+# Created    : Daniel Campora
 #=====================================================================
 package PrPixel
 version v1r5
@@ -18,7 +21,6 @@ use TrackEvent  v* Event
 use GaudiAlg    v*
 use GaudiKernel v*
 use GpuService  v* GpuManager
-use PrPixelSerialization v* Pr
 
 include_path none
 

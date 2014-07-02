@@ -1,9 +1,13 @@
-#pragma once
 
-#include "PrPixelSerialization/Serialization.h"
+// #ifndef PIXEL_IMPLEMENTATION
+// #define PIXEL_IMPLEMENTATION 1
 
-#include <vector>
+// #include "PrPixelSerialization/Serialization.h"
+// #include <vector>
 
-void pixel_tracker_implementation(
-    const PixelEvent      & event,
-    std::vector<GpuTrack> & result);
+// int gpuPixelSearchByTriplet(
+//     const std::vector<char> & eventCollection,
+//     std::vector<char> & trackCollection
+// );
+
+// #endif

@@ -12,7 +12,7 @@
 #include <vector>
 
 #define MAX_TRACKS 10000
-#define TRACK_SIZE 24
+#define MAX_TRACK_SIZE 24
 
 #define ALLOW_POSTPROCESSING 0
 #define BUNCH_POST_TRACKS 32
@@ -32,8 +32,6 @@
 #define PARAM_TOLERANCE PARAM_TOLERANCE_EXTENDED
 #define PARAM_MAXCHI2 PARAM_MAXCHI2_EXTENDED
 
-// #define Track GpuTrack
-
 struct Sensor {
 	int z;
 	int hitStart;
@@ -50,7 +48,12 @@ struct Track { // 57 + 24*4 = 324 B
 	float tx;
 	float y0;
 	float ty;
+	
+	int hitsNum;
+	int hits[MAX_TRACK_SIZE];
+};
 
+struct TrackFit {
 	float s0;
 	float sx;
 	float sz;
@@ -62,9 +65,6 @@ struct Track { // 57 + 24*4 = 324 B
 	float uz;
 	float uyz;
 	float uz2;
-	
-	int hitsNum;
-	int hits[TRACK_SIZE];
 };
 
 /*
