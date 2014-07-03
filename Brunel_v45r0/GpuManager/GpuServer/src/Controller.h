@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Admin.h"
+#include "AdminClient.h"
 #include "Logger.h"
 
 #include "GpuIpc/LocalSocketClient.h"
@@ -20,5 +20,5 @@ class Controller {
 
     LocalSocketClient m_transport;
     Protocol          m_protocol;
-    Admin             m_admin;
+    AdminClient       m_admin;
 };

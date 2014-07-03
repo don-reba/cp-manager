@@ -33,7 +33,7 @@ StatusCode GpuAlgorithm::initialize() {
   info() << "got GpuService" << endmsg;
 
   uint32_t result;
-  gpuService->submitData("test", NULL, 0, simpleAlloc, &result);
+  gpuService->submitData("SampleGpuHandler", NULL, 0, simpleAlloc, &result);
   cout << "Received: " << result << endl;
 
   return StatusCode::SUCCESS;

@@ -41,10 +41,9 @@ int gpuPixelSearchByTripletInvocation(
   // In principle, each execution will return a different output
   output.resize(input.size());
 
-  for (int i=0; i<input.size(); ++i){
     // This should be done in streams (non-blocking)
+  for (int i=0; i<input.size(); ++i)
     cudaCheck(invokeParallelSearch(numBlocks, numThreads, *input[i], output[i], logger));
-  }
 
   cudaCheck(cudaDeviceReset());
 

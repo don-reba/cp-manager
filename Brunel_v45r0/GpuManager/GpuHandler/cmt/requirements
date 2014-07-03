@@ -3,6 +3,7 @@ version v1r1
 
 branches cmt src GpuHandler
 
+#use GaudiKernel v30r3
 use GaudiPolicy *
 
 library GpuHandler *.cpp
@@ -10,3 +11,8 @@ apply_pattern linker_library library=GpuHandler
 
 apply_pattern install_more_includes more=GpuHandler
 include_dirs ../GpuHandler
+
+macro_append SampleGpuHandler_use_linkopts " -lGaudiPluginService"
+
+#apply_tag no_genconf
+#apply_tag no_merge_genconfDb

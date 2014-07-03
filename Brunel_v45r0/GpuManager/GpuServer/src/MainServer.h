@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
 class IProtocol;
@@ -49,6 +51,8 @@ private: // private functions
 
   std::string createInvalidHandlerMsg(const std::string & handler) const;
 
+  IGpuHandler * getHandlerByName(const std::string & name);
+
   void processQueue();
 
 private:
@@ -61,4 +65,7 @@ private:
   Queue m_dataQueue;
 
   boost::thread m_processingThread;
+
+  typedef boost::mutex::scoped_lock scoped_lock;
+  boost::mutex m_mutex;
 };

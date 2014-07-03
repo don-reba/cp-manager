@@ -2,7 +2,7 @@ package PrPixelCuda
 version v1r1
 
 # structure
-branches PrPixelCuda cmt src
+branches cmt src
 
 # dependencies
 use GaudiPolicy          *
@@ -16,13 +16,6 @@ document cuda_library PrPixelCuda \
   KernelInvoker.cu                \
   PrPixelCudaHandler.cpp          \
   Tools.cu
-
-include_dirs ../PrPixelCuda
-apply_pattern install_more_includes more=PrPixelCuda
-
-# this should be done by the CUDA package
-macro_remove use_linkopts "$(PrPixelCuda_linkopts)"
-macro_append use_linkopts " $(PrPixelCuda_use_linkopts)"
 
 # the server uses Gaudi components to load handlers
 # declare the constituent as a component library
