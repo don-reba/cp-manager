@@ -1,4 +1,3 @@
-
 #include "GpuPixelSearchByTriplet.h"
 #include "PrPixelCudaHandler.h"
 // #include "PrPixelSerialization/Serialization.h"
@@ -13,14 +12,7 @@ void PrPixelCudaHandler::operator() (
     AllocParam    allocResultParam) {
 
     // gpuPixelSearchByTriplet handles several events in parallel
-    std::vector<std::vector<uint8_t> > trackCollection;
-    
-    // std::vector<std::vector<char> > input;
-    // input.resize(batch.size());
-    // for (int i=0; i<input.size(); ++i){
-    //     batch.swap(input[i]
-    // }
-
+    std::vector<Data> trackCollection;
     gpuPixelSearchByTriplet(batch, trackCollection);
 
     // TODO: Why do we need to copy these additionally from trackCollection to a[nother] buffer?

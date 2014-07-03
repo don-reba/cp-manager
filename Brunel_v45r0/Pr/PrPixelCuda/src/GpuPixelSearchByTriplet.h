@@ -6,11 +6,16 @@
 #include "Tools.cuh"
 #include "KernelInvoker.cuh"
 
-int independent_execute(const std::vector<std::vector<unsigned char> >& input, std::vector<std::vector<unsigned char> >& output);
+#include <stdint.h>
 
-void independent_post_execute(const std::vector<std::vector<unsigned char> >& output);
+typedef std::vector<uint8_t>     Data;
+typedef std::vector<const Data*> Batch;
 
-int gpuPixelSearchByTriplet(const std::vector<const std::vector<unsigned char>* >& input, std::vector<std::vector<unsigned char> >& output);
+int independent_execute(const Batch & input, std::vector<Data> & output);
+
+void independent_post_execute(const std::vector<Data>& output);
+
+int gpuPixelSearchByTriplet(const Batch & input, std::vector<Data> & output);
 
 /**
  * Common entrypoint for Gaudi and non-Gaudi
@@ -18,7 +23,9 @@ int gpuPixelSearchByTriplet(const std::vector<const std::vector<unsigned char>* 
  * @param output 
  * @param logger 
  */
-int gpuPixelSearchByTripletInvocation( const std::vector<std::vector<unsigned char> >& input,
-    std::vector<std::vector<unsigned char> >& output, std::ostream& logger);
+int gpuPixelSearchByTripletInvocation(
+    const Batch & input,
+    std::vector<Data> & output,
+    std::ostream& logger);
 
 #endif
