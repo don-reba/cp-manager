@@ -531,10 +531,9 @@ int configGenerator::genConfig( const Strings_t& libs, const string& userModule 
       }
 
       if ( !known ) {
-        cout << "WARNING: Unknown (return) type [" << rtype << "] !!\n"
+        cout << "WARNING: Unknown (return) type [" << System::typeinfoName(rtype.c_str()) << "] !!\n"
              << "WARNING: component [" << ident << "] is skipped !"
              << endl;
-        allGood = false;
         continue;
       }
 
