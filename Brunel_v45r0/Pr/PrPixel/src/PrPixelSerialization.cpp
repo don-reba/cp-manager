@@ -1,4 +1,3 @@
-
 //-----------------------------------------------------------------------------
 // PrPixelSerialization
 //
@@ -6,6 +5,35 @@
 //-----------------------------------------------------------------------------
 
 #include "PrPixelSerialization.h"
+
+#include <stdexcept>
+
+using namespace std;
+
+//------------------
+// utility functions
+//------------------
+
+template<typename T>
+const uint8_t * copy(
+    const uint8_t  * buffer,
+    std::vector<T> & collection,
+    size_t           count) {
+  std::copy(
+    (const T *)buffer,
+    (const T *)buffer + count,
+    std::back_inserter(collection));
+  return buffer + sizeof(T) * count;
+}
+
+template<typename T>
+uint8_t * copy(const std::vector<T> & collection, uint8_t * buffer) {
+  return (uint8_t *)std::copy(collection.begin(), collection.end(), (T*)buffer);
+}
+
+//------------------------------------
+// PrPixelSerialization implementation
+//------------------------------------
 
 void PrPixelSerialization::cleanEvent(){
   m_lastAddedSensor = -1;
@@ -20,7 +48,7 @@ void PrPixelSerialization::cleanEvent(){
   m_event.hitYs.clear();
   m_event.hitZs.clear();
 
-  indexedHits.clear();
+  m_indexedHits.clear();
 }
 
 void PrPixelSerialization::addHit(PrPixelHit* hit, int sensorNum, int hitID, float hitX, float hitY, int hitZ){
@@ -42,10 +70,10 @@ void PrPixelSerialization::addHit(PrPixelHit* hit, int sensorNum, int hitID, flo
   m_event.hitZs.push_back(hitZ);
   m_event.noHits++;
 
-  indexedHits[hitID] = hit;
+  m_indexedHits[hitID] = hit;
 }
 
-void PrPixelSerialization::serializeEvent(std::vector<uint8_t> & buffer) {
+void PrPixelSerialization::serializeEvent(Data & buffer) {
   // compute total size and allocate memory
   const size_t noSensorsSize       = sizeof(int);
   const size_t noHitsSize          = sizeof(int);
@@ -65,27 +93,33 @@ void PrPixelSerialization::serializeEvent(std::vector<uint8_t> & buffer) {
   *(int32_t *)dst = m_event.noHits;    dst += noHitsSize;
   
   // serialize container contents
-  dst = copyHelper(m_event.sensorZs,        dst);
-  dst = copyHelper(m_event.sensorHitStarts, dst);
-  dst = copyHelper(m_event.sensorHitsNums,  dst);
-  dst = copyHelper(m_event.hitIDs,          dst);
-  dst = copyHelper(m_event.hitXs,           dst);
-  dst = copyHelper(m_event.hitYs,           dst);
-  dst = copyHelper(m_event.hitZs,           dst);
+  dst = copy(m_event.sensorZs,        dst);
+  dst = copy(m_event.sensorHitStarts, dst);
+  dst = copy(m_event.sensorHitsNums,  dst);
+  dst = copy(m_event.hitIDs,          dst);
+  dst = copy(m_event.hitXs,           dst);
+  dst = copy(m_event.hitYs,           dst);
+  dst = copy(m_event.hitZs,           dst);
 
   assert(dst == &buffer[0] + buffer.size());
 }
 
-void PrPixelSerialization::deserializeTracks(const std::vector<uint8_t> & trackCollection, PrPixelTracks & m_tracks){
-  std::vector<PixelTrack> * trackCollectionPointer = (std::vector<PixelTrack>*) &(trackCollection);
+void PrPixelSerialization::deserializeTracks(
+    const Data    & trackData,
+    PrPixelTracks & tracks) {
+  if (trackData.empty())
+    throw runtime_error("empty track data");
+  if (trackData.size() % sizeof(GpuTrack) != 0)
+    throw runtime_error("invalid track data size");
 
-  if (trackCollectionPointer->empty()){
-    // TODO: error()
-    std::cerr << "Returned track collection is empty!" << std::endl;
-  }
-  else {
-    for (size_t i=0; i<trackCollectionPointer->size(); ++i){
-      m_tracks.push_back( PrPixelTrack( &((*trackCollectionPointer)[i]), indexedHits, m_event.hitIDs ) );
-    }
+  const GpuTrack * gpuTracks = reinterpret_cast<const GpuTrack*>(trackData.data());
+
+  const size_t count = trackData.size() / sizeof(GpuTrack);
+
+  for (size_t i = 0; i != count; ++i) {
+    int hitsNum = gpuTracks[i].hitsNum;
+    if (hitsNum < 0 || hitsNum > MAX_TRACK_SIZE)
+      throw runtime_error("invalid track hitsNum");
+    tracks.push_back(PrPixelTrack(gpuTracks[i], m_indexedHits, m_event.hitIDs));
   }
 }

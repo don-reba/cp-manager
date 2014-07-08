@@ -153,22 +153,7 @@ StatusCode PrPixelTracking::execute() {
   try {
     gpuService->submitData("PrPixelCudaHandler", &m_serializedEvent[0], m_serializedEvent.size(), allocTracks, &trackCollection);
 
-    // There is no need to deserialize the tracks,
-    // and then convert them to "CPU" tracks. These two
-    // can be done in one go (that's what "deserializeTracks" should do, and
-    // it's PrPixel dependent)
-    // if (m_isDebug)
-    //   info() << "--- Deserializing gpu tracks" << endmsg;
-
-
-    // Conversion from track to PrPixelTrack
     m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
-
-    // Additional minor things, which should be left out afterwards
-    // for (PrPixelTracks::iterator it = m_tracks.begin(); it != m_tracks.end(); it++){
-    //   if ( it->hits().size() > 3 )
-    //     it->tagUsedHits();
-    // }
   } catch (const std::exception & e) {
     error() << "submission failed; " << e.what() << std::endl;
   } catch (...) {
@@ -188,8 +173,7 @@ StatusCode PrPixelTracking::execute() {
 
 #ifdef DEBUG_HISTO
   for (unsigned int i = m_hitManager->firstModule(); i < m_hitManager->lastModule(); ++i) {
-    PrPixelHits::iterator ith;
-    for (ith = m_hitManager->hits(i).begin(); ith != m_hitManager->hits(i).end(); ++ith) {
+    for (PrPixelHits::iterator ith = m_hitManager->hits(i).begin(); ith != m_hitManager->hits(i).end(); ++ith) {
       PrPixelHit* iC = *ith;
       const double x = iC->x();
       const double y = iC->y();
@@ -643,10 +627,9 @@ void PrPixelTracking::printHit(const PrPixelHit* hit, std::string title) {
 // Print a track, with distance and chi2
 //=========================================================================
 void PrPixelTracking::printTrack(PrPixelTrack& track) {
-  PrPixelHits::const_iterator ith;
-  for (ith = track.hits().begin(); track.hits().end() != ith; ++ith) {
-    printHit(*ith);
-  }
+  const PrPixelHits & hits = track.hits();
+  for (size_t i = 0, size = hits.size(); i != size; ++i)
+    printHit(hits[i]);
 }
 
 //=========================================================================

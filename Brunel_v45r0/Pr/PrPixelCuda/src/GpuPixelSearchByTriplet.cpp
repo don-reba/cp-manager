@@ -1,18 +1,20 @@
 #include "GpuPixelSearchByTriplet.h"
 
-int independent_execute(const Batch & input, std::vector<Data>& output) {
-  return gpuPixelSearchByTripletInvocation(input, output, std::cout);
+using namespace std;
+
+int independent_execute(const Batch & input, vector<Data>& output) {
+  return gpuPixelSearchByTripletInvocation(input, output, cout);
 }
 
 void independent_post_execute(
-    const std::vector<Data> & output) {
-  std::cout << "post_execute invoked" << std::endl;
-  std::cout << "Size of output: " << output.size() << " B" << std::endl;
+    const vector<Data> & output) {
+  cout << "post_execute invoked" << endl;
+  cout << "Size of output: " << output.size() << " B" << endl;
 
   // Do some printing
 }
 
-int gpuPixelSearchByTriplet(const Batch & input, std::vector<Data> & output) {
+int gpuPixelSearchByTriplet(const Batch & input, vector<Data> & output) {
   FileStdLogger discardStream;
   VoidLogger logger(&discardStream);
 
@@ -27,10 +29,10 @@ int gpuPixelSearchByTriplet(const Batch & input, std::vector<Data> & output) {
  * @param logger
  */
 int gpuPixelSearchByTripletInvocation(
-    const Batch & input,
-    std::vector<Data>& output,
-    std::ostream& logger) {
-  logger << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
+    const Batch  & input,
+    vector<Data> & output,
+    ostream      & logger) {
+  logger << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << endl;
 
   // Define how many blocks / threads we need to deal with numberOfEvents
 
@@ -41,7 +43,7 @@ int gpuPixelSearchByTripletInvocation(
   // In principle, each execution will return a different output
   output.resize(input.size());
 
-    // This should be done in streams (non-blocking)
+  // This should be done in streams (non-blocking)
   for (int i=0; i<input.size(); ++i)
     cudaCheck(invokeParallelSearch(numBlocks, numThreads, *input[i], output[i], logger));
 
@@ -49,7 +51,7 @@ int gpuPixelSearchByTripletInvocation(
 
   // Deprecated:
   // Merge all solutions!
-  // logger << "Merging solutions..." << std::endl;
+  // logger << "Merging solutions..." << endl;
   // mergeSolutions(solutions, output);
 
   return 0;

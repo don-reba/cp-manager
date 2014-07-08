@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <stdint.h>
 
 #define cudaCheck(stmt) {                                    \
     cudaError_t err = stmt;                                  \
@@ -30,7 +31,7 @@ std::string toString(T t){
     return s;
 }
 
-void setHPointersFromInput(const unsigned char* input);
+void setHPointersFromInput(uint8_t * input, size_t size);
 void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output);
 
 #endif
