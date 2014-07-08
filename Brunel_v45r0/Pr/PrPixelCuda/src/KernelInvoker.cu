@@ -1,5 +1,5 @@
 #include "KernelInvoker.cuh"
-#include "kernel.cuh"
+#include "Kernel.cuh"
 
 extern int*   h_no_sensors;
 extern int*   h_no_hits;

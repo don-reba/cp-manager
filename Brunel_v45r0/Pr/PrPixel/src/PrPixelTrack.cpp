@@ -36,18 +36,6 @@ PrPixelTrack::PrPixelTrack(
   m_y0 = track.y0;
   m_ty = track.ty;
 
-  std::cout << "hit count: " << track.hitsNum << " out of " << MAX_TRACK_SIZE << std::endl;
-  if (track.hitsNum > 0) {
-    std::map<int, size_t> vals;
-    for (int i = 0, n = min(track.hitsNum, MAX_TRACK_SIZE); i != n; ++i)
-      ++vals[track.hits[i]];
-
-    std::cout << "actual hit values:" << std::endl;
-    typedef std::map<int, size_t>::const_iterator vals_iter;
-    for (vals_iter i = vals.begin(), end = vals.end(); i != end; ++i)
-      std::cout << "  " << i->first << " (" << i->second << ")" << std::endl;
-  }
-
   for (int i = 0; i != track.hitsNum; ++i)
     m_hits.push_back(indexedHits.at(eventHitIDs.at(track.hits[i])));
 }
