@@ -10,7 +10,6 @@ use GaudiPolicy *
 use GpuHandler  * GpuManager
 use GpuIpc      * GpuManager
 use Boost       * LCG_Interfaces -no_auto_imports
-use tbb         * LCG_Interfaces
 
 # main application constituent
 application gpuserver -import=Boost *.cpp
@@ -28,7 +27,6 @@ macro application_suffix "" \
 macro_append Boost_linkopts " $(Boost_linkopts_filesystem)"
 macro_append Boost_linkopts " $(Boost_linkopts_program_options)"
 macro_append Boost_linkopts " $(Boost_linkopts_system)"
-macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED"
 
