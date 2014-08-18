@@ -36,7 +36,6 @@ apply_pattern component_library library=PrPixel
 
 private
 
-macro_append prpixel_linkopts " -g "
 macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED "
 
 end_private
