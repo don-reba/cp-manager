@@ -5,9 +5,9 @@ version v1r1
 branches cmt src
 
 # dependencies
-use GaudiPolicy          *
-use CUDA                 *
-use GpuHandler           * GpuManager
+use GaudiPolicy *
+use CUDA        *
+use GpuHandler  * GpuManager
 
 # main constituent
 document cuda_library PrPixelCuda \
