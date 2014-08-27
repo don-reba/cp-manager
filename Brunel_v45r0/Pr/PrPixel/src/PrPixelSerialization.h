@@ -1,4 +1,3 @@
-
 #ifndef PRPIXEL_SERIALIZATION
 #define PRPIXEL_SERIALIZATION 1
 
@@ -22,35 +21,20 @@
 #include "PrPixelHit.h"
 #include "PatKernel/IPatDebugTool.h"
 
-//------------------
-// utility functions
-//------------------
-
-template<typename T>
-const uint8_t * copyHelper(const uint8_t * buffer, std::vector<T> & collection, size_t count) {
-  std::copy(
-    (const T *)buffer,
-    (const T *)buffer + count,
-    std::back_inserter(collection));
-  return buffer + sizeof(T) * count;
-}
-
-template<typename T>
-uint8_t * copyHelper(const std::vector<T> & collection, uint8_t * buffer) {
-  return (uint8_t *)std::copy(collection.begin(), collection.end(), (T*)buffer);
-}
-
 class PrPixelSerialization {
+public:
+  typedef std::vector<uint8_t> Data;
+
 public:
   void cleanEvent();
   void addHit(PrPixelHit* hit, int sensorNum, int hitID, float hitX, float hitY, int hitZ);
-  void serializeEvent(std::vector<uint8_t> & buffer);
-  void deserializeTracks(const std::vector<uint8_t> & trackCollection, PrPixelTracks & m_tracks);
+  void serializeEvent(Data & buffer);
+  void deserializeTracks(const Data & trackData, PrPixelTracks & m_tracks);
 
 private:
   PixelEvent m_event;
   int m_lastAddedSensor;
-  std::map<int, PrPixelHit*> indexedHits;
+  std::map<int, PrPixelHit*> m_indexedHits;
 };
 
 #endif

@@ -1,4 +1,3 @@
-
 #ifndef DEFINITIONS_CUH
 #define DEFINITIONS_CUH 1
 

@@ -1,4 +1,3 @@
-
 #include "Kernel.cuh"
 
 // __device__ __constant__ int sens_num = 48;

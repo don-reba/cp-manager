@@ -25,7 +25,8 @@ public:
   /// Standard constructor
   PrPixelTrack(); 
   // Creates a track from indexed data
-  PrPixelTrack(PixelTrack * const t,
+  PrPixelTrack(
+      const GpuTrack                    & t,
       const std::map<int, PrPixelHit*>  & indexedHits,
       const std::vector<int>            & eventHitIDs);
 
@@ -114,7 +115,7 @@ public:
   Gaudi::TrackSymMatrix covariance(double z);
 
   /// Fit with a K-filter with scattering. Return the chi2
-  double fitKalman(LHCb::State& state, int direction, double noisePerLayer) const;
+  double fitKalman(LHCb::State& state, int direction, double noisePerLayer);
 
   // Number of hits assigned to the track
   int size(void) const {return m_hits.size();} 

@@ -24,8 +24,8 @@ int gpuPixelSearchByTriplet(const Batch & input, std::vector<Data> & output);
  * @param logger 
  */
 int gpuPixelSearchByTripletInvocation(
-    const Batch & input,
+    const Batch       & input,
     std::vector<Data> & output,
-    std::ostream& logger);
+    std::ostream      & logger);
 
 #endif

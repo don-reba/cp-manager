@@ -1,27 +1,33 @@
-
 #include "Tools.cuh"
 
+#include <stdexcept>
+
 // TODO: Remove globals in the short future
-int* h_no_sensors;
-int* h_no_hits;
-int* h_sensor_Zs;
-int* h_sensor_hitStarts;
-int* h_sensor_hitNums;
-int* h_hit_IDs;
+int*   h_no_sensors;
+int*   h_no_hits;
+int*   h_sensor_Zs;
+int*   h_sensor_hitStarts;
+int*   h_sensor_hitNums;
+int*   h_hit_IDs;
 float* h_hit_Xs;
 float* h_hit_Ys;
-int* h_hit_Zs;
+int*   h_hit_Zs;
 
-void setHPointersFromInput(const unsigned char* input){
-    h_no_sensors = (int*) &input[0];
-    h_no_hits = (int*) (h_no_sensors + 1);
-    h_sensor_Zs = (int*) (h_no_hits + 1);
-    h_sensor_hitStarts = (int*) (h_sensor_Zs + h_no_sensors[0]);
-    h_sensor_hitNums = (int*) (h_sensor_hitStarts + h_no_sensors[0]);
-    h_hit_IDs = (int*) (h_sensor_hitNums + h_no_sensors[0]);
-    h_hit_Xs = (float*) (h_hit_IDs + h_no_hits[0]);
-    h_hit_Ys = (float*) (h_hit_Xs + h_no_hits[0]);
-    h_hit_Zs = (int*) (h_hit_Ys + h_no_hits[0]);
+void setHPointersFromInput(uint8_t * input, size_t size){
+  uint8_t * end = input + size;
+
+  h_no_sensors       = (int32_t*)input; input += sizeof(int32_t);
+  h_no_hits          = (int32_t*)input; input += sizeof(int32_t);
+  h_sensor_Zs        = (int32_t*)input; input += sizeof(int32_t) * *h_no_sensors;
+  h_sensor_hitStarts = (int32_t*)input; input += sizeof(int32_t) * *h_no_sensors;
+  h_sensor_hitNums   = (int32_t*)input; input += sizeof(int32_t) * *h_no_sensors;
+  h_hit_IDs          = (int32_t*)input; input += sizeof(int32_t) * *h_no_hits;
+  h_hit_Xs           = (float*)  input; input += sizeof(float)   * *h_no_hits;
+  h_hit_Ys           = (float*)  input; input += sizeof(float)   * *h_no_hits;
+  h_hit_Zs           = (int32_t*)input; input += sizeof(int32_t) * *h_no_hits;
+
+  if (input != end)
+    throw std::runtime_error("failed to deserialize event");
 }
 
 /**

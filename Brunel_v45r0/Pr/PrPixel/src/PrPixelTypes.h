@@ -1,4 +1,3 @@
-
 #ifndef PRPIXEL_TYPES
 #define PRPIXEL_TYPES 1
 
@@ -6,7 +5,7 @@
 #include <vector>
 
 #define MAX_TRACK_SIZE 24
-struct PixelTrack {
+struct GpuTrack {
   float x0;
   float tx;
   float y0;

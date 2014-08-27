@@ -1,4 +1,3 @@
-
 #ifndef CUDA_KERNEL
 #define CUDA_KERNEL 1
 

@@ -3,6 +3,11 @@
 // Local
 #include "PrPixelTrack.h"
 
+#include <iostream>
+#include <map>
+
+using namespace std;
+
 //-----------------------------------------------------------------------------
 // Implementation file for class : PrPixelTrack
 //
@@ -13,29 +18,26 @@
 // Standard constructor, initializes variables
 //=============================================================================
 PrPixelTrack::PrPixelTrack() :
-  m_backward(false),
-  m_x0(0.), m_tx(0.),
-  m_y0(0.), m_ty(0.),
-  m_s0(0.), m_sx(0.), m_sz(0.), m_sxz(0.), m_sz2(0.),
-  m_u0(0.), m_uy(0.), m_uz(0.), m_uyz(0.), m_uz2(0.) {
-
+    m_backward(false),
+    m_x0(0.), m_tx(0.),
+    m_y0(0.), m_ty(0.),
+    m_s0(0.), m_sx(0.), m_sz(0.), m_sxz(0.), m_sz2(0.),
+    m_u0(0.), m_uy(0.), m_uz(0.), m_uyz(0.), m_uz2(0.) {
   m_hits.reserve(20);
 }
 
-PrPixelTrack::PrPixelTrack(PixelTrack * const t,
-  const std::map<int, PrPixelHit*>  & indexedHits,
-  const std::vector<int>            & eventHitIDs){
-  
+PrPixelTrack::PrPixelTrack(
+    const GpuTrack              & track,
+    const map<int, PrPixelHit*> & indexedHits,
+    const vector<int>           & eventHitIDs){
   m_backward = false;
-  m_x0 = t->x0;
-  m_tx = t->tx;
-  m_y0 = t->y0;
-  m_ty = t->ty;
+  m_x0 = track.x0;
+  m_tx = track.tx;
+  m_y0 = track.y0;
+  m_ty = track.ty;
 
-  m_hits.clear();
-  for (int i=0; i<t->hitsNum; ++i){
-    m_hits.push_back(indexedHits.at(eventHitIDs[t->hits[i]]));
-  }
+  for (int i = 0; i != track.hitsNum; ++i)
+    m_hits.push_back(indexedHits.at(eventHitIDs.at(track.hits[i])));
 }
 
 //=============================================================================
@@ -99,7 +101,7 @@ void PrPixelTrack::addHit(PrPixelHit* hit) {
 //=========================================================================
 void PrPixelTrack::removeHit(PrPixelHit* hit) {
 
-  PrPixelHits::iterator it = std::find(m_hits.begin(), m_hits.end(), hit);
+  PrPixelHits::iterator it = find(m_hits.begin(), m_hits.end(), hit);
   if (it == m_hits.end()) return;
   m_hits.erase(it);
   const double x = hit->x();
@@ -218,23 +220,24 @@ namespace
 //  noise2PerLayer: scattering contribution (squared) to tx and ty
 // The return value is the chi2 of the fit  
 // ===============================================================================
-double
-PrPixelTrack::fitKalman( LHCb::State& state, int direction, double noise2PerLayer ) const
+double PrPixelTrack::fitKalman(LHCb::State& state, int direction, double noise2PerLayer)
 {
+  if (m_hits.empty())
+    return 0.0;
+
   // WH: hits are apparently not perfectly sorted. if we really want
   // to use this in the future, we probably want to sort them only
   // once. for now, we sort on every call. since hits seem to be
   // almost sorted in decreasing Z, that's what we'll stick to.
-  PrPixelTrack* nonconstthis = const_cast<PrPixelTrack*>(this) ;
-  std::sort( nonconstthis->m_hits.begin(), nonconstthis->m_hits.end(), SortDecreasingZ() ) ;
+  sort(m_hits.begin(), m_hits.end(), SortDecreasingZ());
 
   // assume the hits are sorted, but don't assume anything on the direction of sorting
   int N = int(m_hits.size()) ;
   int firsthit = 0 ;
   int lasthit  = N-1 ;
   int dhit = +1 ;
-  if( ( m_hits[lasthit]->z() - m_hits[firsthit]->z() ) * direction < 0 ) {
-    std::swap( firsthit, lasthit ) ;
+  if((m_hits[lasthit]->z() - m_hits[firsthit]->z()) * direction < 0) {
+    swap(firsthit, lasthit) ;
     dhit = -1 ;
   }
   
