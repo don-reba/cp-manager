@@ -30,7 +30,7 @@ void App::run() {
 
   m_main.start();
 
-  m_logger.printMessage("started");
+  m_logger.printMessage("started\n");
 
   adminServer->join();
   mainServer->join();
