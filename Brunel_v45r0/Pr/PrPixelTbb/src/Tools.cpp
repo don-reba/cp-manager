@@ -1,5 +1,4 @@
-
-#include "tools.h"
+#include "Tools.h"
 
 void quickSort(float*& hit_Xs, float*& hit_Ys, int*& hit_IDs, int*& hit_Zs, int _beginning, int _end)
 {

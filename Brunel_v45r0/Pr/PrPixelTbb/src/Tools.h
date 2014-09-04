@@ -1,6 +1,4 @@
-
-#ifndef DEBUG_PRINT
-#define DEBUG_PRINT 1
+#pragma once
 
 #include <iostream>
 
@@ -38,8 +36,6 @@ public:
   }
 };
 
-
-
 //  quickSort
 //
 //  This public-domain C implementation by Darel Rex Finley.
@@ -52,6 +48,3 @@ public:
 
 // Slightly mod to match my needs
 void quickSort(float*& hit_Xs, float*& hit_Ys, int*& hit_IDs, int*& hit_Zs, int _beginning, int _end);
-
-#endif
-

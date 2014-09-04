@@ -12,9 +12,9 @@
 #include "tbb/parallel_for.h"
 #include "tbb/task_scheduler_init.h"
 
-#include "New_Algorithm.h"
-#include "tools.h"
-#include "pixel_tbb.h"
+#include "NewAlgorithm.h"
+#include "Tools.h"
+#include "PixelTbb.h"
 
 using namespace std;
 using namespace tbb;

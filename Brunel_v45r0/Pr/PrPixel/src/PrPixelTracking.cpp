@@ -152,13 +152,14 @@ StatusCode PrPixelTracking::execute() {
 
   try {
     gpuService->submitData("PrPixelCudaHandler", &m_serializedEvent[0], m_serializedEvent.size(), allocTracks, &trackCollection);
-
-    m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
   } catch (const std::exception & e) {
     error() << "submission failed; " << e.what() << std::endl;
   } catch (...) {
     error() << "submission failed; reason unknown" << std::endl;
   }
+
+  if (!trackCollection.empty())
+    m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
 
   if (m_doTiming) m_timerTool->stop(m_timePairs);
 

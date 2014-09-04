@@ -1,5 +1,4 @@
-
-#include "New_Algorithm.h"
+#include "NewAlgorithm.h"
 
 double m_maxXSlope         = 0.400;
 double m_maxYSlope         = 0.400;

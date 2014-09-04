@@ -81,14 +81,16 @@ try {
   if (cl.exit()) {
     exitPreviousInstance(logger, adminPath.c_str());
     return EXIT_SUCCESS;
-  } else if (anotherInstanceExists(logger, adminPath.c_str())) {
-    logger.printMessage("Another instance is still running. Terminating.");
-    return EXIT_SUCCESS;
   }
 
   if (!cl.handlerToLoad().empty()) {
     Controller controller(logger, adminPath.c_str());
     controller.loadHandler(cl.handlerToLoad());
+    return EXIT_SUCCESS;
+  }
+
+  if (anotherInstanceExists(logger, adminPath.c_str())) {
+    logger.printMessage("Another instance is still running. Terminating.");
     return EXIT_SUCCESS;
   }
 

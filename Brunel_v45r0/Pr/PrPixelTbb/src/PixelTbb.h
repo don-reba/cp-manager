@@ -1,8 +1,8 @@
-
-#ifndef TRACK
-#define TRACK 1
+#pragma once
 
 #include <vector>
+
+#define MAX_TRACK_SIZE 24
 
 struct PixelEvent {
   int noSensors;
@@ -38,6 +38,14 @@ struct GpuTrack {
   std::vector<int> hits;
 };
 
-void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>& result);
+struct SolutionTrack { // 57 + 24*4 = 324 B
+  float x0;
+  float tx;
+  float y0;
+  float ty;
 
-#endif
+  int hitsNum;
+  int hits[MAX_TRACK_SIZE];
+};
+
+void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>& result);
