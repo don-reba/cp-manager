@@ -1,6 +1,8 @@
 #include "KernelInvoker.cuh"
 #include "Kernel.cuh"
 
+#include <iostream>
+
 extern int*   h_no_sensors;
 extern int*   h_no_hits;
 extern int*   h_sensor_Zs;
@@ -44,7 +46,7 @@ cudaError_t invokeParallelSearch(
   cudaError_t cudaStatus = cudaSuccess;
 
   // Choose which GPU to run on, change this on a multi-GPU system.
-  cudaCheck( cudaSetDevice(0) );
+  cudaCheck(cudaSetDevice(0));
 
   // Allocate memory
   // Allocate CPU buffers
