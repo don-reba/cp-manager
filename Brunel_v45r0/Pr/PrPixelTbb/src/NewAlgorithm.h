@@ -1,16 +1,16 @@
 #pragma once
 
+#include "Tools.h"
+#include "PixelTbb.h"
+
+#include "tbb/parallel_for.h"
+#include "tbb/tick_count.h"
+
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <math.h>
 #include <algorithm>
-
-#include "tbb/parallel_for.h"
-#include "tbb/tick_count.h"
-
-#include "tools.h"
-#include "pixel_tbb.h"
 
 extern int* no_sensors;
 extern int* no_hits;

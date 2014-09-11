@@ -2,6 +2,7 @@
 #include "PixelTbb.h"
 
 #include <algorithm>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 
@@ -71,6 +72,8 @@ void PrPixelTbbHandler::operator() (
 
     Data serializedTracks;
     SerializeTracks(tracks, serializedTracks);
+
+    cout << tracks.size() << " tracks\n";
 
     uint8_t * buffer = allocResult(i, serializedTracks.size(), allocResultParam);
     copy(serializedTracks.begin(), serializedTracks.end(), buffer);

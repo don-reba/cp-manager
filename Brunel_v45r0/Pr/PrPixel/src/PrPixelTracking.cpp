@@ -151,7 +151,7 @@ StatusCode PrPixelTracking::execute() {
   std::vector<uint8_t> trackCollection;
 
   try {
-    gpuService->submitData("PrPixelCudaHandler", &m_serializedEvent[0], m_serializedEvent.size(), allocTracks, &trackCollection);
+    gpuService->submitData("PrPixelTbbHandler", &m_serializedEvent[0], m_serializedEvent.size(), allocTracks, &trackCollection);
   } catch (const std::exception & e) {
     error() << "submission failed; " << e.what() << std::endl;
   } catch (...) {
