@@ -1,28 +1,30 @@
 #include "NewAlgorithm.h"
 
-double m_maxXSlope         = 0.400;
-double m_maxYSlope         = 0.400;
-double m_maxZForRBeamCut   = 200.0;
-double m_maxR2Beam         = 1.0;
-int    m_maxMissed         = 4;
-double m_extraTol          = 0.200;
-double m_maxChi2ToAdd      = 60.0;
-double m_maxChi2SameSensor = 12.0;
-double m_maxChi2Short      = 6.0    ;
-double m_maxChi2PerHit     = 12.0;
-int    m_sensNum           = 48;
+// would be nice to have some expalanations for all of these constants
 
-double  w                   = 1.0 / ((0.055 / sqrt( 12. )) * ((0.055 / sqrt( 12. ))));
+const double m_maxXSlope         = 0.400;
+const double m_maxYSlope         = 0.400;
+const double m_maxZForRBeamCut   = 200.0;
+const double m_maxR2Beam         = 1.0;
+const int    m_maxMissed         = 4;
+const double m_extraTol          = 0.200;
+const double m_maxChi2ToAdd      = 60.0;
+const double m_maxChi2SameSensor = 12.0;
+const double m_maxChi2Short      = 6.0;
+const double m_maxChi2PerHit     = 12.0;
+const int    m_sensNum           = 48;
+
+const double  w                   = 1.0 / ((0.055 / sqrt( 12. )) * ((0.055 / sqrt( 12. ))));
 
 double zBeam(GpuTrack *tr) {
   return -( tr->m_x0 * tr->m_tx + tr->m_y0 * tr->m_ty ) / ( tr->m_tx * tr->m_tx + tr->m_ty * tr->m_ty );
 }
 
-double r2AtZ( double z , GpuTrack *tr) {
-    double xx = tr->m_x0 + z * tr->m_tx;
-    double yy = tr->m_y0 + z * tr->m_ty;
-    return xx*xx + yy * yy;
- }
+double r2AtZ( double z , const GpuTrack *tr) {
+  double xx = tr->m_x0 + z * tr->m_tx;
+  double yy = tr->m_y0 + z * tr->m_ty;
+  return xx*xx + yy * yy;
+}
 
 void solve (GpuTrack *tr) {
   double den = ( tr->m_sz2 * tr->m_s0 - tr->m_sz * tr->m_sz );
@@ -127,7 +129,7 @@ double chi2(GpuTrack *t)
   return ch/nDoF;
 }
 
-bool addHitsOnSensor(sensorInfo *sensor, double xTol, double maxChi2, GpuTrack *tr, int eventId ) {
+bool addHitsOnSensor(SensorInfo *sensor, double xTol, double maxChi2, GpuTrack *tr, int eventId ) {
   if (sensor->hitsNum == 0) return false;
   int offset = eventId * hits_num;
 
@@ -248,8 +250,8 @@ void removeWorstHit(GpuTrack* tr)
 
 bool all3SensorsAreDifferent(GpuTrack/* *t*/) {
   /* if ( t->sensorNums[0] == t->sensorNums[1] ) return false;
-    if ( t->sensorNums[0] == t->sensorNums[2] ) return false;
-    if ( t->sensorNums[1] == t->sensorNums[2] ) return false; */
+     if ( t->sensorNums[0] == t->sensorNums[2] ) return false;
+     if ( t->sensorNums[1] == t->sensorNums[2] ) return false; */
   return true;
 }
 
@@ -277,12 +279,12 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
 
   bool* hit_isUseds = (bool*) calloc(hits_num, sizeof(bool));
 
-  // Helping variables
+  // helper variables
   int event_sensor_displ = eventId * sens_num;
-  int event_hit_displ = eventId * hits_num;
+  int event_hit_displ    = eventId * hits_num;
 
   int sens0, sens1, first1, hit0_no, hit1_no;
-  sensorInfo sensor0, sensor1, extra_sensor;
+  SensorInfo sensor0, sensor1, extra_sensor;
   double dxMax, dyMax;
 
   debug << "-- searchByPair --" << endl
@@ -293,15 +295,15 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
 
   // Iterate from the last until the first+1 (including it)
   for ( sens0 = lastSensor; firstSensor <= sens0; sens0 -= 1 ) {
-    // sens1 is next sensor in same side
+    // sens1 is next sensor on the same side
     sens1 = sens0 - 2;
 
-    sensor0.startPosition = sensor_hitStarts[event_sensor_displ + sens0];
-    sensor0.hitsNum       = sensor_hitNums[event_sensor_displ + sens0];
-    sensor0.z             = sensor_Zs[event_sensor_displ + sens0];
-    sensor1.startPosition = sensor_hitStarts[event_sensor_displ + sens1];
-    sensor1.hitsNum       = sensor_hitNums[event_sensor_displ + sens1];
-    sensor1.z             = sensor_Zs[event_sensor_displ + sens1];
+    sensor0.startPosition = sensor_hitStarts [event_sensor_displ + sens0];
+    sensor0.hitsNum       = sensor_hitNums   [event_sensor_displ + sens0];
+    sensor0.z             = sensor_Zs        [event_sensor_displ + sens0];
+    sensor1.startPosition = sensor_hitStarts [event_sensor_displ + sens1];
+    sensor1.hitsNum       = sensor_hitNums   [event_sensor_displ + sens1];
+    sensor1.z             = sensor_Zs        [event_sensor_displ + sens1];
 
     /* 
        debug << "sensor 0: " << endl
@@ -360,10 +362,10 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
         debug << endl << "hit" << hit_IDs[hit0_offset] << " and hit" << hit_IDs[hit1_offset] << " are compatible, creating GpuTrack" << endl;
 
         //== Cut on R2Beam if needed : backward tracks, i.e zBeam > first hit
-        if ( sensor0.z < m_maxZForRBeamCut ) {
+        if (sensor0.z < m_maxZForRBeamCut) {
           double z_beam  = zBeam(&m_track);
           if ( z_beam > sensor0.z ) {
-            double r2Beam = r2AtZ( z_beam, &m_track );
+            double r2Beam = r2AtZ(z_beam, &m_track);
             if ( r2Beam > m_maxR2Beam ){
               continue;
             }
@@ -371,8 +373,8 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
         }
 
         //== Extend downstream, on both sides of the detector as soon as one hit is missed
-        int extraStep = 2;
-        int extraSens = sens1-extraStep;
+        const int extraStep = 2;
+        const int extraSens = sens1-extraStep;
 
         int nbMissed = 0;
 
@@ -410,8 +412,8 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
 
         //== Try upstream if almost forward tracks
         if ( sensor0.z > m_maxZForRBeamCut ) {
-          extraStep = 1;
-          extraSens = sens0 + 3;  // + 2 already tried...
+          const int extraStep = 1;
+          const int extraSens = sens0 + 3;  // + 2 already tried...
           nbMissed = 2;
 
           while ( extraSens <= lastSensor ) {
@@ -495,7 +497,7 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
   } // sens0
   // return tracks;
   free(hit_isUseds);
- }
+}
 
 void addHitIDs(vector<int>& localHitIDs){
   vector<int> realHitIDs;
