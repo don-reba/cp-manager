@@ -77,8 +77,7 @@ void fill_hit_sensorNums(){
 
   int sensor_id = 0;
   for (int i=0; i<hits_num; i++){
-    if ((sensor_id != sens_num - 1) && 
-        (sensor_hitStarts[sensor_id+1] == i))
+    if ((sensor_id != sens_num - 1) && (sensor_hitStarts[sensor_id+1] == i))
       sensor_id++;
     hit_sensorNums[i] = sensor_id;
   }
@@ -181,8 +180,7 @@ void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>
     task_scheduler_init(num_threads);
 
   tick_count parallel_start = tick_count::now();
-  parallel_for(blocked_range<int>(0, num_events),
-      TBBSearchByPair());
+  parallel_for(blocked_range<int>(0, num_events), TBBSearchByPair());
   tick_count parallel_end = tick_count::now();
   result = parallel_tracks_vector[0];
 
