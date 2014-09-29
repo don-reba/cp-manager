@@ -38,4 +38,6 @@ class GpuService :
     IProtocol  * m_protocol;
 
     StringProperty  m_socketPath;
+    StringProperty  m_serverHost;
+    IntegerProperty m_serverPort;
 };

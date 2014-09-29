@@ -1,6 +1,7 @@
 #include "GpuService.h"
 
-#include "GpuIpc/LocalSocketClient.h"
+//#include "GpuIpc/LocalSocketClient.h"
+#include "GpuIpc/TcpSocketClient.h"
 #include "GpuIpc/Protocol.h"
 
 #include <GaudiKernel/SvcFactory.h>
@@ -22,6 +23,8 @@ GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
     m_protocol   (NULL),
     m_socketPath ("/tmp/GpuManager") {
   declareProperty("SocketPath",  m_socketPath);
+  declareProperty("Host",  m_serverHost);
+  declareProperty("Port",  m_serverPort);
 }
 
 GpuService::~GpuService() {
@@ -113,6 +116,6 @@ void GpuService::cleanup() {
 
 void GpuService::initIO() {
   string socketPath = m_socketPath.value() + "-tracker";
-  m_transport = new LocalSocketClient(socketPath.c_str());
+  m_transport = new TcpSocketClient(m_serverPort, m_serverHost);
   m_protocol  = new Protocol(*m_transport);
 }
