@@ -8,6 +8,7 @@
 #include "MainServer.h"
 
 #include "GpuIpc/Protocol.h"
+#include "GpuIpc/TcpSocketServerConnector.h"
 #include "GpuIpc/LocalSocketServerConnector.h"
 #include "GpuIpc/ThreadedServer.h"
 
@@ -32,7 +33,10 @@ class App : public IApp {
       PerfLog    & perfLog,
       DataLog    & dataLog,
       const char * adminPath,
-      const char * mainPath);
+      const char * mainPath,
+      const std::string& host,
+      const int    port,
+      const std::string& connector);
 
     void run();
 
@@ -52,9 +56,15 @@ class App : public IApp {
 
     Logger  & m_logger;
 
+    // Marco 23-07-2014: Substitute LocalSocket with a pointer to IConnector
+    //                   to let App use different Connectors, not only Local ones
+    
     LocalSocketServerConnector m_adminConnector;
-    LocalSocketServerConnector m_mainConnector;
+    //IConnector* m_mainConnector;
+    std::shared_ptr<IConnector> m_mainConnector;
 
+    //std::shared_ptr<IConnector> m_adminConnector;
+    //std::shared_ptr<IConnector> m_mainConnector;
     ThreadedServer m_adminServer;
     ThreadedServer m_mainServer;
 
