@@ -37,7 +37,8 @@ class GpuService :
     ITransport * m_transport;
     IProtocol  * m_protocol;
 
-    StringProperty  m_socketPath;
+    StringProperty  m_connectionType;
+    StringProperty  m_localSocketPath;
     StringProperty  m_serverHost;
     IntegerProperty m_serverPort;
 };

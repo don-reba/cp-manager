@@ -1,6 +1,7 @@
 #include "App.h"
 #include "DataLog.h"
 #include "CommandLine.h"
+#include "ConnectionInfo.h"
 #include "Controller.h"
 #include "PerfLog.h"
 #include "Logger.h"
@@ -10,7 +11,9 @@
 #include <syslog.h>
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -40,46 +43,25 @@ void doDaemonize() {
     throw runtime_error("Failed to change the current working directory.");
 }
 
-class PrPixelCudaHandler
-{
-  public:
-    PrPixelCudaHandler();
-};
+std::shared_ptr<ConnectionInfo> makeConnectionInfo(
+    const char * connection,
+    const char * localPath,
+    const char * host,
+    int          port) {
+	if (strcmp(connection, "local") == 0) return std::make_shared<LocalConnectionInfo>(localPath);
+	if (strcmp(connection, "tcp")   == 0) return std::make_shared<TcpConnectionInfo>(host, port);
+	throw runtime_error("Invalid connection type. Must be one of: local, tcp.");
+}
 
 // Main entry point.
 int main(int argc, char * argv[])
 try {
+  const char * const defaultPath = "/tmp/GpuManager";
+  const char * const defaultHost = "localhost";
+  const int          defaultPort = 65000;
+  const char * const adminPath   = "/tmp/GpuManager-admin";
 
-  /*
-  using Gaudi::PluginService::Details::Registry;
-  cout << "getting the registry..." << endl;
-  const Registry             & registry  = Registry::instance();
-  cout << "getting the factories..." << endl;
-  const Registry::FactoryMap & factories = registry.factories();
-
-  const char * offset = "    ";
-
-  cout << factories.size() << " plugins found" << endl;
-  for (const auto & entry : factories) {
-    const string                & name = entry.first;
-    const Registry::FactoryInfo & info = entry.second;
-    cout << "* " << name << endl;
-    if (!info.library.empty())   cout << offset << "library   = " << info.library   << '\n';
-    if (!info.type.empty())      cout << offset << "type      = " << info.type      << '\n';
-    if (!info.rtype.empty())     cout << offset << "rtype     = " << info.rtype     << '\n';
-    if (!info.className.empty()) cout << offset << "className = " << info.className << '\n';
-    if (!info.properties.empty()) {
-      cout << "    properties:\n";
-      for (const auto & entry : info.properties)
-        cout << offset << offset << entry.first << ": " << entry.second << '\n';
-    }
-  }
-  */
-
-
-  const char * defaultPath = "/tmp/GpuManager";
-
-  CommandLine cl(defaultPath);
+  CommandLine cl(defaultPath, defaultHost, defaultPort);
   if (!cl.parse(argc, argv))
     return EXIT_SUCCESS;
 
@@ -91,29 +73,23 @@ try {
 
   PerfLog perfLog("perf.log");
 
-  const bool recordData = !cl.dataDir().empty();
+  const bool recordData = cl.dataDir()[0] != '\0';
   DataLog dataLog(recordData, cl.dataDir());
 
-  string adminPath   = cl.servicePath() + "-admin";
-  string trackerPath = cl.servicePath() + "-tracker";
-
-  string host        = cl.hostName();
-  string connector   = cl.connectorType();
-  int    port        = cl.hostPort();
-
   if (cl.exit()) {
-    Controller controller(logger, adminPath.c_str());
+    Controller controller(logger, adminPath);
     controller.stopServer();
     return EXIT_SUCCESS;
   }
 
-  if (!cl.handlerToLoad().empty()) {
-    Controller controller(logger, adminPath.c_str());
+  if (cl.handlerToLoad()[0] != '\0') {
+    Controller controller(logger, adminPath);
     controller.loadHandler(cl.handlerToLoad());
     return EXIT_SUCCESS;
   }
 
-  App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str(), host, port, connector);
+  auto connectionInfo = makeConnectionInfo(cl.connectionType(), cl.localPath(), cl.host(), cl.port());
+  App app(logger, perfLog, dataLog, adminPath, *connectionInfo);
   app.run();
 
   return EXIT_SUCCESS;

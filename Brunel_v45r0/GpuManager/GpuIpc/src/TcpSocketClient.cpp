@@ -1,17 +1,13 @@
 #include "TcpSocketClient.h"
 #include "SystemException.h"
 
+#include <arpa/inet.h>
 #include <cstring>
+#include <netinet/in.h>
 #include <stdexcept>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-// Marco 25-07-2014: header added to implement TCP socket client
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <sstream>
 
@@ -20,17 +16,16 @@
 //-------------
 
 TcpSocketClient::TcpSocketClient(int port, const std::string& hname) :
-    m_port(port),
-    m_host(hname),
-    m_socket (-1) {
+    m_host   (hname),
+    m_socket (-1),
+    m_port   (port) {
   m_socket = socket(AF_INET, SOCK_STREAM, 0);
   if (m_socket == -1)
     throw SystemException("Could not create socket.");
 
-  struct sockaddr_in address;
-  bzero((char *) &address, sizeof(address));
-  address.sin_family = AF_INET;
-  address.sin_port = htons(m_port);
+  sockaddr_in address = {};
+  address.sin_family      = AF_INET;
+  address.sin_port        = htons(m_port);
   address.sin_addr.s_addr = inet_addr(m_host.c_str());
 
   if (-1 == connect(m_socket, (sockaddr*)&address, sizeof(address)))
