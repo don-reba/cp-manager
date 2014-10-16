@@ -44,31 +44,31 @@ void App::run() {
 }
 
 void App::exit() {
-	try {
-		m_adminServer.stop();
-	} catch (const std::exception & e) {
-		m_logger.printError(e.what());
-	}
+  try {
+    m_adminServer.stop();
+  } catch (const std::exception & e) {
+    m_logger.printError(e.what());
+  }
 
-	try {
+  try {
   m_mainServer.stop();
-	} catch (const std::exception & e) {
-		m_logger.printError(e.what());
-	}
+  } catch (const std::exception & e) {
+    m_logger.printError(e.what());
+  }
 
-	try {
+  try {
   m_main.stop();
-	} catch (const std::exception & e) {
-		m_logger.printError(e.what());
-	}
+  } catch (const std::exception & e) {
+    m_logger.printError(e.what());
+  }
 }
 
 void App::loadHandler(const string & handlerName) {
-	try {
-		m_main.loadHandler(handlerName);
-	} catch (const std::exception & e) {
-		m_logger.printError(e.what());
-	}
+  try {
+    m_main.loadHandler(handlerName);
+  } catch (const std::exception & e) {
+    m_logger.printError(e.what());
+  }
 }
 
 shared_ptr<IProtocol> App::getProtocol(ITransport & transport) {

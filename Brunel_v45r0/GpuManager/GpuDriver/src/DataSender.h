@@ -12,16 +12,16 @@ class ITransport;
 class IProtocol;
 
 class DataSender {
-	public:
+  public:
 
-		struct DiffMessage {
-			std::string path;
-			std::string message;
+    struct DiffMessage {
+      std::string path;
+      std::string message;
 
-			DiffMessage(const std::string & path, const std::string & message)
-				: path(path), message(message)
-			{}
-		};
+      DiffMessage(const std::string & path, const std::string & message)
+        : path(path), message(message)
+      {}
+    };
 
     typedef std::vector<boost::filesystem::directory_entry> directory_entry_vector;
 
@@ -35,17 +35,17 @@ class DataSender {
         int                        index,
         const char               * servicePath,
         directory_entry_vector   & paths,
-				std::vector<DiffMessage> & diffMessages,
+        std::vector<DiffMessage> & diffMessages,
         boost::mutex             & pathsMutex,
-				bool                       verifyOutput);
+        bool                       verifyOutput);
 
     void operator() ();
 
   private:
 
-		std::string diff(
-				const std::vector<uint8_t> & data,
-				const std::vector<uint8_t> & reference);
+    std::string diff(
+        const std::vector<uint8_t> & data,
+        const std::vector<uint8_t> & reference);
 
     static void readData(
       const char           * path,
@@ -57,9 +57,9 @@ class DataSender {
 
     int                        m_index;
     directory_entry_vector   & m_paths;
-		std::vector<DiffMessage> & m_diffMessages;
+    std::vector<DiffMessage> & m_diffMessages;
     boost::mutex             & m_mutex;
-		bool                       m_verifyOutput;
+    bool                       m_verifyOutput;
 
     // pointers are used to make sure DataSender could be copied
     std::shared_ptr<ITransport> m_transport;

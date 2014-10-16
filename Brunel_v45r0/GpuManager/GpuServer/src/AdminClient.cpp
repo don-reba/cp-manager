@@ -12,6 +12,6 @@ void AdminClient::exit() {
 }
 
 void AdminClient::loadHandler(const string & handlerName) {
-	protocol.writeUInt32(AdminID_LoadHandler);
-	protocol.writeString(handlerName);
+  protocol.writeUInt32(AdminID_LoadHandler);
+  protocol.writeString(handlerName);
 }
