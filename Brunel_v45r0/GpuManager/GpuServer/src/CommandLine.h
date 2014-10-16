@@ -4,21 +4,27 @@
 
 class CommandLine {
   public:
-    CommandLine(const char * path);
+    CommandLine(const char * localPath, const char * tcpHost, int tcpPort);
 
     bool parse(int argc, char * argv[]);
 
     bool daemonize() const { return m_daemonize; }
     bool exit()      const { return m_exit;      }
 
-    const std::string & dataDir()       const { return m_dataDir;       }
-		const std::string & handlerToLoad() const { return m_handlerToLoad; }
-    const std::string & servicePath()   const { return m_servicePath;   }
+    const char * dataDir()        const { return m_dataDir.c_str();       }
+    const char * handlerToLoad()  const { return m_handlerToLoad.c_str(); }
+    const char * connectionType() const { return m_connection.c_str();    }
+    const char * localPath()      const { return m_localPath.c_str();     }
+    const char * host()           const { return m_host.c_str();          }
+    int          port()           const { return m_port;                  }
 
   private:
     bool        m_daemonize;
     bool        m_exit;
     std::string m_dataDir;
-		std::string m_handlerToLoad;
-    std::string m_servicePath;
+    std::string m_handlerToLoad;
+    std::string m_connection;
+    std::string m_localPath;
+    std::string m_host;
+    int         m_port;
 };

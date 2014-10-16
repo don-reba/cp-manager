@@ -17,5 +17,5 @@ void Controller::stopServer() {
 }
 
 void Controller::loadHandler(const string & handlerName) {
-	m_admin.loadHandler(handlerName);
+  m_admin.loadHandler(handlerName);
 }

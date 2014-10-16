@@ -55,58 +55,39 @@ EventSelector().Input = inputFiles
 PrPixelTracking().TimingMeasurement = True
 PrPixelTracking().OutputLevel = DEBUG
 
-# What does this do?
-# from Gaudi.Configuration import *
-# def doMyChanges():
-#    from Configurables import GaudiSequencer, PrTrackAssociator, PrChecker, FastSTDecoding, VPRawBankToLiteCluster, PrPixelTracking, FastPVFinder, FstSelectVeloTracks   
-#    GaudiSequencer("CaloBanksHandler").Members = []
-#    GaudiSequencer("DecodeTriggerSeq").Members = []
-#    GaudiSequencer("MCLinksTrSeq").Members = [ "PrLHCbID2MCParticle", "PrTrackAssociator"]
-#    PrTrackAssociator().RootOfContainers = "/Event/Fst/Track"
-#    GaudiSequencer("CheckPatSeq" ).Members = [ "PrChecker" ]
-#    PrChecker().VeloTracks = "/Event/Fst/Track/Velo"
-#    PrChecker().ForwardTracks = "/Event/Fst/Track/Forward"
-#    GaudiSequencer("RecoFstSeq").Members = [  VPRawBankToLiteCluster("FstVPDecoding"), PatPixelTracking("FstPixel"), FastPVFinder("FstPV"), FstSelectVeloTracks() ]
-   
-#    PrPixelTracking().TimingMeasurement = True
-#    PrPixelTracking().OutputLevel = "DEBUG"
+# PrChecker options
+#PrChecker().VeloTracks = "/Event/Fst/Track/Velo"
+#PrChecker().ForwardTracks = "/Event/Fst/Track/Forward"
+
+#PrTrackAssociator options
+#PrTrackAssociator().RootOfContainers = "/Event/Fst/Track"
 
 def track_checker():
     GaudiSequencer("MCLinksTrSeq").Members = [PrLHCbID2MCParticle(), PrTrackAssociator()]
     GaudiSequencer("CheckPatSeq").Members = [PrChecker()]
 
 def quick():
-    GaudiSequencer("RecoCALOSeq").Members = []
-    GaudiSequencer("RecoMUONSeq").Members = []
-    GaudiSequencer("RecoPROTOSeq").Members = []
-    GaudiSequencer("RecoRICHSeq").Members = []
-    #GaudiSequencer("RecoVertexSeq").Members = []
-    #GaudiSequencer("TrForwardSeq").Members = []
-    #GaudiSequencer("TrSeedingSeq").Members = []
-    #GaudiSequencer("TrUpSeq").Members = []
-    #GaudiSequencer("TrDownSeq").Members = []
-    #GaudiSequencer("TrMatchSeq").Members = []
-    #GaudiSequencer("TrBestSeq").Members = []
-    #GaudiSequencer("TrFitSeq").Members = []
-    #
+    GaudiSequencer("RecoCALOSeq").Members      = []
+    GaudiSequencer("RecoMUONSeq").Members      = []
+    GaudiSequencer("RecoPROTOSeq").Members     = []
+    GaudiSequencer("RecoRICHSeq").Members      = []
     GaudiSequencer("MCLinksUnpackSeq").Members = []
     GaudiSequencer("CaloBanksHandler").Members = []
-    GaudiSequencer("MCLinksTrSeq").Members = []
-    GaudiSequencer("CheckPatSeq").Members = []
-    #
-    GaudiSequencer("MCLinksCaloSeq").Members = []
-    GaudiSequencer("TrUpSeq").Members = []
-    GaudiSequencer("TrMatchSeq").Members = []
-    GaudiSequencer("TrDownSeq").Members = []
-    GaudiSequencer("RecoVertexSeq").Members = []
-    GaudiSequencer("TrForwardSeq").Members = []
-    GaudiSequencer("TrSeedingSeq").Members = []
-    GaudiSequencer("TrBestSeq").Members = []
-    GaudiSequencer("TrFitSeq").Members = []
-    GaudiSequencer("CheckMUONSeq").Members = []
-    GaudiSequencer("CheckRICHSeq").Members = []
-    GaudiSequencer("OutputDSTSeq").Members = []
-    GaudiSequencer("RecoSUMMARYSeq").Members = []
+    GaudiSequencer("MCLinksTrSeq").Members     = []
+    GaudiSequencer("CheckPatSeq").Members      = []
+    GaudiSequencer("MCLinksCaloSeq").Members   = []
+    GaudiSequencer("TrUpSeq").Members          = []
+    GaudiSequencer("TrMatchSeq").Members       = []
+    GaudiSequencer("TrDownSeq").Members        = []
+    GaudiSequencer("RecoVertexSeq").Members    = []
+    GaudiSequencer("TrForwardSeq").Members     = []
+    GaudiSequencer("TrSeedingSeq").Members     = []
+    GaudiSequencer("TrBestSeq").Members        = []
+    GaudiSequencer("TrFitSeq").Members         = []
+    GaudiSequencer("CheckMUONSeq").Members     = []
+    GaudiSequencer("CheckRICHSeq").Members     = []
+    GaudiSequencer("OutputDSTSeq").Members     = []
+    GaudiSequencer("RecoSUMMARYSeq").Members   = []
 
 appendPostConfigAction(quick)
 appendPostConfigAction(track_checker)

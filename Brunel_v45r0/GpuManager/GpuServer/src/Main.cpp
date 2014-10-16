@@ -1,6 +1,7 @@
 #include "App.h"
 #include "DataLog.h"
 #include "CommandLine.h"
+#include "ConnectionInfo.h"
 #include "Controller.h"
 #include "PerfLog.h"
 #include "Logger.h"
@@ -10,9 +11,13 @@
 #include <syslog.h>
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+
+//#include <Gaudi/PluginService.h>
 
 using namespace boost;
 using namespace std;
@@ -38,29 +43,25 @@ void doDaemonize() {
     throw runtime_error("Failed to change the current working directory.");
 }
 
-void exitPreviousInstance(Logger & logger, const char * path)
-try {
-  Controller controller(logger, path);
-  controller.stopServer();
-} catch (const std::exception & e) {
-  logger.printError(e.what());
-  // it's ok
-}
-
-bool anotherInstanceExists(Logger & logger, const char * path)
-try {
-  Controller controller(logger, path);
-  return true;
-} catch (const std::exception &) {
-  return false;
+std::shared_ptr<ConnectionInfo> makeConnectionInfo(
+    const char * connection,
+    const char * localPath,
+    const char * host,
+    int          port) {
+	if (strcmp(connection, "local") == 0) return std::make_shared<LocalConnectionInfo>(localPath);
+	if (strcmp(connection, "tcp")   == 0) return std::make_shared<TcpConnectionInfo>(host, port);
+	throw runtime_error("Invalid connection type. Must be one of: local, tcp.");
 }
 
 // Main entry point.
 int main(int argc, char * argv[])
 try {
-  const char * defaultPath = "/tmp/GpuManager";
+  const char * const defaultPath = "/tmp/GpuManager";
+  const char * const defaultHost = "localhost";
+  const int          defaultPort = 65000;
+  const char * const adminPath   = "/tmp/GpuManager-admin";
 
-  CommandLine cl(defaultPath);
+  CommandLine cl(defaultPath, defaultHost, defaultPort);
   if (!cl.parse(argc, argv))
     return EXIT_SUCCESS;
 
@@ -72,27 +73,23 @@ try {
 
   PerfLog perfLog("perf.log");
 
-  const bool recordData = !cl.dataDir().empty();
+  const bool recordData = cl.dataDir()[0] != '\0';
   DataLog dataLog(recordData, cl.dataDir());
 
-  string adminPath   = cl.servicePath() + "-admin";
-  string trackerPath = cl.servicePath() + "-tracker";
-
   if (cl.exit()) {
-    exitPreviousInstance(logger, adminPath.c_str());
-    return EXIT_SUCCESS;
-  } else if (anotherInstanceExists(logger, adminPath.c_str())) {
-    logger.printMessage("Another instance is still running. Terminating.");
+    Controller controller(logger, adminPath);
+    controller.stopServer();
     return EXIT_SUCCESS;
   }
 
-  if (!cl.handlerToLoad().empty()) {
-    Controller controller(logger, adminPath.c_str());
+  if (cl.handlerToLoad()[0] != '\0') {
+    Controller controller(logger, adminPath);
     controller.loadHandler(cl.handlerToLoad());
     return EXIT_SUCCESS;
   }
 
-  App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str());
+  auto connectionInfo = makeConnectionInfo(cl.connectionType(), cl.localPath(), cl.host(), cl.port());
+  App app(logger, perfLog, dataLog, adminPath, *connectionInfo);
   app.run();
 
   return EXIT_SUCCESS;

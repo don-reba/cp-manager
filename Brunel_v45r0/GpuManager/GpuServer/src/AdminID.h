@@ -2,5 +2,5 @@
 
 enum AdminID {
   AdminID_Exit,
-	AdminID_LoadHandler,
+  AdminID_LoadHandler,
 };

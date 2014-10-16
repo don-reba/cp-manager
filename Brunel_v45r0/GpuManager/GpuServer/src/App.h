@@ -5,9 +5,11 @@
 #include "Logger.h"
 
 #include "AdminServer.h"
+#include "ConnectionInfo.h"
 #include "MainServer.h"
 
 #include "GpuIpc/Protocol.h"
+#include "GpuIpc/TcpSocketServerConnector.h"
 #include "GpuIpc/LocalSocketServerConnector.h"
 #include "GpuIpc/ThreadedServer.h"
 
@@ -31,8 +33,8 @@ class App : public IApp {
       Logger     & logger,
       PerfLog    & perfLog,
       DataLog    & dataLog,
-      const char * adminPath,
-      const char * mainPath);
+			const char * adminPath,
+      const ConnectionInfo & connection);
 
     void run();
 
@@ -41,19 +43,20 @@ class App : public IApp {
     /// Safely terminates the application.
     virtual void exit();
 
-		/// Load a GPU handler component.
-		virtual void loadHandler(const std::string & handlerHanel);
+    /// Load a GPU handler component.
+    virtual void loadHandler(const std::string & handlerHanel);
 
   private: // private functions
 
-    static std::shared_ptr<IProtocol> getProtocol(ITransport & transport);
+    static std::shared_ptr<IProtocol>  getProtocol(ITransport & transport);
+		static std::shared_ptr<IConnector> createConnector(const ConnectionInfo & info);
 
   private: // data
 
     Logger  & m_logger;
 
-    LocalSocketServerConnector m_adminConnector;
-    LocalSocketServerConnector m_mainConnector;
+    LocalSocketServerConnector  m_adminConnector;
+    std::shared_ptr<IConnector> m_mainConnector;
 
     ThreadedServer m_adminServer;
     ThreadedServer m_mainServer;

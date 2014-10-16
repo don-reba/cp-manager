@@ -18,7 +18,7 @@ class AdminServer : public IProcessor {
     virtual void process(IProtocol & protocol);
 
     void processExit        (IProtocol & protocol);
-		void processLoadHandler (IProtocol & protocol);
+    void processLoadHandler (IProtocol & protocol);
 
   private:
     void exit();

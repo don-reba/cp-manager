@@ -2,6 +2,7 @@
 
 #include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
+#include "GpuIpc/TcpSocketClient.h"
 
 #include <GaudiKernel/SvcFactory.h>
 
@@ -17,11 +18,17 @@ DECLARE_SERVICE_FACTORY(GpuService)
 //-------------
 
 GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
-    Service      (name, sl),
-    m_transport  (NULL),
-    m_protocol   (NULL),
-    m_socketPath ("/tmp/GpuManager") {
-  declareProperty("SocketPath",  m_socketPath);
+    Service           (name, sl),
+    m_transport       (NULL),
+    m_protocol        (NULL),
+    m_connectionType  ("local"),
+    m_localSocketPath ("/tmp/GpuManager"),
+    m_serverHost      ("localhost"),
+    m_serverPort      (65000) {
+  declareProperty("ConnectionType", m_connectionType);
+  declareProperty("SocketPath",     m_localSocketPath);
+  declareProperty("TcpHost",        m_serverHost);
+  declareProperty("TcpPort",        m_serverPort);
 }
 
 GpuService::~GpuService() {
@@ -112,7 +119,14 @@ void GpuService::cleanup() {
 }
 
 void GpuService::initIO() {
-  string socketPath = m_socketPath.value() + "-tracker";
-  m_transport = new LocalSocketClient(socketPath.c_str());
-  m_protocol  = new Protocol(*m_transport);
+  if (m_connectionType.value() == "local") {
+    string socketPath = m_localSocketPath.value() + "-tracker";
+    m_transport = new LocalSocketClient(socketPath.c_str());
+    m_protocol  = new Protocol(*m_transport);
+  } else if (m_connectionType.value() == "tcp") {
+    m_transport = new TcpSocketClient(m_serverPort, m_serverHost);
+    m_protocol  = new Protocol(*m_transport);
+  } else {
+    throw runtime_error("Invalid connection type. Should be one of: local, tcp.");
+  }
 }
