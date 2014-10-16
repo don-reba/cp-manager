@@ -1,6 +1,6 @@
 /*
  * Tcp socket server adapted from the LocalSocketServerConnector
- * by Alexey Badalov
+ * by Alexey Badalov and Marco Corvo
  */
 
 #include "IOException.h"
@@ -8,37 +8,27 @@
 #include "TcpSocketServerConnector.h"
 #include "SystemException.h"
 
+#include <arpa/inet.h>
 #include <cstring>
+#include <netinet/in.h>
 #include <stdexcept>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <iostream>
-// Marco 23-07-2014: added to bind the socket to a real IP address
-#include <sys/types.h>
-#include <ifaddrs.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 //-----------------
 // public interface
 //-----------------
 
 TcpSocketServerConnector::TcpSocketServerConnector(int port, const std::string& hname) :
-    m_port   (port),
     m_host   (hname),
+    m_port   (port),
     m_socket (-1) {
   m_socket = ::socket(AF_INET, SOCK_STREAM, 0);
   if (m_socket == -1)
     throw SystemException("Could not create socket.");
 
-  //int opt = 1;
-  //::setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-  struct sockaddr_in serv_addr;
-  bzero((char *) &serv_addr, sizeof(serv_addr));
+  sockaddr_in serv_addr = {};
 
   serv_addr.sin_family = AF_INET;
   if (m_host.compare("localhost") == 0)
@@ -46,8 +36,7 @@ TcpSocketServerConnector::TcpSocketServerConnector(int port, const std::string& 
   else
       serv_addr.sin_addr.s_addr = inet_addr(m_host.c_str());
   serv_addr.sin_port = htons(m_port);
-  std::cout << "host and port: " << m_host << " and " << m_port << std::endl;
-  if (::bind(m_socket, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+  if (::bind(m_socket, (sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
       throw SystemException("Could not bind to socket");
   }
   if (::listen(m_socket,5) < 0) {

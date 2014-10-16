@@ -28,6 +28,8 @@ action doxygen "$(doxygen_home)/doxygen $(doxygen_settings)"
 
 macro GpuIpc_dependencies "doxygen"
 
+macro_append cppflags " -Wno-missing-field-initializers "
+
 # boost libraries
 macro_append Boost_linkopts " $(Boost_linkopts_system) "
 macro_append Boost_linkopts " $(Boost_linkopts_thread) "

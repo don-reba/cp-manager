@@ -8,25 +8,16 @@
 
 using namespace std;
 
-/*
- * TODO: connector is now a simple "placeholder", must be used to select
- *       the specified socket server (i.e. tcp, local...)
- */
-
 App::App(
     Logger     & logger,
     PerfLog    & perfLog,
     DataLog    & dataLog,
-    const char * adminPath,
-    const char * mainPath,
-    const std::string& host,
-    const int    port,
-    const std::string& connector) :
+		const char * adminPath,
+    const ConnectionInfo & connection) :
     // initializers
     m_logger         (logger),
     m_adminConnector (adminPath),
-    //m_mainConnector  (new TcpSocketServerConnector(65000, "131.154.184.23")),
-    m_mainConnector  (new TcpSocketServerConnector(port, host)),
+    m_mainConnector  (createConnector(connection)),
     m_adminServer    (m_adminConnector, &App::getProtocol, m_admin),
     m_mainServer     (*m_mainConnector, &App::getProtocol, m_main),
     m_main           (perfLog, dataLog),
@@ -73,4 +64,18 @@ void App::loadHandler(const string & handlerName) {
 
 shared_ptr<IProtocol> App::getProtocol(ITransport & transport) {
   return make_shared<Protocol>(ref(transport));
+}
+
+shared_ptr<IConnector> App::createConnector(const ConnectionInfo & connection) {
+	switch (connection.type()) {
+		case ConnectionInfo::Local: {
+			auto info = reinterpret_cast<const LocalConnectionInfo &>(connection);
+			return make_shared<LocalSocketServerConnector>(info.path());
+		}
+		case ConnectionInfo::Tcp: {
+			auto info = reinterpret_cast<const TcpConnectionInfo &>(connection);
+			return make_shared<TcpSocketServerConnector>(info.port(), info.host());
+		}
+	}
+	throw runtime_error("Unexpected connection type.");
 }

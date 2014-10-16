@@ -4,14 +4,14 @@
 
 using namespace std;
 
-AdminClient::AdminClient(IProtocol & protocol) : protocol(protocol) {
+AdminClient::AdminClient(IProtocol & protocol) : m_protocol(protocol) {
 }
 
 void AdminClient::exit() {
-  protocol.writeUInt32(AdminID_Exit);
+  m_protocol.writeUInt32(AdminID_Exit);
 }
 
 void AdminClient::loadHandler(const string & handlerName) {
-  protocol.writeUInt32(AdminID_LoadHandler);
-  protocol.writeString(handlerName);
+  m_protocol.writeUInt32(AdminID_LoadHandler);
+  m_protocol.writeString(handlerName);
 }

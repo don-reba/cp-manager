@@ -1,30 +1,34 @@
 #include "CommandLine.h"
 
 #include <iostream>
+#include <stdexcept>
 
 #include <boost/program_options.hpp>
 
 using namespace boost::program_options;
 using namespace std;
 
-CommandLine::CommandLine(const char * path) :
-    m_daemonize   (false),
-    m_exit        (false),
-    m_servicePath (path) {
+CommandLine::CommandLine(const char * localPath, const char * tcpHost, int tcpPort) :
+    m_daemonize  (false),
+    m_exit       (false),
+		m_connection ("local"),
+    m_localPath  (localPath),
+		m_host       (tcpHost),
+		m_port       (tcpPort) {
 }
 
 bool CommandLine::parse(int argc, char * argv[]) {
   options_description desc("Supported options");
   desc.add_options()
     ("help", "display this help message")
-    ("service",   value(&m_servicePath)->default_value(m_servicePath), "socket path" )
-    ("daemonize", bool_switch(&m_daemonize), "run the process as a daemon"    )
-    ("exit",      bool_switch(&m_exit),      "stop the server"                )
-    ("load",      value(&m_handlerToLoad),   "load a handler component"       )
-    ("servername",value(&m_hostName)->default_value("localhost"), "name or IP address of server"   )
-    ("port",      value(&m_hostPort)->default_value(65000),       "port to listen to"              )
-    ("connector", value(&m_connectorType)->default_value("local"), "Type of server connection (local, tcp, ib, ...)"     )
-    ("datadir",   value(&m_dataDir),         "save transactions to directory" );
+    ("daemonize",  bool_switch(&m_daemonize),                         "run the process as a daemon"    )
+    ("exit",       bool_switch(&m_exit),                              "stop the server"                )
+    ("load",       value(&m_handlerToLoad),                           "load a handler component"       )
+    ("connection", value(&m_connection)->default_value(m_connection), "one of: local, tcp"             )
+    ("localPath",  value(&m_localPath)->default_value(m_localPath),   "local socket path"              )
+    ("tcpHost",    value(&m_host)->default_value(m_host),             "tcp hostname or server IP"      )
+    ("tcpPort",    value(&m_port)->default_value(m_port),             "tcp server port"                )
+    ("datadir",    value(&m_dataDir),                                 "save transactions to directory" );
 
   variables_map vm;
   try {

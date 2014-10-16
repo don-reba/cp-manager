@@ -13,5 +13,5 @@ class AdminClient {
     void loadHandler(const std::string & handlerName);
 
   private:
-    IProtocol & protocol;
+    IProtocol & m_protocol;
 };
