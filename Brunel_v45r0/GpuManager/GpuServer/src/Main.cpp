@@ -77,8 +77,7 @@ try {
   DataLog dataLog(recordData, cl.dataDir());
 
   if (cl.exit()) {
-    Controller controller(logger, adminPath);
-    controller.stopServer();
+    exitPreviousInstance(logger, adminPath.c_str());
     return EXIT_SUCCESS;
   }
 
@@ -88,8 +87,12 @@ try {
     return EXIT_SUCCESS;
   }
 
-  auto connectionInfo = makeConnectionInfo(cl.connectionType(), cl.localPath(), cl.host(), cl.port());
-  App app(logger, perfLog, dataLog, adminPath, *connectionInfo);
+  if (anotherInstanceExists(logger, adminPath.c_str())) {
+    logger.printMessage("Another instance is still running. Terminating.");
+    return EXIT_SUCCESS;
+  }
+
+  App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str());
   app.run();
 
   return EXIT_SUCCESS;

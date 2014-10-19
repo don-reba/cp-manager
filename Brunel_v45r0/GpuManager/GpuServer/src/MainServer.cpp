@@ -127,7 +127,7 @@ size_t MainServer::addSize(size_t total, const Data * data) {
   return total + data->size();
 }
 
-void * MainServer::allocVector(
+uint8_t * MainServer::allocVector(
     size_t index,
     size_t size,
     IGpuHandler::AllocParam param) {

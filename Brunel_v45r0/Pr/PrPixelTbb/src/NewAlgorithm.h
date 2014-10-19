@@ -1,17 +1,16 @@
+#pragma once
 
-//#include "stdafx.h"
+#include "Tools.h"
+#include "PixelTbb.h"
+
+#include "tbb/parallel_for.h"
+#include "tbb/tick_count.h"
 
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <math.h>
 #include <algorithm>
-
-#include "tbb/parallel_for.h"
-#include "tbb/tick_count.h"
-
-#include "tools.h"
-#include "pixel_tbb.h"
 
 extern int* no_sensors;
 extern int* no_hits;
@@ -37,11 +36,11 @@ using namespace tbb;
 #endif
 
 
-typedef struct {
+struct SensorInfo {
   int startPosition;
   int hitsNum;
   double z;
-} sensorInfo;
+};
 
 
 extern vector< vector<GpuTrack> > parallel_tracks_vector;
@@ -62,7 +61,7 @@ inline double xAtHit(GpuTrack *tr, double z);
 inline double yAtHit(GpuTrack *tr, double z);
 inline double chi2Track(GpuTrack *tr, int offset);
 inline double chi2(GpuTrack *t);
-inline bool addHitsOnSensor(sensorInfo sensor, double xTol, double maxChi2, GpuTrack *tr, int threadId);
+inline bool addHitsOnSensor(SensorInfo sensor, double xTol, double maxChi2, GpuTrack *tr, int threadId);
 inline void removeHit(GpuTrack *t, int worstHitOffset);
 inline void removeWorstHit(GpuTrack* t);
 inline bool all3SensorsAreDifferent(GpuTrack t);

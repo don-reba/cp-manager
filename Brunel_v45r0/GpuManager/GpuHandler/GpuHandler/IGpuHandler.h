@@ -27,7 +27,7 @@ class IGpuHandler
     // - an opaque parameter given to the handler
 
     typedef void * AllocParam;
-    typedef void * (*Alloc)(
+    typedef uint8_t * (*Alloc)(
         std::size_t index,
         std::size_t size,
         AllocParam  param);
