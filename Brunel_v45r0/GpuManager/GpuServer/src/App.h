@@ -43,8 +43,8 @@ class App : public IApp {
     /// Safely terminates the application.
     virtual void exit();
 
-		/// Load a GPU handler component.
-		virtual void loadHandler(const std::string & handlerHanel);
+    /// Load a GPU handler component.
+    virtual void loadHandler(const std::string & handlerHanel);
 
   private: // private functions
 

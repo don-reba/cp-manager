@@ -112,7 +112,7 @@ cudaError_t invokeParallelSearch(
   cudaCheck(cudaMemcpy(tracks, dev_tracks, MAX_TRACKS * sizeof(Track), cudaMemcpyDeviceToHost));
   cudaCheck(cudaMemcpy(num_tracks, dev_num_tracks, sizeof(int), cudaMemcpyDeviceToHost));
 
-  // Amount of tracks after stage#1
+  // number of tracks after stage#1
   int no_tracks_stage1 = 0;
   for(int i=0; i<h_no_hits[0]; ++i)
     if(h_track_holders[i])

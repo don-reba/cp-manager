@@ -12,7 +12,7 @@ class Controller {
     Controller(Logger & logger, const char * adminPath);
 
     void stopServer();
-		void loadHandler(const std::string & handlerName);
+    void loadHandler(const std::string & handlerName);
 
   public: // data
 

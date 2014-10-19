@@ -19,9 +19,9 @@ void AdminServer::process(IProtocol & protocol) {
 }
 
 void AdminServer::processExit(IProtocol &) {
-	  m_app.exit();
+    m_app.exit();
 }
 
 void AdminServer::processLoadHandler(IProtocol & protocol) {
-	m_app.loadHandler(protocol.readString());
+  m_app.loadHandler(protocol.readString());
 }

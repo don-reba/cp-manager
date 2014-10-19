@@ -22,12 +22,12 @@ DataSender::DataSender(
     int                      index,
     const char             * servicePath,
     directory_entry_vector & paths,
-		vector<DiffMessage>    & diffMessages,
+    vector<DiffMessage>    & diffMessages,
     mutex                  & pathsMutex,
-		bool                     verifyOutput) :
+    bool                     verifyOutput) :
     m_index        (index),
     m_paths        (paths),
-		m_diffMessages (diffMessages),
+    m_diffMessages (diffMessages),
     m_mutex        (pathsMutex),
     m_verifyOutput (verifyOutput),
     m_transport (new LocalSocketClient(servicePath)),
@@ -78,14 +78,14 @@ try {
     if (!result.empty())
       m_protocol->readData(result.data(), resultSize);
 
-		// verify output
-		if (m_verifyOutput) {
-			string message = diff(result, recordedOutput);
-			if (!message.empty()) {
-				scoped_lock lock(m_mutex);
-				m_diffMessages.push_back(DiffMessage(path, message));
-			}
-		}
+    // verify output
+    if (m_verifyOutput) {
+      string message = diff(result, recordedOutput);
+      if (!message.empty()) {
+        scoped_lock lock(m_mutex);
+        m_diffMessages.push_back(DiffMessage(path, message));
+      }
+    }
 
     // receive performance information ­ seconds elapsed
     m_protocol->readDouble();
@@ -97,54 +97,54 @@ try {
 }
 
 string DataSender::diff(
-		const vector<uint8_t> & data,
-		const vector<uint8_t> & reference) {
+    const vector<uint8_t> & data,
+    const vector<uint8_t> & reference) {
   // check size
-	if (data.size() != reference.size()) {
-		ostringstream message;
-		message << "size mismatch: " << data.size() << " B instead of " << reference.size() << " B";
-		return message.str();
-	}
+  if (data.size() != reference.size()) {
+    ostringstream message;
+    message << "size mismatch: " << data.size() << " B instead of " << reference.size() << " B";
+    return message.str();
+  }
 
   // check contents
   size_t mismatchCount = 0;
   for (size_t i = 0, size = data.size(); i != size; ++i)
     mismatchCount += (data[i] != reference[i]);
-	if (mismatchCount > 0) {
+  if (mismatchCount > 0) {
     ostringstream message;
     message << "data mismatch on " << mismatchCount << " bytes";
     return message.str();
   }
 
-	return "";
+  return "";
 }
 
 void DataSender::readData(
     const char      * path,
     string          & handlerName,
     vector<uint8_t> & input,
-		vector<uint8_t> & output) {
+    vector<uint8_t> & output) {
   ifstream stream(path, ios_base::binary);
 
   uint32_t handlerSize;
   readStream(stream, &handlerSize, 4);
 
-	// read name
+  // read name
   vector<char> handlerChars(handlerSize + 1); // +1 for terminating zero
   readStream(stream, handlerChars.data(), handlerSize);
   handlerName = handlerChars.data();
 
-	// read input
+  // read input
   uint32_t inputSize;
   readStream(stream, &inputSize, 4);
 
   input.resize(inputSize);
-	readStream(stream, input.data(), inputSize);
+  readStream(stream, input.data(), inputSize);
 
-	// read output
+  // read output
   uint32_t outputSize;
   readStream(stream, &outputSize, 4);
 
   output.resize(outputSize);
-	readStream(stream, output.data(), outputSize);
+  readStream(stream, output.data(), outputSize);
 }

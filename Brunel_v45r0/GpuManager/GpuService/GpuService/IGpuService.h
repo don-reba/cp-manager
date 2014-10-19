@@ -23,7 +23,7 @@ class IGpuService : public virtual IInterface {
         const void * data,
         const size_t size,
         Alloc        allocResults,
-        void *       allocResultsParam) = 0;
+        AllocParam   allocResultsParam) = 0;
 
     /// Gaudi interface declaration
     DeclareInterfaceID(IGpuService, 1, 0);
