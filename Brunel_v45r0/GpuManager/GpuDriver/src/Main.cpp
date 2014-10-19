@@ -65,7 +65,7 @@ try {
     return EXIT_SUCCESS;
   sort(paths.begin(), paths.end(), DirectoryCompare);
 
-  string socketPath = cl.servicePath() + "-tracker";
+  string socketPath = cl.servicePath();
 
   sendData(socketPath.c_str(), cl.threadCount(), cl.verifyOutput(), paths);
 
