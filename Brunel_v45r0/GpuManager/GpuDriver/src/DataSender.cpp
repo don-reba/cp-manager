@@ -5,6 +5,7 @@
 #include "Timer.h"
 
 #include <algorithm>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -24,12 +25,14 @@ DataSender::DataSender(
     directory_entry_vector & paths,
     vector<DiffMessage>    & diffMessages,
     mutex                  & pathsMutex,
-    bool                     verifyOutput) :
+    bool                     verifyOutput,
+    PerfLog                & perfLog) :
     m_index        (index),
     m_paths        (paths),
     m_diffMessages (diffMessages),
     m_mutex        (pathsMutex),
     m_verifyOutput (verifyOutput),
+    m_perfLog      (perfLog),
     m_transport (new LocalSocketClient(servicePath)),
     m_protocol  (new Protocol(*m_transport)) {
 }
@@ -46,6 +49,9 @@ try {
       path = m_paths.back().path().string();
       m_paths.pop_back();
     }
+
+    Timer timer;
+    timer.start();
 
     ifstream stream(path.c_str(), ios_base::binary);
 
@@ -77,6 +83,9 @@ try {
     vector<uint8_t> result(resultSize);
     if (!result.empty())
       m_protocol->readData(result.data(), resultSize);
+
+    timer.stop();
+    m_perfLog.addRecord(time(0), timer.secondsElapsed());
 
     // verify output
     if (m_verifyOutput) {

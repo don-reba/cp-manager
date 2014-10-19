@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PerfLog.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,7 +39,8 @@ class DataSender {
         directory_entry_vector   & paths,
         std::vector<DiffMessage> & diffMessages,
         boost::mutex             & pathsMutex,
-        bool                       verifyOutput);
+        bool                       verifyOutput,
+        PerfLog                  & perfLog);
 
     void operator() ();
 
@@ -60,6 +63,7 @@ class DataSender {
     std::vector<DiffMessage> & m_diffMessages;
     boost::mutex             & m_mutex;
     bool                       m_verifyOutput;
+    PerfLog                  & m_perfLog;
 
     // pointers are used to make sure DataSender could be copied
     std::shared_ptr<ITransport> m_transport;

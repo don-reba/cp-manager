@@ -1,5 +1,6 @@
 #include "CommandLine.h"
 #include "DataSender.h"
+#include "PerfLog.h"
 
 #include "GpuIpc/IProtocol.h"
 
@@ -33,13 +34,14 @@ void sendData(
     const char              * servicePath,
     int                       threadCount,
     bool                      verifyOutput,
-    vector<directory_entry> & paths) {
+    vector<directory_entry> & paths,
+    PerfLog                 & perfLog) {
   vector<DataSender::DiffMessage> diffMessages;
 
   mutex pathsMutex;
   thread_group group;
   for (int i = 0; i != threadCount; ++i)
-    group.create_thread(DataSender(i, servicePath, paths, diffMessages, pathsMutex, verifyOutput));
+    group.create_thread(DataSender(i, servicePath, paths, diffMessages, pathsMutex, verifyOutput, perfLog));
   group.join_all();
 
   if (!diffMessages.empty()) {
@@ -59,6 +61,8 @@ try {
   if (!cl.parse(argc, argv))
     return EXIT_SUCCESS;
 
+  PerfLog perfLog("drv-perf.log");
+
   vector<directory_entry> paths;
   copy(directory_iterator(cl.dataPath()), directory_iterator(), back_inserter(paths));
   if (paths.empty())
@@ -67,7 +71,7 @@ try {
 
   string socketPath = cl.servicePath();
 
-  sendData(socketPath.c_str(), cl.threadCount(), cl.verifyOutput(), paths);
+  sendData(socketPath.c_str(), cl.threadCount(), cl.verifyOutput(), paths, perfLog);
 
   return EXIT_SUCCESS;
 } catch (const std::exception & e) {
