@@ -20,7 +20,7 @@ double zBeam(GpuTrack *tr) {
   return -( tr->m_x0 * tr->m_tx + tr->m_y0 * tr->m_ty ) / ( tr->m_tx * tr->m_tx + tr->m_ty * tr->m_ty );
 }
 
-double r2AtZ( double z , const GpuTrack *tr) {
+double r2AtZ(double z , const GpuTrack *tr) {
   double xx = tr->m_x0 + z * tr->m_tx;
   double yy = tr->m_y0 + z * tr->m_ty;
   return xx*xx + yy * yy;
@@ -373,8 +373,8 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
         }
 
         //== Extend downstream, on both sides of the detector as soon as one hit is missed
-        const int extraStep = 2;
-        const int extraSens = sens1-extraStep;
+        int extraStep = 2;
+        int extraSens = sens1-extraStep;
 
         int nbMissed = 0;
 
@@ -412,8 +412,8 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
 
         //== Try upstream if almost forward tracks
         if ( sensor0.z > m_maxZForRBeamCut ) {
-          const int extraStep = 1;
-          const int extraSens = sens0 + 3;  // + 2 already tried...
+          int extraStep = 1;
+          int extraSens = sens0 + 3;  // + 2 already tried...
           nbMissed = 2;
 
           while ( extraSens <= lastSensor ) {

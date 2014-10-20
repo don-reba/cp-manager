@@ -54,7 +54,7 @@ public:
 // void searchByPair_tbb(const blocked_range<int>& r);
 
 double zBeam(GpuTrack *tr);
-double r2AtZ(double z , GpuTrack *tr);
+double r2AtZ(double z, const GpuTrack *tr);
 void solve (GpuTrack *tr);
 inline double chi2Hit(double x, double y, double hitX, double hitY, double hitW);
 inline double xAtHit(GpuTrack *tr, double z);

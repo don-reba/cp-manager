@@ -48,9 +48,26 @@ std::shared_ptr<ConnectionInfo> makeConnectionInfo(
     const char * localPath,
     const char * host,
     int          port) {
-	if (strcmp(connection, "local") == 0) return std::make_shared<LocalConnectionInfo>(localPath);
-	if (strcmp(connection, "tcp")   == 0) return std::make_shared<TcpConnectionInfo>(host, port);
-	throw runtime_error("Invalid connection type. Must be one of: local, tcp.");
+  if (strcmp(connection, "local") == 0) return std::make_shared<LocalConnectionInfo>(localPath);
+  if (strcmp(connection, "tcp")   == 0) return std::make_shared<TcpConnectionInfo>(host, port);
+  throw runtime_error("Invalid connection type. Must be one of: local, tcp.");
+}
+
+void exitPreviousInstance(Logger & logger, const char * path)
+try {
+  Controller controller(logger, path);
+  controller.stopServer();
+} catch (const std::exception & e) {
+  logger.printError(e.what());
+  // it's ok
+}
+
+bool anotherInstanceExists(Logger & logger, const char * path)
+try {
+  Controller controller(logger, path);
+  return true;
+} catch (const std::exception &) {
+  return false;
 }
 
 // Main entry point.
@@ -77,7 +94,7 @@ try {
   DataLog dataLog(recordData, cl.dataDir());
 
   if (cl.exit()) {
-    exitPreviousInstance(logger, adminPath.c_str());
+    exitPreviousInstance(logger, adminPath);
     return EXIT_SUCCESS;
   }
 
@@ -87,12 +104,13 @@ try {
     return EXIT_SUCCESS;
   }
 
-  if (anotherInstanceExists(logger, adminPath.c_str())) {
+  if (anotherInstanceExists(logger, adminPath)) {
     logger.printMessage("Another instance is still running. Terminating.");
     return EXIT_SUCCESS;
   }
 
-  App app(logger, perfLog, dataLog, adminPath.c_str(), trackerPath.c_str());
+  auto connectionInfo = makeConnectionInfo(cl.connectionType(), cl.localPath(), cl.host(), cl.port());
+  App app(logger, perfLog, dataLog, adminPath, *connectionInfo);
   app.run();
 
   return EXIT_SUCCESS;

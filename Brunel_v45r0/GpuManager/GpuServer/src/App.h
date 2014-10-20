@@ -33,7 +33,7 @@ class App : public IApp {
       Logger     & logger,
       PerfLog    & perfLog,
       DataLog    & dataLog,
-			const char * adminPath,
+      const char * adminPath,
       const ConnectionInfo & connection);
 
     void run();
@@ -49,7 +49,7 @@ class App : public IApp {
   private: // private functions
 
     static std::shared_ptr<IProtocol>  getProtocol(ITransport & transport);
-		static std::shared_ptr<IConnector> createConnector(const ConnectionInfo & info);
+    static std::shared_ptr<IConnector> createConnector(const ConnectionInfo & info);
 
   private: // data
 
