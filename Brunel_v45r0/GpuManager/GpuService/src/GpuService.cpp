@@ -120,8 +120,7 @@ void GpuService::cleanup() {
 
 void GpuService::initIO() {
   if (m_connectionType.value() == "local") {
-    string socketPath = m_localSocketPath.value() + "-tracker";
-    m_transport = new LocalSocketClient(socketPath.c_str());
+    m_transport = new LocalSocketClient(m_localSocketPath.value().c_str());
     m_protocol  = new Protocol(*m_transport);
   } else if (m_connectionType.value() == "tcp") {
     m_transport = new TcpSocketClient(m_serverPort, m_serverHost);

@@ -1,5 +1,7 @@
 #include "GaudiAlg/GaudiAlgorithm.h"
 
+#include <GaudiKernel/Property.h>
+
 // forward declarations
 class IGpuService;
 
@@ -15,5 +17,7 @@ class GpuAlgorithm : public GaudiAlgorithm {
     virtual StatusCode finalize();
 
   private:
-    SmartIF<IGpuService> gpuService;
+    SmartIF<IGpuService> m_gpuService;
+
+    IntegerProperty m_dataAmount;
 };
