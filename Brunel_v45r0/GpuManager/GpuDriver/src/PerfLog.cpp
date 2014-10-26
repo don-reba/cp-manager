@@ -21,6 +21,6 @@ void PerfLog::prepareStream() {
 
     // append header, if file is empty
     if (m_out.tellp() == 0)
-      m_out << "timestamp\tname\ttime(s)\tin-size(B)\tout-size(B)\tcount\n" << flush;
+      m_out << "timestamp\tseconds\n" << flush;
   }
 }
