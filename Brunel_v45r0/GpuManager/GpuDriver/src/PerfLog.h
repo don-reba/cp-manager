@@ -8,7 +8,7 @@ class PerfLog {
 
     PerfLog(const char * filePath);
 
-    void addRecord(time_t timestamp, double secods);
+    void addRecord(time_t timestamp, size_t trial, size_t size, double secods);
 
   private:
 

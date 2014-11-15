@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/filesystem.hpp>
@@ -14,56 +15,36 @@ class ITransport;
 class IProtocol;
 
 class DataSender {
-  public:
-
-    struct DiffMessage {
-      std::string path;
-      std::string message;
-
-      DiffMessage(const std::string & path, const std::string & message)
-        : path(path), message(message)
-      {}
-    };
-
-    typedef std::vector<boost::filesystem::directory_entry> directory_entry_vector;
-
   private:
 
     typedef boost::mutex::scoped_lock scoped_lock;
 
   public:
 
+    struct Item
+    {
+      size_t trial;
+      size_t size;
+    };
+    typedef std::vector<Item> Data;
+
+  public:
+
     DataSender(
-        int                        index,
-        const char               * servicePath,
-        directory_entry_vector   & paths,
-        std::vector<DiffMessage> & diffMessages,
-        boost::mutex             & pathsMutex,
-        bool                       verifyOutput,
-        PerfLog                  & perfLog);
+        int            index,
+        const char   * servicePath,
+        Data         & data,
+        boost::mutex & mutex,
+        PerfLog      & perfLog);
 
     void operator() ();
 
   private:
 
-    std::string diff(
-        const std::vector<uint8_t> & data,
-        const std::vector<uint8_t> & reference);
-
-    static void readData(
-      const char           * path,
-      std::string          & handlerName,
-      std::vector<uint8_t> & input,
-      std::vector<uint8_t> & output);
-
-  private:
-
-    int                        m_index;
-    directory_entry_vector   & m_paths;
-    std::vector<DiffMessage> & m_diffMessages;
-    boost::mutex             & m_mutex;
-    bool                       m_verifyOutput;
-    PerfLog                  & m_perfLog;
+    int          m_index;
+    Data         & m_data;
+    boost::mutex & m_mutex;
+    PerfLog      & m_perfLog;
 
     // pointers are used to make sure DataSender could be copied
     std::shared_ptr<ITransport> m_transport;
