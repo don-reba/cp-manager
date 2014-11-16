@@ -91,7 +91,7 @@ void PrPixelSerialization::serializeEvent(Data & buffer) {
   // serialize POD members
   *(int32_t *)dst = m_event.noSensors; dst += noSensorsSize;
   *(int32_t *)dst = m_event.noHits;    dst += noHitsSize;
-  
+
   // serialize container contents
   dst = copy(m_event.sensorZs,        dst);
   dst = copy(m_event.sensorHitStarts, dst);

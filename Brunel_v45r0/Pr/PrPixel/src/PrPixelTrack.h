@@ -1,9 +1,9 @@
-#ifndef PRPIXELTRACK_H 
+#ifndef PRPIXELTRACK_H
 #define PRPIXELTRACK_H 1
 
 // LHCb
 #include "Event/StateVector.h"
-// Local 
+// Local
 #include "PrPixelHit.h"
 
 #include "PrPixelTypes.h"
@@ -21,9 +21,9 @@ namespace LHCb {
 
 class PrPixelTrack {
 
-public: 
+public:
   /// Standard constructor
-  PrPixelTrack(); 
+  PrPixelTrack();
   // Creates a track from indexed data
   PrPixelTrack(
       const GpuTrack                    & t,
@@ -41,14 +41,14 @@ public:
   // Return the list of hits on this track.
   PrPixelHits& hits() {return m_hits;}
   // Add a given hit to this track
-  void addHit(PrPixelHit* hit);                                
+  void addHit(PrPixelHit* hit);
   // Remove a given hit from this track
   void removeHit(PrPixelHit* hit);
   // Mark the hits of this track as being associated
   void tagUsedHits() {
     PrPixelHits::iterator ith;
     for (ith = m_hits.begin(); m_hits.end() != ith; ++ith) {
-      (*ith)->setUsed(true); 
+      (*ith)->setUsed(true);
     }
   }
   // Count unassociated hits for this track
@@ -58,15 +58,15 @@ public:
     for (ith = m_hits.begin(); m_hits.end() != ith; ++ith) {
       if (!(*ith)->isUsed()) ++nn;
     }
-    return nn; 
+    return nn;
   }
 
   // Check that for a 3-hit track, there are actually 3 different sensors used.
-  bool all3SensorsAreDifferent() const { 
+  bool all3SensorsAreDifferent() const {
     if (m_hits[0]->module() == m_hits[1]->module()) return false;
     if (m_hits[0]->module() == m_hits[2]->module()) return false;
     if (m_hits[1]->module() == m_hits[2]->module()) return false;
-    return true; 
+    return true;
   }
 
   int firstModule() const {return m_hits.front()->module();}
@@ -85,7 +85,7 @@ public:
   }
   /// Chi2 constribution from a given hit
   double chi2(PrPixelHit* hit) {
-    return hit->chi2(m_x0 + m_tx * hit->z(), m_y0 + m_ty * hit->z()); 
+    return hit->chi2(m_x0 + m_tx * hit->z(), m_y0 + m_ty * hit->z());
   }
   /// Position at given z from straight-line fit
   double xAtZ(const double z) const {
@@ -93,7 +93,7 @@ public:
   }
   double yAtZ(const double z) const {
     return m_y0 + m_ty * z;
-  } 
+  }
 
   /// Create a track state vector: position and the slopes: dx/dz and dy/dz
   LHCb::StateVector state(double z) {
@@ -104,12 +104,12 @@ public:
     temp.setTx(m_tx);
     temp.setTy(m_ty);
     temp.setQOverP(0.); // Q/P is Charge/Momentum ratio
-    return temp; 
+    return temp;
   }
 
   // Calculate the z-pos. where the track passes closest to the beam
   double zBeam() const {
-    return -(m_x0 * m_tx + m_y0 * m_ty) / (m_tx * m_tx + m_ty * m_ty); 
+    return -(m_x0 * m_tx + m_y0 * m_ty) / (m_tx * m_tx + m_ty * m_ty);
   }
 
   Gaudi::TrackSymMatrix covariance(double z);
@@ -118,26 +118,26 @@ public:
   double fitKalman(LHCb::State& state, int direction, double noisePerLayer);
 
   // Number of hits assigned to the track
-  int size(void) const {return m_hits.size();} 
+  int size(void) const {return m_hits.size();}
 
 private:
   /// Backward or forward track
-  bool m_backward;     
+  bool m_backward;
   /// List of pointers to hits
-  PrPixelHits m_hits;        
+  PrPixelHits m_hits;
   /// Straight-line fit parameters
   double m_x0;
   double m_tx;
   double m_y0;
   double m_ty;
   /// Sums for the x-slope fit
-  double m_s0;                  
+  double m_s0;
   double m_sx;
   double m_sz;
   double m_sxz;
   double m_sz2;
-  /// Sums for the y-slope fit 
-  double m_u0;                  
+  /// Sums for the y-slope fit
+  double m_u0;
   double m_uy;
   double m_uz;
   double m_uyz;

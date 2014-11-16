@@ -239,7 +239,7 @@ void removeWorstHit(GpuTrack* tr)
       // It has still not been added to isUseds, no need to do this :)
 
       removeHit(tr, worstHitOffset);
-      // This changes the chi2 of the GpuTrack, which is why 
+      // This changes the chi2 of the GpuTrack, which is why
     }
 
     // And the algorithm goes on... ?
@@ -305,9 +305,9 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
     sensor1.hitsNum       = sensor_hitNums   [event_sensor_displ + sens1];
     sensor1.z             = sensor_Zs        [event_sensor_displ + sens1];
 
-    /* 
+    /*
        debug << "sensor 0: " << endl
-       << " Z: " << sensor0.z << endl 
+       << " Z: " << sensor0.z << endl
        << " sP: " << sensor0.startPosition << endl
        << " hitsNum: " << sensor0.hitsNum << endl;
        */

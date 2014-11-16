@@ -20,7 +20,7 @@ SocketServer::SocketServer(int socket) :
 }
 
 SocketServer::~SocketServer() {
-  if (m_socket != -1) 
+  if (m_socket != -1)
     close(m_socket);
 }
 

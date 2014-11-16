@@ -25,7 +25,7 @@ PrPixelTracking::PrPixelTracking(const std::string& name,
 #else
     GaudiAlgorithm(name, pSvcLocator),
 #endif
-    m_debugTool(NULL) { 
+    m_debugTool(NULL) {
 
   declareProperty("OutputTracksName", m_outputLocation = LHCb::TrackLocation::Velo);
   declareProperty("MaxXSlope", m_maxXSlope = 0.400);
@@ -33,19 +33,19 @@ PrPixelTracking::PrPixelTracking(const std::string& name,
   // Tolerance window when adding hits
   declareProperty("ExtraTol", m_extraTol = 0.6 * Gaudi::Units::mm);
   // Number of modules without a hit after which to stop extrapolation
-  declareProperty("MaxMissed", m_maxMissed = 3); 
+  declareProperty("MaxMissed", m_maxMissed = 3);
 
   // Acceptance criteria for adding new hits
   declareProperty("MaxScatter", m_maxScatter = 0.004);
-  
+
   // Acceptance criteria for track candidates
   // Max. chi2 for 3-hit tracks
-  declareProperty("MaxChi2Short", m_maxChi2Short = 20.0); 
+  declareProperty("MaxChi2Short", m_maxChi2Short = 20.0);
   // Min. fraction of unused hits
   declareProperty("FractionUnused", m_fractionUnused = 0.5);
 
-  // Flag to clear hits (for rerunning in same event) 
-  declareProperty("ClearHits", m_clearHits = false);  
+  // Flag to clear hits (for rerunning in same event)
+  declareProperty("ClearHits", m_clearHits = false);
 
   declareProperty("UseSlopeCorrection", m_useSlopeCorrection = false);
 
@@ -119,7 +119,7 @@ StatusCode PrPixelTracking::execute() {
   // Code with minimal instructions to set it off to the GPU
   // and perform check afterwards.
   // Also timing unaffected.
-  
+
   if (m_doTiming) {
     m_timerTool->start(m_timeTotal);
     m_timerTool->start(m_timePrepare);
@@ -133,10 +133,10 @@ StatusCode PrPixelTracking::execute() {
 
   // Do some typecasting into a format understandable by GPU
   m_hitManager->m_serializer.serializeEvent(m_serializedEvent);
-  
+
   if (m_serializedEvent.empty())
     info() << "--- Serialized event is empty! This should not happen!" << endmsg;
-  
+
   if (m_isDebug){
     info() << "--- Submitting data to gpuService" << endmsg;
     info() << "--- serializedEvent: 0x" << std::hex << (long long)&m_serializedEvent[0] <<
@@ -218,16 +218,16 @@ StatusCode PrPixelTracking::execute() {
 }
 
 //=============================================================================
-// Extend track towards smaller z, 
+// Extend track towards smaller z,
 // on both sides of the detector as soon as one hit is missed.
 //=============================================================================
-void PrPixelTracking::extendTrack(const PrPixelHit* h1, 
+void PrPixelTracking::extendTrack(const PrPixelHit* h1,
                                   const PrPixelHit* h2) {
 
   // Initially scan every second module (stay on the same side).
   int step = 2;
   // Start two modules behind the last one.
-  int next = h2->module() - step; 
+  int next = h2->module() - step;
   // Count modules without hits found.
   unsigned int nbMissed = 0;
   while (next >= 0) {
@@ -254,8 +254,8 @@ void PrPixelTracking::extendTrack(const PrPixelHit* h1,
           h1 = h2;
           h2 = h3;
         }
-        // Switch to scanning every module (left and right). 
-        step = 1; 
+        // Switch to scanning every module (left and right).
+        step = 1;
       } else {
         ++nbMissed;
       }
@@ -272,10 +272,10 @@ void PrPixelTracking::extendTrack(const PrPixelHit* h1,
 void PrPixelTracking::searchByPair() {
 
   // Get the range of modules to start search on,
-  // starting with the one at largest Z. 
+  // starting with the one at largest Z.
   const int lastModule  = m_hitManager->lastModule();
   const int firstModule = m_hitManager->firstModule() + 2;
-  for (int sens0 = lastModule; firstModule <= sens0; sens0 -= 1) { 
+  for (int sens0 = lastModule; firstModule <= sens0; sens0 -= 1) {
     // Pick-up the "paired" module one station backwards
     const int sens1 = sens0 - 2;
     PrPixelModule* module0 = m_hitManager->module(sens0);
@@ -284,11 +284,11 @@ void PrPixelTracking::searchByPair() {
     double z1 = module1->z();
     double dz = z0 - z1;
     // Does it make sense to skip pairs very far apart ?
-    // if( fabs(dz) > 60.0) continue;                                      
+    // if( fabs(dz) > 60.0) continue;
 #ifdef DEBUG_HISTO
     plot(dz, "SeedPairDeltaZ", "Separation in Z [mm] between the seed pair modules", -200.0, +200.0, 400);
 #endif
-    // Calculate the search window from the slope limits. 
+    // Calculate the search window from the slope limits.
     const double dxMax = m_maxXSlope * fabs(dz);
     const double dyMax = m_maxYSlope * fabs(dz);
     // Loop over hits in the first module (larger Z) in the pair.
@@ -297,7 +297,7 @@ void PrPixelTracking::searchByPair() {
     PrPixelHits::const_iterator first1 = module1->hits().begin();
     for (ith0 = module0->hits().begin(); last0 != ith0; ++ith0) {
       // Skip hits already assigned to tracks.
-      if ((*ith0)->isUsed()) continue;                                            
+      if ((*ith0)->isUsed()) continue;
       const double x0 = (*ith0)->x();
       const double y0 = (*ith0)->y();
       // Calculate x-pos. limits on the other module.
@@ -310,13 +310,13 @@ void PrPixelTracking::searchByPair() {
       // Loop over hits in the second module (smaller Z) in the pair.
       PrPixelHits::const_iterator ith1;
       PrPixelHits::const_iterator last1 = module1->hits().end();
-      for (ith1 = first1; last1 != ith1; ++ith1) { 
+      for (ith1 = first1; last1 != ith1; ++ith1) {
         const double x1 = (*ith1)->x();
         // Skip hits below the X-pos. limit.
         if (x1 < xMin) {
           first1 = ith1 + 1;
           continue;
-        } 
+        }
         // Stop search when above the X-pos. limit.
         if (x1 > xMax) break;
         // Skip hits already assigned to tracks.
@@ -330,7 +330,7 @@ void PrPixelTracking::searchByPair() {
         if (m_debugTool) {
           if (matchKey(*ith0) && matchKey(*ith1)) m_debug = true;
           if (m_debug) {
-            info() << format("s1%3d dxRel %7.3f dyRel %7.3f    ", 
+            info() << format("s1%3d dxRel %7.3f dyRel %7.3f    ",
                              sens1, (x1-xMin)/(xMax-xMin), fabs((*ith1)->y()-y0)/dyMax);
             printHit(*ith1);
           }
@@ -347,7 +347,7 @@ void PrPixelTracking::searchByPair() {
           if (m_track.nbUnused() != 3) {
             if (m_debug) {
               info() << "  -- reject, only " << m_track.nbUnused() << " unused hits." << endmsg;
-              printTrack(m_track); 
+              printTrack(m_track);
             }
             continue;
           }
@@ -361,9 +361,9 @@ void PrPixelTracking::searchByPair() {
         } else {
           if (m_track.nbUnused() < m_fractionUnused * m_track.hits().size()) {
             if (m_debug) {
-              info() << "  -- reject, only " << m_track.nbUnused() << "/" 
+              info() << "  -- reject, only " << m_track.nbUnused() << "/"
                      << m_track.hits().size() << " hits are unused." << endmsg;
-              printTrack(m_track); 
+              printTrack(m_track);
             }
             continue;
           }
@@ -390,7 +390,7 @@ void PrPixelTracking::searchByPair() {
 void PrPixelTracking::makeLHCbTracks() {
 
 #ifdef DEBUG_HISTO
-  unsigned int nFwd = 0; 
+  unsigned int nFwd = 0;
   unsigned int nBwd = 0;
 #endif
 
@@ -400,7 +400,7 @@ void PrPixelTracking::makeLHCbTracks() {
   PrPixelTracks::iterator itt;
   for (itt = m_tracks.begin(); m_tracks.end() != itt; ++itt) {
     // Skip 3-hit tracks with double-used hits.
-    if ((*itt).hits().size() == 3 && (*itt).nbUnused() != 3) continue; 
+    if ((*itt).hits().size() == 3 && (*itt).nbUnused() != 3) continue;
     // Create a new LHCb track.
     LHCb::Track* newTrack = new LHCb::Track(key++);
     newTrack->setType(LHCb::Track::Velo);
@@ -411,13 +411,13 @@ void PrPixelTracking::makeLHCbTracks() {
       printTrack(*itt);
     }
 
-    // Loop over the hits, add their LHCbIDs to the LHCb track and 
+    // Loop over the hits, add their LHCbIDs to the LHCb track and
     // find the highest Z.
     double zMax = -1.e9;
     PrPixelHits::iterator ith;
     for (ith = (*itt).hits().begin(); (*itt).hits().end() != ith; ++ith) {
       newTrack->addToLhcbIDs((*ith)->id());
-      if ((*ith)->z() > zMax) zMax = (*ith)->z(); 
+      if ((*ith)->z() > zMax) zMax = (*ith)->z();
     }
     // Decide if this is a forward or backward track.
     // Calculate Z where the track passes closest to the beam.
@@ -456,7 +456,7 @@ void PrPixelTracking::makeLHCbTracks() {
     if (!m_stateClosestToBeamKalmanFit) {
       newTrack->addToStates(state);
     }
-    
+
     // Set state at last measurement, if requested
     if ((!backward && m_stateEndVeloKalmanFit) || m_addStateFirstLastMeasurementKalmanFit) {
       LHCb::State downstreamstate;
@@ -468,8 +468,8 @@ void PrPixelTracking::makeLHCbTracks() {
       if (m_stateEndVeloKalmanFit) {
         state = downstreamstate;
       }
-    } 
-    
+    }
+
     // Add state at end of velo
     if (!backward) {
       state.setLocation(LHCb::State::EndVelo) ;
@@ -478,7 +478,7 @@ void PrPixelTracking::makeLHCbTracks() {
     }
 
     // Set the chi2/dof
-    newTrack->setNDoF(2 * ((*itt).hits().size() - 2)); 
+    newTrack->setNDoF(2 * ((*itt).hits().size() - 2));
     newTrack->setChi2PerDoF((*itt).chi2());
     // Add the LHCb track to the list.
     outputTracks->insert(newTrack);
@@ -543,7 +543,7 @@ PrPixelHit* PrPixelTracking::bestHit(PrPixelModule* module, double xTol, double 
   const double y2 = h2->y();
   const double z2 = h2->z();
   const double tx = (x2 - x1) / (z2 - z1);
-  const double ty = (y2 - y1) / (z2 - z1); 
+  const double ty = (y2 - y1) / (z2 - z1);
   // Extrapolate to the z-position of the module
   const double xGuess = x1 + tx * (module->z() - z1) - xTol;
 
@@ -569,7 +569,7 @@ PrPixelHit* PrPixelTracking::bestHit(PrPixelModule* module, double xTol, double 
     const double hit_x = hit->x();
     const double hit_y = hit->y();
     const double hit_z = hit->z();
-    const double dz = hit_z - z1; 
+    const double dz = hit_z - z1;
     const double xPred = x1 + tx * dz;
     const double yPred = y1 + ty * dz;
 #ifdef DEBUG_HISTO
@@ -584,8 +584,8 @@ PrPixelHit* PrPixelTracking::bestHit(PrPixelModule* module, double xTol, double 
     // Skip hits outside the y-position tolerance.
     if (fabs(dy) > xTol) continue;
     const double scatter = sqrt(dx * dx + dy * dy) / fabs(hit_z - z2);
-    if (scatter < bestScatter) { 
-      bestHit = hit; 
+    if (scatter < bestScatter) {
+      bestHit = hit;
       bestScatter = scatter;
     }
     if (scatter < maxScatter) ++nFound;

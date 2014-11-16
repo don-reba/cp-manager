@@ -1,4 +1,4 @@
-#ifndef PRPIXELHITMANAGER_H 
+#ifndef PRPIXELHITMANAGER_H
 #define PRPIXELHITMANAGER_H 1
 
 // Gaudi
@@ -27,12 +27,12 @@ static const InterfaceID IID_PrPixelHitManager("PrPixelHitManager", 1, 0);
  */
 
 class PrPixelHitManager : public GaudiTool, public IIncidentListener {
-public: 
+public:
   // Return the interface ID
   static const InterfaceID& interfaceID() {return IID_PrPixelHitManager;}
 
   /// Standard constructor
-  PrPixelHitManager(const std::string& type, 
+  PrPixelHitManager(const std::string& type,
                      const std::string& name,
                      const IInterface* parent);
   /// Destructor
@@ -57,24 +57,24 @@ public:
   unsigned int lastModule() const  {return m_lastModule;}
 
   /// Return the number of hits in the pool.
-  unsigned int nbHits() const {return m_nextInPool - m_pool.begin();} 
+  unsigned int nbHits() const {return m_nextInPool - m_pool.begin();}
   /// Return the number of hits associated to a track.
   unsigned int nbHitsUsed() const {
     unsigned int nUsed = 0;
     std::vector<PrPixelHit>::const_iterator itH;
     for (itH = m_pool.begin(); itH != m_nextInPool; ++itH) {
-      if ((*itH).isUsed()) ++nUsed; 
+      if ((*itH).isUsed()) ++nUsed;
     }
-    return nUsed; 
+    return nUsed;
   }
 
   void useSlopeCorrection(const bool flag) {m_useSlopeCorrection = flag;}
   /// Calculate X,Y,Z-position for pixel ChannelID with fractional interpolation.
   Gaudi::XYZPoint position(LHCb::VPChannelID id, double dx, double dy);
   /// Recompute the geometry in case of change
-  StatusCode rebuildGeometry();                                  
+  StatusCode rebuildGeometry();
   /// Sort hits by X within every module (to speed up the search).
-  void sortByX();                                                
+  void sortByX();
 
   // Datatypes for GPU connectivity
   PrPixelSerialization m_serializer;
@@ -83,11 +83,11 @@ private:
   /// Detector element
   DeVP* m_vp;
   // List of hits: here are the hits stored
-  std::vector<PrPixelHit> m_pool;             
+  std::vector<PrPixelHit> m_pool;
   /// Next free place in the hit list
-  std::vector<PrPixelHit>::iterator m_nextInPool;       
+  std::vector<PrPixelHit>::iterator m_nextInPool;
   /// List of pointers to modules (which contain pointers to their hits)
-  std::vector<PrPixelModule*> m_modules;          
+  std::vector<PrPixelModule*> m_modules;
 
   /// Indices of first and last module
   unsigned int m_firstModule;
@@ -95,7 +95,7 @@ private:
 
   /// Flag to use position correction based on track slope or not
   bool m_useSlopeCorrection;
- 
+
   /// Flag whether hits are ready for use
   bool m_eventReady;
 };

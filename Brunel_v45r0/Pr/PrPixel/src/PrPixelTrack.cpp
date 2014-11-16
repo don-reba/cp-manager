@@ -134,7 +134,7 @@ void PrPixelTrack::solve() {
   if (fabs(den) < 10e-10) den = 1.;
   m_tx = (m_sxz * m_s0  - m_sx  * m_sz) / den;
   m_x0 = (m_sx  * m_sz2 - m_sxz * m_sz) / den;
-  
+
   den = (m_uz2 * m_u0 - m_uz * m_uz);
   if (fabs(den) < 10e-10) den = 1.;
   m_ty = (m_uyz * m_u0  - m_uy  * m_uz) / den;
@@ -157,7 +157,7 @@ Gaudi::TrackSymMatrix PrPixelTrack::covariance(double z) {
   double m33 = m_uz2 - 2 * z * m_uz + z * z * m_u0;
   double den20 = m22 * m00 - m20 * m20;
   double den31 = m33 * m11 - m31 * m31;
-  
+
   cov(0,0) =  m22/den20;
   cov(2,0) = -m20/den20;
   cov(2,2) =  m00/den20;
@@ -218,7 +218,7 @@ namespace
 //  direction=+1 : filter in positive z direction (not normally what you want)
 //  direction=-1 : filter in negative z direction
 //  noise2PerLayer: scattering contribution (squared) to tx and ty
-// The return value is the chi2 of the fit  
+// The return value is the chi2 of the fit
 // ===============================================================================
 double PrPixelTrack::fitKalman(LHCb::State& state, int direction, double noise2PerLayer)
 {
@@ -240,7 +240,7 @@ double PrPixelTrack::fitKalman(LHCb::State& state, int direction, double noise2P
     swap(firsthit, lasthit) ;
     dhit = -1 ;
   }
-  
+
   // we filter x and y simultaneously but take them uncorrelated.
   // filter first the first hit.
 
@@ -249,7 +249,7 @@ double PrPixelTrack::fitKalman(LHCb::State& state, int direction, double noise2P
   double tx = m_tx ;
   double y  = hit->y() ;
   double ty = m_ty ;
-  double z  = hit->z() ; 
+  double z  = hit->z() ;
 
   // initialize the covariance matrix
   double covXX = 1/hit->wx() ;
@@ -257,8 +257,8 @@ double PrPixelTrack::fitKalman(LHCb::State& state, int direction, double noise2P
   double covXTx  = 0 ; // no initial correlation
   double covYTy  = 0 ;
   double covTxTx = 1 ; // randomly large error
-  double covTyTy = 1 ; 
-  
+  double covTyTy = 1 ;
+
   // add remaining hits
   double chi2(0) ;
   for(int i = firsthit + dhit; i != lasthit + dhit; i += dhit ) {

@@ -17,7 +17,7 @@ class PrPixelModule {
 
 public:
   /// Constructor
-  PrPixelModule(const unsigned int number, const bool right) : 
+  PrPixelModule(const unsigned int number, const bool right) :
     m_lastHitX(-1), m_empty(true), m_number(number), m_isRight(right), m_previous(-1) {
     reset();
   }

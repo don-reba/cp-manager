@@ -33,7 +33,7 @@ struct GpuTrack {
   float m_uz;
   float m_uyz;
   float m_uz2;
-  
+
   int trackHitsNum;
   std::vector<int> hits;
 };

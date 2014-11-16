@@ -1,4 +1,4 @@
-#ifndef PRPIXELTRACKING_H 
+#ifndef PRPIXELTRACKING_H
 #define PRPIXELTRACKING_H 1
 
 // #define DEBUG_HISTO // fill some histograms while the algorithm runs.
@@ -32,7 +32,7 @@ class PrPixelTracking : public GaudiTupleAlg {
 class PrPixelTracking : public GaudiAlgorithm {
 #endif
 
-public: 
+public:
   /// Standard constructor
   PrPixelTracking(const std::string& name, ISvcLocator* pSvcLocator);
   /// Destructor
@@ -44,10 +44,10 @@ public:
 private:
 
   /// Search for tracks starting from pair of hits on adjacent sensors
-  void searchByPair();                            
+  void searchByPair();
   /// Extrapolate a seed track and try to add further hits.
   void extendTrack(const PrPixelHit* h1, const PrPixelHit* h2);
-  /// Try to add a matching hit on a given module. 
+  /// Try to add a matching hit on a given module.
   PrPixelHit* bestHit(PrPixelModule* module, double xTol, double maxScatter,
                       const PrPixelHit* h1, const PrPixelHit* h2);
   /// Produce LHCb::Track list understandable to other LHCb applications.
@@ -89,12 +89,12 @@ private:
   bool m_clearHits;
   bool m_stateClosestToBeamKalmanFit;
   bool m_stateEndVeloKalmanFit;
-  bool m_addStateFirstLastMeasurementKalmanFit; 
+  bool m_addStateFirstLastMeasurementKalmanFit;
 
   /// List of tracks found
-  PrPixelTracks m_tracks; 
+  PrPixelTracks m_tracks;
   /// Current track being worked with
-  PrPixelTrack m_track; 
+  PrPixelTrack m_track;
 
   /// Debug control
   std::string m_debugToolName;

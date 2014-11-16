@@ -169,12 +169,12 @@ void PrPixelHitManager::buildHits() {
   // Get the clusters
   LHCb::VPLiteCluster::VPLiteClusters* liteClusters =
     GaudiTool::get<LHCb::VPLiteCluster::VPLiteClusters>(LHCb::VPLiteClusterLocation::Default);
-  
+
   // Assume binary resolution of hit position
   const double dx = 0.055 / sqrt(12.0);
 
   // Loop over clusters
-  LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc; 
+  LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc;
   LHCb::VPLiteCluster::VPLiteClusters::const_iterator itc_end(liteClusters->end());
   for (itc = liteClusters->begin(); itc_end != itc; ++itc) {
     const unsigned int module = itc->channelID().module();
@@ -185,13 +185,13 @@ void PrPixelHitManager::buildHits() {
 
     // Calculate the 3-D position for this cluster.
     point = position((*itc).channelID(),
-              (*itc).interPixelFractionX(), 
+              (*itc).interPixelFractionX(),
               (*itc).interPixelFractionY());
 
     // Set our hit data (DEBUG purposes)
     hit->setHit(LHCb::LHCbID((*itc).channelID()), point, dx, dx, module);
     m_modules[module]->addHit(hit);
-    
+
     // TODO: At some point, we may need to add the hit resolution (wx, wy)
     m_serializer.addHit(
         hit,
@@ -221,7 +221,7 @@ Gaudi::XYZPoint PrPixelHitManager::position(LHCb::VPChannelID id, double dx, dou
     double slx = fabs(point.x() / point.z());
     double p_offset = 0.31172471 + 0.15879833 * TMath::Erf(-6.78928312 * slx + 0.73019077);
     double t_factor = 0.43531842 + 0.3776611 * TMath::Erf(6.84465914 * slx - 0.75598833);
-    dx_prime = 0.5 + (dx - 0.5) / delta_x * (p_offset + t_factor * delta_x); 
+    dx_prime = 0.5 + (dx - 0.5) / delta_x * (p_offset + t_factor * delta_x);
   }
   if (dy != 0.5) {
     double sly = fabs(point.y() / point.z());
@@ -242,7 +242,7 @@ void PrPixelHitManager::sortByX() {
   for (itm = m_modules.begin(); m_modules.end() != itm; ++itm) {
     if (*itm) {
       if (!((*itm)->empty())) {
-        std::sort((*itm)->hits().begin(), (*itm)->hits().end(), 
+        std::sort((*itm)->hits().begin(), (*itm)->hits().end(),
                   PrPixelHit::LowerByX());
         (*itm)->setLastHitX((*itm)->hits().back()->x());
       }
