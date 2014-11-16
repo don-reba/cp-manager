@@ -1,13 +1,17 @@
 #include "GpuPixelSearchByTriplet.h"
 
+#include "FileStdLogger.h"
+
+#include "Tools.cuh"
+#include "KernelInvoker.cuh"
+
 using namespace std;
 
-int independent_execute(const Batch & input, vector<Data>& output) {
+int independentExecute(const Batch & input, vector<Data>& output) {
   return gpuPixelSearchByTripletInvocation(input, output, cout);
 }
 
-void independent_post_execute(
-    const vector<Data> & output) {
+void independentPostExecute(const vector<Data> & output) {
   cout << "post_execute invoked" << endl;
   cout << "Size of output: " << output.size() << " B" << endl;
 
@@ -25,34 +29,30 @@ int gpuPixelSearchByTriplet(const Batch & input, vector<Data> & output) {
 /**
  * Common entrypoint for Gaudi and non-Gaudi
  * @param input  
- * @param output 
+ * @param trackBatch 
  * @param logger
  */
 int gpuPixelSearchByTripletInvocation(
-    const Batch  & input,
-    vector<Data> & output,
+    const Batch  & eventBatch,
+    vector<Data> & trackBatch,
     ostream      & logger) {
-  logger << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << endl;
+  logger << "Invoking gpuPixelSearchByTriplet with " << eventBatch.size() << " events" << endl;
 
-  // Define how many blocks / threads we need to deal with numberOfEvents
+  // define how many blocks / threads we need to deal with numberofevents
 
-  // For each event, we will execute 48 blocks and 32 threads.
-  // Call a kernel for each event, let CUDA engine decide when to issue the kernels.
+  // for each event, we will execute 48 blocks and 32 threads.
+  // [ where do these magic numbers come from? ]
+  // call a kernel for each event, let cuda engine decide when to issue the kernels.
   dim3 numBlocks(46), numThreads(32);
 
-  // In principle, each execution will return a different output
-  output.resize(input.size());
+  // each execution will return a different output
+  trackBatch.resize(eventBatch.size());
 
-  // This should be done in streams (non-blocking)
-  for (int i=0; i<input.size(); ++i)
-    cudaCheck(invokeParallelSearch(numBlocks, numThreads, *input[i], output[i], logger));
+  // this should be done in streams (non-blocking)
+  for (int i=0; i<eventBatch.size(); ++i)
+    cudaCheck(invokeParallelSearch(numBlocks, numThreads, *eventBatch[i], trackBatch[i], logger));
 
   cudaCheck(cudaDeviceReset());
-
-  // Deprecated:
-  // Merge all solutions!
-  // logger << "Merging solutions..." << endl;
-  // mergeSolutions(solutions, output);
 
   return 0;
 }

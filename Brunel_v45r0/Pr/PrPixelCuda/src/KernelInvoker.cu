@@ -94,7 +94,6 @@ cudaError_t invokeParallelSearch(
 
   cudaEventRecord(start_postprocess);
 
-
   logger << "postProcess" << std::endl;
   postProcess<<<1, numThreads>>>(dev_tracks, dev_track_holders, dev_track_indexes, dev_num_tracks, dev_tracks_to_process);
 
@@ -108,7 +107,7 @@ cudaError_t invokeParallelSearch(
   cudaEventDestroy( start_postprocess );
   cudaEventDestroy( stop );
 
-  // Get results
+  // get the results
   cudaCheck(cudaMemcpy(h_track_holders, dev_track_holders, MAX_TRACKS * sizeof(bool), cudaMemcpyDeviceToHost));
   cudaCheck(cudaMemcpy(h_track_indexes, dev_track_indexes, MAX_TRACKS * sizeof(int), cudaMemcpyDeviceToHost));
   cudaCheck(cudaMemcpy(tracks, dev_tracks, MAX_TRACKS * sizeof(Track), cudaMemcpyDeviceToHost));
@@ -121,7 +120,6 @@ cudaError_t invokeParallelSearch(
       ++no_tracks_stage1;
 
   // copy selected track to the solution vector
-
   if (*num_tracks > 0) {
     solution.resize(*num_tracks * sizeof(Track));
     Track * solutionTracks = (Track*)&solution[0];
@@ -130,7 +128,6 @@ cudaError_t invokeParallelSearch(
   }
 
   // print debug info
-
   for(int i=0; i<num_tracks[0]; ++i)
     printTrack(tracks, h_track_indexes[i], logger);
   logger << "Processed " << num_tracks[0] << " tracks" << std::endl;

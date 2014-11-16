@@ -17,7 +17,7 @@
 #include <sstream>
 #include <string>
 
-// Dumb type, just making constructor public
+// Dumb type, just making the constructor public
 class FileStdLogger : public std::ostream {};
 
 // Can't believe this is so simple
