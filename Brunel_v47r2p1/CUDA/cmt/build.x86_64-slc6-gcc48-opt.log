@@ -1,0 +1,39 @@
+#===============================================================================
+# Building package CUDA [9/10]
+#===============================================================================
+Tue Dec  2 14:29:46 CET 2014
+v1r1 CUDA
+# Building group all
+#CMT---> Info: Execute action make => gmake bin=../x86_64-slc6-gcc48-opt/ all
+gmake[1]: Entering directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/CUDA/cmt'
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> (constituents.make) Rebuilding library links
+#CMT---> (constituents.make) all done
+#CMT---> all ok.
+gmake[1]: Leaving directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/CUDA/cmt'
+Tue Dec  2 14:29:48 CET 2014
+# Building group cmt_actions
+#CMT---> Info: Execute action make => gmake bin=../x86_64-slc6-gcc48-opt/ cmt_actions
+gmake[1]: Entering directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/CUDA/cmt'
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> (constituents.make) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt_make.make
+#CMT---> (constituents.make) Rebuilding ../x86_64-slc6-gcc48-opt/setup_make.make
+#CMT---> (constituents.make) Rebuilding library links
+#CMT---> (constituents.make) Building make.make
+#CMT---> Info: Document make
+#CMT---> (constituents.make) Creating make.lock and Starting make
+gmake bin=../x86_64-slc6-gcc48-opt/ 
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> (constituents.make) Rebuilding library links
+#CMT---> (constituents.make) all done
+#CMT---> all ok.
+#CMT---> (constituents.make) make done
+#CMT---> cmt_actions ok.
+gmake[1]: Leaving directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/CUDA/cmt'
+Tue Dec  2 14:29:52 CET 2014

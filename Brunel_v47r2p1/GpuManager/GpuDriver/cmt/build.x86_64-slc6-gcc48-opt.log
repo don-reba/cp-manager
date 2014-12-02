@@ -1,0 +1,36 @@
+#===============================================================================
+# Building package GpuManager/GpuDriver [7/10]
+#===============================================================================
+Tue Dec  2 14:29:22 CET 2014
+v1r1 GpuManager/GpuDriver
+# Building group all
+#CMT---> Info: Execute action make => gmake bin=../x86_64-slc6-gcc48-opt/ all
+gmake[1]: Entering directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuDriver/cmt'
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> (constituents.make) Rebuilding library links
+#CMT---> (constituents.make) all done
+#CMT---> (constituents.make) Building gpudriver.make
+#CMT---> Info: Application gpudriver
+#CMT---> (constituents.make) Starting gpudriver
+#CMT---> (gpudriver.make) /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuIpc/x86_64-slc6-gcc48-opt/GpuIpc.stamp: No rule for such target
+if echo /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuIpc/x86_64-slc6-gcc48-opt/GpuIpc.stamp | grep 'GpuDriversetup\.make$' >/dev/null; then\
+	 echo "#CMT--->" "(gpudriver.make): /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuIpc/x86_64-slc6-gcc48-opt/GpuIpc.stamp: File no longer generated" >&2; exit 0; fi
+#CMT---> building application ../x86_64-slc6-gcc48-opt/gpudriver
+lcg-g++-4.8.1 -Wl,-Bdynamic  -ldl -Wl,--as-needed -Wl,--no-undefined  -o ../x86_64-slc6-gcc48-opt/gpudriver.new ../x86_64-slc6-gcc48-opt/PerfLog.o ../x86_64-slc6-gcc48-opt/DataSender.o ../x86_64-slc6-gcc48-opt/Timer.o ../x86_64-slc6-gcc48-opt/CommandLine.o ../x86_64-slc6-gcc48-opt/Main.o -L/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/lib  -L/cvmfs/lhcb.cern.ch/lib/lhcb/BRUNEL/BRUNEL_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/lib  -L/cvmfs/lhcb.cern.ch/lib/lhcb/REC/REC_v17r2p1/InstallArea/x86_64-slc6-gcc48-opt/lib  -L/cvmfs/lhcb.cern.ch/lib/lhcb/LBCOM/LBCOM_v16r1p1/InstallArea/x86_64-slc6-gcc48-opt/lib  -L/cvmfs/lhcb.cern.ch/lib/lhcb/LHCB/LHCB_v38r2p1/InstallArea/x86_64-slc6-gcc48-opt/lib  -L/cvmfs/lhcb.cern.ch/lib/lhcb/GAUDI/GAUDI_v25r5/InstallArea/x86_64-slc6-gcc48-opt/lib    -lGpuIpc     -L/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCGCMT/LCGCMT_70root6/LCG_Settings/../../../LCG_70root6/Boost/1.55.0_python2.7/x86_64-slc6-gcc48-opt/lib  -lboost_thread-gcc48-mt-1_55   -lboost_filesystem-gcc48-mt-1_55   -lboost_program_options-gcc48-mt-1_55   -lboost_system-gcc48-mt-1_55    -L/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCGCMT/LCGCMT_70root6/LCG_Settings/../../../LCG_70root6/Python/2.7.6/x86_64-slc6-gcc48-opt/lib -lpython2.7 -lutil -lpthread        && mv -f ../x86_64-slc6-gcc48-opt/gpudriver.new ../x86_64-slc6-gcc48-opt/gpudriver
+#CMT---> gpudriver ok
+#CMT---> installation done
+#CMT---> (constituents.make) gpudriver done
+#CMT---> all ok.
+gmake[1]: Leaving directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuDriver/cmt'
+Tue Dec  2 14:29:27 CET 2014
+# Building group cmt_actions
+#CMT---> Info: Execute action make => gmake bin=../x86_64-slc6-gcc48-opt/ cmt_actions
+gmake[1]: Entering directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuDriver/cmt'
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> cmt_actions ok.
+gmake[1]: Leaving directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/GpuManager/GpuDriver/cmt'
+Tue Dec  2 14:29:29 CET 2014

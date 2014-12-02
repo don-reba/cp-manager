@@ -1,0 +1,60 @@
+#===============================================================================
+# Building package Pr/PrPixelCuda [10/10]
+#===============================================================================
+Tue Dec  2 14:29:52 CET 2014
+v1r1 Pr/PrPixelCuda
+# Building group all
+#CMT---> Info: Execute action make => gmake bin=../x86_64-slc6-gcc48-opt/ all
+gmake[1]: Entering directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/Pr/PrPixelCuda/cmt'
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> (constituents.make) Rebuilding library links
+#CMT---> (constituents.make) all done
+#CMT---> (constituents.make) Building PrPixelCuda.make
+#CMT---> Info: Document PrPixelCuda
+#CMT---> (constituents.make) Creating PrPixelCuda.lock and Starting PrPixelCuda
+#CMT---> installation done
+#CMT---> (constituents.make) PrPixelCuda done
+#CMT---> (constituents.make) Building PrPixelCudaComponentsList.make
+#CMT---> Info: Document PrPixelCudaComponentsList
+#CMT---> (constituents.make) Creating PrPixelCudaComponentsList.lock and Starting PrPixelCudaComponentsList
+#CMT---> (constituents.make) PrPixelCudaComponentsList done
+#CMT---> (constituents.make) Building PrPixelCudaMergeComponentsList.make
+#CMT---> Info: Document PrPixelCudaMergeComponentsList
+#CMT---> (constituents.make) Creating PrPixelCudaMergeComponentsList.lock and Starting PrPixelCudaMergeComponentsList
+#CMT---> (constituents.make) PrPixelCudaMergeComponentsList done
+#CMT---> (constituents.make) Building PrPixelCudaConf.make
+#CMT---> Info: Document PrPixelCudaConf
+#CMT---> (constituents.make) Creating PrPixelCudaConf.lock and Starting PrPixelCudaConf
+Installing /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/Pr/PrPixelCuda/x86_64-slc6-gcc48-opt/genConf/PrPixelCuda in /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/python
+#CMT---> (constituents.make) PrPixelCudaConf done
+#CMT---> (constituents.make) Building PrPixelCuda_python_init.make
+#CMT---> Info: Document PrPixelCuda_python_init
+#CMT---> (constituents.make) Creating PrPixelCuda_python_init.lock and Starting PrPixelCuda_python_init
+#CMT---> (constituents.make) PrPixelCuda_python_init done
+#CMT---> (constituents.make) Building PrPixelCudaConfDbMerge.make
+#CMT---> Info: Document PrPixelCudaConfDbMerge
+#CMT---> (constituents.make) Creating PrPixelCudaConfDbMerge.lock and Starting PrPixelCudaConfDbMerge
+#CMT---> (constituents.make) PrPixelCudaConfDbMerge done
+#CMT---> (constituents.make) Building zip_PrPixelCuda_python_modules.make
+#CMT---> Info: Document zip_PrPixelCuda_python_modules
+#CMT---> (constituents.make) Creating zip_PrPixelCuda_python_modules.lock and Starting zip_PrPixelCuda_python_modules
+test -d /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/python && python /cvmfs/lhcb.cern.ch/lib/lhcb/GAUDI/GAUDI_v25r5/GaudiPolicy/scripts/ZipPythonDir.py /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/python || echo Nothing to zip.
+INFO:LockFile:2014-12-02_14:30:02 - Locking on /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/gaudi_build_lock
+INFO:zipdir:Zipping directory '/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/python'
+INFO:zipdir:Nothing to do on '/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/x86_64-slc6-gcc48-opt/python.zip'
+INFO:LockFile:2014-12-02_14:30:02 - Lock on /home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/InstallArea/gaudi_build_lock released
+#CMT---> (constituents.make) zip_PrPixelCuda_python_modules done
+#CMT---> all ok.
+gmake[1]: Leaving directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/Pr/PrPixelCuda/cmt'
+Tue Dec  2 14:30:02 CET 2014
+# Building group cmt_actions
+#CMT---> Info: Execute action make => gmake bin=../x86_64-slc6-gcc48-opt/ cmt_actions
+gmake[1]: Entering directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/Pr/PrPixelCuda/cmt'
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/x86_64-slc6-gcc48-opt.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/setup.make
+#CMT---> (Makefile.header) Rebuilding ../x86_64-slc6-gcc48-opt/constituents.make
+#CMT---> cmt_actions ok.
+gmake[1]: Leaving directory `/home/dcampora/projects/gaudi/new-gaudi-gpu-manager-dev/Brunel_v47r2p1/Pr/PrPixelCuda/cmt'
+Tue Dec  2 14:30:06 CET 2014

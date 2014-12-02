@@ -1,6 +1,0 @@
-project GPU
-
-use BRUNEL BRUNEL_v45r0 
-
-build_strategy with_installarea
-structure_strategy without_version_directory
