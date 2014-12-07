@@ -1,0 +1,23 @@
+package PrPixelCuda
+version v1r1
+
+# structure
+branches cmt src
+
+# dependencies
+use GaudiPolicy *
+use CUDA        *
+use GpuHandler  * GpuManager
+
+# main constituent
+document cuda_library PrPixelCuda \
+  GpuPixelSearchByTriplet.cpp     \
+  Kernel.cu                       \
+  KernelInvoker.cu                \
+  PrPixelCudaHandler.cpp          \
+  CudaException.cpp               \
+  Tools.cu
+
+# the server uses Gaudi components to load handlers
+# declare the constituent as a component library
+apply_pattern component_library library=PrPixelCuda

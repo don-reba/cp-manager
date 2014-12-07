@@ -1,8 +1,0 @@
-#ifndef GAUDIKERNEL_DECLAREFACTORYENTRIES_H
-#define GAUDIKERNEL_DECLAREFACTORYENTRIES_H 1
-
-#ifdef GAUDI_NEW_PLUGIN_SERVICE
-#warning "obsolete empty header, please remove it"
-#endif
-
-#endif // GAUDIKERNEL_DECLAREFACTORYENTRIES_H
