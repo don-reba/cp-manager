@@ -1,6 +1,8 @@
 #pragma once
 
-#include "GpuHandler/IGpuHandler.h"
+#include <vector>
+#include <cstdint>
+#include <ostream>
 
 typedef std::vector<uint8_t>     Data;
 typedef std::vector<const Data*> Batch;
