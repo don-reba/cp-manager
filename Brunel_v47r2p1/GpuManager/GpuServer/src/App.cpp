@@ -30,6 +30,8 @@ void App::run() {
 
   m_main.start();
 
+  m_logger.printMessage("GPU Manager server started");
+
   adminServer->join();
   mainServer->join();
 }

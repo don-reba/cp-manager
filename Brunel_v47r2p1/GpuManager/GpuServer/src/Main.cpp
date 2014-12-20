@@ -76,7 +76,6 @@ try {
   const char * const defaultPath = "/tmp/GpuManager";
   const char * const defaultHost = "localhost";
   const int          defaultPort = 65000;
-  const char * const adminPath   = "/tmp/GpuManager-admin";
 
   CommandLine cl(defaultPath, defaultHost, defaultPort);
   if (!cl.parse(argc, argv))
@@ -93,24 +92,26 @@ try {
   const bool recordData = cl.dataDir()[0] != '\0';
   DataLog dataLog(recordData, cl.dataDir());
 
+  const string adminPath(string(cl.localPath()) + "-admin");
+
   if (cl.exit()) {
-    exitPreviousInstance(logger, adminPath);
+    exitPreviousInstance(logger, adminPath.c_str());
     return EXIT_SUCCESS;
   }
 
   if (cl.handlerToLoad()[0] != '\0') {
-    Controller controller(logger, adminPath);
+    Controller controller(logger, adminPath.c_str());
     controller.loadHandler(cl.handlerToLoad());
     return EXIT_SUCCESS;
   }
 
-  if (anotherInstanceExists(logger, adminPath)) {
+  if (anotherInstanceExists(logger, adminPath.c_str())) {
     logger.printMessage("Another instance is still running. Terminating.");
     return EXIT_SUCCESS;
   }
 
   auto connectionInfo = makeConnectionInfo(cl.connectionType(), cl.localPath(), cl.host(), cl.port());
-  App app(logger, perfLog, dataLog, adminPath, *connectionInfo);
+  App app(logger, perfLog, dataLog, adminPath.c_str(), *connectionInfo);
   app.run();
 
   return EXIT_SUCCESS;
