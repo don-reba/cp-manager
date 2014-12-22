@@ -20,13 +20,12 @@ void independentPostExecute(const vector<Data> & output) {
 
 int gpuPixelSearchByTriplet(const Batch & input, vector<Data> & output) {
   FileStdLogger discardStream;
-  VoidLogger logger(&discardStream);
 
   // Silent execution
-  // return gpuPixelSearchByTripletInvocation(input, output, discardStream);
-  // 
+  return gpuPixelSearchByTripletInvocation(input, output, discardStream);
+
   // Debug (with cout)
-  return gpuPixelSearchByTripletInvocation(input, output, cout);
+  // return gpuPixelSearchByTripletInvocation(input, output, cout);
 }
 
 /**

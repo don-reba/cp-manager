@@ -57,7 +57,7 @@ EventSelector().Input = inputFiles
 
 # PrPixel options
 PrPixelTracking().TimingMeasurement = True
-PrPixelTracking().OutputLevel = DEBUG
+PrPixelTracking().OutputLevel = ERROR
 
 def add_members():
     GaudiSequencer("RecoCALOSeq").Members = []

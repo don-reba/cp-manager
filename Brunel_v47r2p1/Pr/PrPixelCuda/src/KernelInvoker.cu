@@ -19,11 +19,11 @@ cudaError_t invokeParallelSearch(
     std::ostream               & logger) {
   // For now, just perform what we did before
   // (backwards compatibility)
-  int* h_track_indexes;
-  int* num_tracks;
-  Track* tracks;
+  int   *h_track_indexes;
+  int   *num_tracks;
+  Track *tracks;
 
-  logger << "Input pointer: " 
+  logger << "Input pointer: "
     << std::hex << "0x" << (long long int) &(input[0])
     << std::dec << std::endl;
 
@@ -33,18 +33,18 @@ cudaError_t invokeParallelSearch(
   // int* h_prevs, *h_nexts;
   // Histo histo;
 
-  char*  dev_input             = 0;
-  int*   dev_num_tracks        = 0;
-  int*   dev_track_indexes     = 0;
-  Track* dev_tracks            = 0;
-  bool*  dev_track_holders     = 0;
-  int*   dev_prevs             = 0;
-  int*   dev_nexts             = 0;
-  int*   dev_tracks_to_process = 0;
+  char  *dev_input             = 0;
+  int   *dev_num_tracks        = 0;
+  int   *dev_track_indexes     = 0;
+  Track *dev_tracks            = 0;
+  bool  *dev_track_holders     = 0;
+  int   *dev_prevs             = 0;
+  int   *dev_nexts             = 0;
+  int   *dev_tracks_to_process = 0;
   cudaError_t cudaStatus = cudaSuccess;
 
   // Choose which GPU to run on, change this on a multi-GPU system.
-  cudaCheck( cudaSetDevice(0) );
+  cudaCheck(cudaSetDevice(0));
 
   // Allocate memory
   // Allocate CPU buffers
@@ -79,31 +79,31 @@ cudaError_t invokeParallelSearch(
 
   // gpuKalman
   logger << "gpuKalman" << std::endl;
-  cudaEvent_t start_kalman, start_postprocess, stop;
-  float t0, t1, t2;
+  //cudaEvent_t start_kalman, start_postprocess, stop;
+  //float t0, t1, t2;
 
-  cudaEventCreate(&start_kalman);
-  cudaEventCreate(&start_postprocess);
-  cudaEventCreate(&stop);
+  //cudaEventCreate(&start_kalman);
+  //cudaEventCreate(&start_postprocess);
+  //cudaEventCreate(&stop);
 
-  cudaEventRecord(start_kalman, 0 );
+  //cudaEventRecord(start_kalman, 0);
 
   gpuKalman<<<numBlocks, numThreads>>>(dev_tracks, dev_track_holders);
 
-  cudaEventRecord(start_postprocess);
+  //cudaEventRecord(start_postprocess);
 
   logger << "postProcess" << std::endl;
   postProcess<<<1, numThreads>>>(dev_tracks, dev_track_holders, dev_track_indexes, dev_num_tracks, dev_tracks_to_process);
 
-  cudaEventRecord( stop, 0 );
-  cudaEventSynchronize( stop );
+  //cudaEventRecord(stop, 0);
+  //cudaEventSynchronize(stop);
 
-  cudaEventElapsedTime( &t0, start_kalman, start_postprocess );
-  cudaEventElapsedTime( &t1, start_postprocess, stop );
-  cudaEventElapsedTime( &t2, start_kalman, stop );
-  cudaEventDestroy( start_kalman );
-  cudaEventDestroy( start_postprocess );
-  cudaEventDestroy( stop );
+  //cudaEventElapsedTime(&t0, start_kalman, start_postprocess);
+  //cudaEventElapsedTime(&t1, start_postprocess, stop);
+  //cudaEventElapsedTime(&t2, start_kalman, stop);
+  //cudaEventDestroy(start_kalman);
+  //cudaEventDestroy(start_postprocess);
+  //cudaEventDestroy(stop);
 
   // get the results
   cudaCheck(cudaMemcpy(h_track_holders, dev_track_holders, MAX_TRACKS * sizeof(bool), cudaMemcpyDeviceToHost));
@@ -158,7 +158,7 @@ void printOutAllSensorHits(int* prevs, int* nexts, std::ostream& logger){
       int hit = h_sensor_hitStarts[i] + j;
 
       if(nexts[hit] != -1){
-        std::cout << hit << ", " << nexts[hit] << std::endl;
+        logger << hit << ", " << nexts[hit] << std::endl;
       }
     }
   }

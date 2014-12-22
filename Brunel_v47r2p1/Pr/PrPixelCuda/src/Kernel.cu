@@ -17,22 +17,21 @@ __device__ int* nexts;
 
 
 __global__ void prepareData(char* input, int* _prevs, int* _nexts, bool* track_holders) {
-  no_sensors = (int*) &input[0];
-  no_hits = (int*) (no_sensors + 1);
-  sensor_Zs = (int*) (no_hits + 1);
-  sensor_hitStarts = (int*) (sensor_Zs + no_sensors[0]);
-  sensor_hitNums = (int*) (sensor_hitStarts + no_sensors[0]);
-  hit_IDs = (int*) (sensor_hitNums + no_sensors[0]);
-  hit_Xs = (float*) (hit_IDs + no_hits[0]);
-  hit_Ys = (float*) (hit_Xs + no_hits[0]);
-  hit_Zs = (int*) (hit_Ys + no_hits[0]);
+  no_sensors       = (int*)   (input + 0);
+  no_hits          = (int*)   (input + 4);
+  sensor_Zs        = (int*)   (input + 8);
+  sensor_hitStarts = (int*)   (sensor_Zs        + *no_sensors);
+  sensor_hitNums   = (int*)   (sensor_hitStarts + *no_sensors);
+  hit_IDs          = (int*)   (sensor_hitNums   + *no_sensors);
+  hit_Xs           = (float*) (hit_IDs + *no_hits);
+  hit_Ys           = (float*) (hit_Xs  + *no_hits);
+  hit_Zs           = (int*)   (hit_Ys  + *no_hits);
 
   prevs = _prevs;
   nexts = _nexts;
 
-  for(int i=0; i<MAX_TRACKS; ++i) {
+  for (int i = 0; i < MAX_TRACKS; ++i)
     track_holders[i] = false;
-  }
 }
 
 __global__ void neighboursFinder() {
@@ -56,7 +55,7 @@ __global__ void neighboursFinder() {
 
   // Prepare input
   if (threadIdx.x == 0 || threadIdx.x == 1 || threadIdx.x == 2) {
-    
+
     // trick to execute things in the same warp
     bool condition = (prev_sensor >= 0 && threadIdx.x == 0) || (next_sensor <= 48 && threadIdx.x == 2) || threadIdx.x == 1;
     if (condition) {
@@ -85,25 +84,25 @@ __global__ void neighboursFinder() {
 
   // TODO: Account for special cases (2 first sensors, and 2 last sensors)
   // if (prev_sensor < 0 || next_sensor > NUM_SENSORS) {
-  if(false) {
+  if (false) {
     if (next_sensor > NUM_SENSORS) {
       current_sensor -= 2;
       next_sensor -= 2;
     }
 
-    current_num_hits_to_load = int(ceilf(s[1].hitNums / blockDim.x));
-    next_num_hits_to_load = int(ceilf(s[2].hitNums / blockDim.x));
-    
+    current_num_hits_to_load = (s[1].hitNums + blockDim.x - 1) / blockDim.x;
+    next_num_hits_to_load    = (s[2].hitNums + blockDim.x - 1) / blockDim.x;
+
     best_fit = MAX_FLOAT;
     best_prev = -1;
     best_next = -1;
-    
+
     // Load elements into
     // - current_hit: The element we are treating
     // - prev_hits:   Previous hits (HITS_SHARED === blockDim.x)
     // - next_hits:   Next hits (HITS_SHARED === blockDim.x)
 
-    for (int i=0; i<current_num_hits_to_load; ++i) {
+    for (int i = 0; i < current_num_hits_to_load; ++i) {
       current_element = i * blockDim.x + threadIdx.x;
 
       if (current_element < s[1].hitNums) {
@@ -120,7 +119,7 @@ __global__ void neighboursFinder() {
         }
 
         // Start comparison, minimize the best_fit for each current_element
-        if(current_element < s[1].hitNums) {
+        if (current_element < s[1].hitNums) {
           // Minimize best fit
           for (int m=0; m<HITS_SHARED; ++m) {
             // float fit;
@@ -133,20 +132,20 @@ __global__ void neighboursFinder() {
             t = - s[1].z / s[2].z - s[1].z;
             x = current_hit.x + t * (next_hits[m].x - current_hit.x);
             y = current_hit.y + t * (next_hits[m].y - current_hit.y);
-            fit = powf( (float) (x), 2.0) + 
-                powf( (float) (y), 2.0);
-                
+            fit = powf((float) (x), 2.0) +
+                powf((float) (y), 2.0);
+
             fit_is_better = fit < best_fit;
             best_fit = fit_is_better * fit + !fit_is_better * best_fit;
-            best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + m) + 
+            best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + m) +
                   !fit_is_better * best_next;
           }
         }
       }
     }
-    
+
     // Store best fit into solution array.
-    if(prev_sensor < 0) {
+    if (prev_sensor < 0) {
       nexts[s[1].hitStart + current_element] = best_next;
     }
     else {
@@ -156,10 +155,10 @@ __global__ void neighboursFinder() {
 
   if (prev_sensor >= 0 && next_sensor <= NUM_SENSORS) {
 
-    prev_num_hits_to_load = int(ceilf(s[0].hitNums / blockDim.x));
-    current_num_hits_to_load = int(ceilf(s[1].hitNums / blockDim.x));
-    next_num_hits_to_load = int(ceilf(s[2].hitNums / blockDim.x));
-    
+    prev_num_hits_to_load    = (s[0].hitNums + blockDim.x - 1) / blockDim.x;
+    current_num_hits_to_load = (s[1].hitNums + blockDim.x - 1) / blockDim.x;
+    next_num_hits_to_load    = (s[2].hitNums + blockDim.x - 1) / blockDim.x;
+
     best_fit = MAX_FLOAT;
     best_prev = -1;
     best_next = -1;
@@ -169,7 +168,7 @@ __global__ void neighboursFinder() {
     // - prev_hits:   Previous hits (HITS_SHARED === blockDim.x)
     // - next_hits:   Next hits (HITS_SHARED === blockDim.x)
 
-    for (int i=0; i<current_num_hits_to_load; ++i) {
+    for (int i = 0; i < current_num_hits_to_load; ++i) {
       current_element = i * blockDim.x + threadIdx.x;
 
       if (current_element < s[1].hitNums) {
@@ -177,7 +176,7 @@ __global__ void neighboursFinder() {
         current_hit.y = hit_Ys[s[1].hitStart + current_element];
       }
 
-      for (int j=0; j<prev_num_hits_to_load; ++j) {
+      for (int j = 0; j < prev_num_hits_to_load; ++j) {
         prev_element = j * blockDim.x + threadIdx.x;
 
         if (prev_element < s[0].hitNums) {
@@ -194,7 +193,7 @@ __global__ void neighboursFinder() {
           }
 
           // Start comparison, minimize the best_fit for each current_element
-          if(current_element < s[1].hitNums) {
+          if (current_element < s[1].hitNums) {
             // Minimize best fit
             for (int m=0; m<HITS_SHARED; ++m) {
               for (int n=0; n<HITS_SHARED; ++n) {
@@ -212,23 +211,23 @@ __global__ void neighboursFinder() {
                 t = s[1].z - s[0].z / s[2].z - s[0].z;
                 x = prev_hits[m].x + t * (next_hits[n].x - prev_hits[m].x);
                 y = prev_hits[m].y + t * (next_hits[n].y - prev_hits[m].y);
-                d1 = sqrtf( powf( (float) (current_hit.x - x), 2.0) + 
-                      powf( (float) (current_hit.y - y), 2.0));
+                d1 = sqrtf(powf( (float) (current_hit.x - x), 2.0) +
+                      powf((float) (current_hit.y - y), 2.0));
 
                 // t = - s[0].z / s[2].z - s[0].z;
                 // x = prev_hits[m].x + t * (next_hits[n].x - prev_hits[m].x);
                 // y = prev_hits[m].y + t * (next_hits[n].y - prev_hits[m].y);
-                // float d2 = sqrtf( powf( (float) (x), 2.0) + 
-                //       powf( (float) (y), 2.0));
+                // float d2 = sqrtf(powf( (float) (x), 2.0) +
+                //       powf((float) (y), 2.0));
 
                 // fit = powf(d1, 2.0) + d2;
                 fit = d1;
-                
+
                 fit_is_better = fit < best_fit;
                 best_fit = fit_is_better * fit + !fit_is_better * best_fit;
                 best_prev = fit_is_better * (s[0].hitStart + j * blockDim.x + m) +
                       !fit_is_better * best_prev;
-                best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + n) + 
+                best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + n) +
                       !fit_is_better * best_next;
               }
             }
@@ -237,7 +236,7 @@ __global__ void neighboursFinder() {
       }
 
       // Store best fit into solution array.
-      if(current_element < s[1].hitNums) {
+      if (current_element < s[1].hitNums) {
         prevs[s[1].hitStart + current_element] = best_prev;
         nexts[s[1].hitStart + current_element] = best_next;
       }
@@ -246,14 +245,14 @@ __global__ void neighboursFinder() {
 }
 
 __global__ void neighboursCleaner() {
-  int block_size = int(ceilf( ((float)no_hits[0]) / gridDim.x));
-  int thread_size = int(ceilf( ((float)block_size) / blockDim.x));
+  int block_size  = (no_hits[0] + gridDim.x  - 1) / gridDim.x;
+  int thread_size = (block_size + blockDim.x - 1) / blockDim.x;
 
-  for(int j=0; j<thread_size; ++j) {
+  for (int j = 0; j < thread_size; ++j) {
     int current_hit = blockIdx.x * block_size + blockDim.x * j + threadIdx.x;
-    if(current_hit < no_hits[0]) {
+    if (current_hit < no_hits[0]) {
       int next_hit = nexts[current_hit];
-      if(next_hit < 0 || prevs[next_hit] != current_hit) {
+      if (next_hit < 0 || prevs[next_hit] != current_hit) {
         prevs[next_hit] = -1;
         nexts[current_hit] = -1;
       }
@@ -272,33 +271,33 @@ __device__ float fitHits(Hit& h0, Hit& h1, Hit &h2, Sensor& s0, Sensor& s1, Sens
 
   // TODO: This can go outside this function (only calc once per pair
   // of sensors). Also, it could only be calculated on best fitting distance d1.
-  float s_dist = fabs((float)( s1.z - s0.z ));
+  float s_dist = fabs((float)(s1.z - s0.z));
   float dxmax = PARAM_MAXXSLOPE * s_dist;
   float dymax = PARAM_MAXYSLOPE * s_dist;
-  
+
   bool accept_condition = fabs(h1.x - h0.x) < dxmax &&
               fabs(h1.y - h0.y) < dymax;
 
-  /*float dxmax = PARAM_MAXXSLOPE * fabs((float)( s1.z - s0.z ));
-  float dymax = PARAM_MAXYSLOPE * fabs((float)( s1.z - s0.z ));*/
-  
+  /*float dxmax = PARAM_MAXXSLOPE * fabs((float)(s1.z - s0.z));
+  float dymax = PARAM_MAXYSLOPE * fabs((float)(s1.z - s0.z));*/
+
   // Distance to <0,0,0> in its XY plane.
   /*float t = - s0.z / (s1.z - s0.z);
   float x = h0.x + t * (h1.x - h0.x);
   float y = h0.y + t * (h1.y - h0.y);
-  float d1 = sqrtf( powf( (float) (x), 2.0f) + 
-        powf( (float) (y), 2.0f));*/
+  float d1 = sqrtf(powf( (float) (x), 2.0f) +
+        powf((float) (y), 2.0f));*/
 
   // Distance between the hits.
-  // float d1 = sqrtf( powf( (float) (h1.x - h0.x), 2.0f) + 
-  //          powf( (float) (h1.y - h0.y), 2.0f));
+  // float d1 = sqrtf(powf( (float) (h1.x - h0.x), 2.0f) +
+  //          powf((float) (h1.y - h0.y), 2.0f));
 
   // Distance between line <h0,h1> and h2 in XY plane (s2.z)
   // float t = s2.z - s0.z / (s1.z - s0.z);
   // float x = h0.x + t * (h1.x - h0.x);
   // float y = h0.y + t * (h1.y - h0.y);
-  // float d1 = sqrtf( powf( (float) (x - h2.x), 2.0f) + 
-  //      powf( (float) (y - h2.y), 2.0f));
+  // float d1 = sqrtf(powf( (float) (x - h2.x), 2.0f) +
+  //      powf((float) (y - h2.y), 2.0f));
   // accept_condition &= (fabs(x - h2.x) < PARAM_TOLERANCE);
 
   // Require chi2 of third hit below the threshold
@@ -329,7 +328,7 @@ __device__ float fitHitToTrack(Track& t, Hit& h1, Sensor& s1) {
 
   // TODO: The check for chi2_condition can totally be done after this call
   bool chi2_condition = chi2 < PARAM_MAXCHI2;
-  
+
   return tol_condition * chi2_condition * chi2 + (!tol_condition || !chi2_condition) * MAX_FLOAT;
 }
 
@@ -380,15 +379,17 @@ __device__ void updateTrack(Track& t, TrackFit& fit, Hit& h1, Sensor& s1, int h1
 
 // TODO: Check this function
 __device__ void updateTrackCoords (Track& t, TrackFit& fit) {
-  float den = ( fit.sz2 * fit.s0 - fit.sz * fit.sz );
-  if ( fabs(den) < 10e-10 ) den = 1.f;
-  t.tx     = ( fit.sxz * fit.s0  - fit.sx  * fit.sz ) / den;
-  t.x0     = ( fit.sx  * fit.sz2 - fit.sxz * fit.sz ) / den;
+  float den = (fit.sz2 * fit.s0 - fit.sz * fit.sz);
+  if (fabs(den) < 10e-10)
+    den = 1.f;
+  t.tx = (fit.sxz * fit.s0  - fit.sx  * fit.sz) / den;
+  t.x0 = (fit.sx  * fit.sz2 - fit.sxz * fit.sz) / den;
 
-  den = ( fit.uz2 * fit.u0 - fit.uz * fit.uz );
-  if ( fabs(den) < 10e-10 ) den = 1.f;
-  t.ty     = ( fit.uyz * fit.u0  - fit.uy  * fit.uz ) / den;
-  t.y0     = ( fit.uy  * fit.uz2 - fit.uyz * fit.uz ) / den;
+  den = (fit.uz2 * fit.u0 - fit.uz * fit.uz);
+  if (fabs(den) < 10e-10)
+    den = 1.f;
+  t.ty = (fit.uyz * fit.u0  - fit.uy  * fit.uz) / den;
+  t.y0 = (fit.uy  * fit.uz2 - fit.uyz * fit.uz) / den;
 }
 
 /** Simple implementation of the Kalman Filter selection on the GPU (step 4).
@@ -426,59 +427,62 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
 
   float fit, best_fit;
   bool fit_is_better, accept_track;
-  int best_hit, best_hit_h2, current_hit;
+  int best_hit, best_hit_h2;
 
+  // ??? shouldn't this be this?
+  // ??? blockDim.x - blockIdx.x - 1
   int current_sensor = (47 - blockIdx.x);
 
   s0.hitStart = sensor_hitStarts[current_sensor];
-  s0.hitNums = sensor_hitNums[current_sensor];
-  s0.z = sensor_Zs[current_sensor];
+  s0.hitNums  = sensor_hitNums[current_sensor];
+  s0.z        = sensor_Zs[current_sensor];
 
   // Analyze the best hit for next sensor
-  int next_sensor = current_sensor - 2;
+  int next_sensor  = current_sensor - 2;
   int third_sensor = current_sensor - 4;
 
-  if(third_sensor >= 0) {
+  if (third_sensor >= 0) {
     // TODO: shared memory.
     s1.hitStart = sensor_hitStarts[next_sensor];
-    s1.hitNums = sensor_hitNums[next_sensor];
-    s1.z = sensor_Zs[next_sensor];
+    s1.hitNums  = sensor_hitNums[next_sensor];
+    s1.z        = sensor_Zs[next_sensor];
 
     // Iterate in all hits for current sensor
-    for(int i=0; i<int(ceilf( ((float) s0.hitNums) / blockDim.x)); ++i) {
+    for (int i = 0; i < (s0.hitNums + blockDim.x - 1) / blockDim.x; ++i) {
       next_sensor = current_sensor - 2;
 
-      current_hit = blockIdx.x * i + threadIdx.x;
-      if(current_hit < s0.hitNums) {
-
+      // ??? this looks extremely wrong
+      // ??? shouldn't this be this?
+      // ??? current_hit = blockDim.x * i + threadIdx.x
+      const int current_hit = blockIdx.x * i + threadIdx.x;
+      if (current_hit < s0.hitNums) {
         h0.x = hit_Xs[ s0.hitStart + current_hit ];
         h0.y = hit_Ys[ s0.hitStart + current_hit ];
 
         // Initialize track
-        for(int j=0; j<MAX_TRACK_SIZE; ++j) {
+        for (int j = 0; j < MAX_TRACK_SIZE; ++j)
           t.hits[j] = -1;
-        }
-    
+
         // TRACK CREATION
         // TODO: Modify with preprocessed list of hits.
-        best_fit = MAX_FLOAT;
-        best_hit = -1;
+        best_fit    = MAX_FLOAT;
+        best_hit    = -1;
         best_hit_h2 = -1;
-        for(int j=0; j<sensor_hitNums[next_sensor]; ++j) {
+        for (int j = 0; j < sensor_hitNums[next_sensor]; ++j) {
           // TODO: Load in chunks of SHARED_MEMORY and take
           // them from shared memory.
           h1.x = hit_Xs[s1.hitStart + j];
           h1.y = hit_Ys[s1.hitStart + j];
 
           // Search in both sides
-          for(int displ=1; displ>-3; --displ) {
+          for (int displ = 1; displ > -3; --displ) {
             // TODO: shared memory.
-            s2.hitStart = sensor_hitStarts[third_sensor+displ];
-            s2.hitNums = sensor_hitNums[third_sensor+displ];
-            s2.z = sensor_Zs[third_sensor+displ];
+            s2.hitStart = sensor_hitStarts[third_sensor + displ];
+            s2.hitNums  = sensor_hitNums[third_sensor + displ];
+            s2.z        = sensor_Zs[third_sensor + displ];
 
             // Iterate in the third! list of hits
-            for(int k=0; k<sensor_hitNums[third_sensor+displ]; ++k) {
+            for (int k = 0; k < sensor_hitNums[third_sensor + displ]; ++k) {
               // TODO: Load in chunks of SHARED_MEMORY and take
               // them from shared memory.
               h2.x = hit_Xs[s2.hitStart + k];
@@ -487,9 +491,9 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
               fit = fitHits(h0, h1, h2, s0, s1, s2);
               fit_is_better = fit < best_fit;
 
-              best_fit = fit_is_better * fit + !fit_is_better * best_fit;
-              best_hit = fit_is_better * j + !fit_is_better * best_hit;
-              best_hit_h2 = fit_is_better * k + !fit_is_better * best_hit_h2;
+              best_fit    = fit_is_better * fit + !fit_is_better * best_fit;
+              best_hit    = fit_is_better * j   + !fit_is_better * best_hit;
+              best_hit_h2 = fit_is_better * k   + !fit_is_better * best_hit_h2;
             }
           }
         }
@@ -498,26 +502,26 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
 
         // We have a best fit!
 
-        // For those who have tracks, we go on
-        if(accept_track) {
+        // For those that have tracks, we go on
+        if (accept_track) {
           // Fill in t (ONLY in case the best fit is acceptable)
           acceptTrack(t, tfit, h0, h1, s0, s1, s0.hitStart + current_hit, s1.hitStart + best_hit);
           updateTrack(t, tfit, h2, s2, s2.hitStart + best_hit_h2);
 
           // TRACK FOLLOWING
           next_sensor -= 4;
-          while(next_sensor >= 0) {
+          while (next_sensor >= 0) {
             // Go to following sensor
             /*s0.hitNums = s1.hitNums;
             s0.hitStart = s1.hitStart;
             s0.z = s1.z;*/
-            
+
             s1.hitStart = sensor_hitStarts[next_sensor];
             s1.hitNums = sensor_hitNums[next_sensor];
             s1.z = sensor_Zs[next_sensor];
 
             best_fit = MAX_FLOAT;
-            for(int k=0; k<sensor_hitNums[next_sensor]; ++k) {
+            for (int k=0; k<sensor_hitNums[next_sensor]; ++k) {
               // TODO: Load in chunks of SHARED_MEMORY and take
               // them from shared memory.
               h1.x = hit_Xs[s1.hitStart + k];
@@ -534,7 +538,7 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
             // Fill in t, ONLY in case the best fit is acceptable
 
             // TODO: Maybe try to do this more "parallel"
-            if(best_fit != MAX_FLOAT) {
+            if (best_fit != MAX_FLOAT) {
               updateTrack(t, tfit, h1, s1, s1.hitStart + best_hit);
             }
 
@@ -545,7 +549,7 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
         // If it's a track, write it to memory, no matter what kind
         // of track it is.
         track_holders[s0.hitStart + current_hit] = accept_track && (t.hitsNum >= MIN_HITS_TRACK);
-        if(accept_track && (t.hitsNum >= MIN_HITS_TRACK)) {
+        if (accept_track && (t.hitsNum >= MIN_HITS_TRACK)) {
           tracks[s0.hitStart + current_hit] = t;
         }
       }
@@ -566,9 +570,9 @@ __device__ float trackChi2(Track& t) {
   float ch = 0.0;
   int nDoF  = -4 + 2 * t.hitsNum;
   Hit h;
-  for (int i=0; i<MAX_TRACK_SIZE; i++) {
+  for (int i = 0; i < MAX_TRACK_SIZE; i++) {
     // TODO: Maybe there's a better way to do this
-    if(t.hits[i] != -1) {
+    if (t.hits[i] != -1) {
       h.x = hit_Xs[ t.hits[i] ];
       h.y = hit_Ys[ t.hits[i] ];
 
@@ -603,7 +607,7 @@ t0.hitsNum > t1.hitsNum ||
 */
 __global__ void postProcess(Track* tracks, bool* track_holders, int* track_indexes, int* num_tracks, int* tracks_to_process) {
   // tracks_to_process holds the list of tracks with track_holders[t] == true
-  
+
   // TODO: Try with sh_tracks_to_process
   // __shared__ int sh_tracks_to_process[MAX_POST_TRACKS];
 
@@ -612,7 +616,7 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 
   __shared__ Track sh_next_tracks[BUNCH_POST_TRACKS];
   __shared__ float sh_next_chi2[BUNCH_POST_TRACKS];
-  
+
   // We will use an atomic to write on a vector concurrently on several values
   __shared__ int tracks_to_process_size;
   __shared__ int tracks_accepted_size;
@@ -622,21 +626,21 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 
   __syncthreads(); // for the atomics tracks_to_process_size, and tracks_processed
 
-  int i, j, current_track, next_track;
+  int current_track, next_track;
   bool preferent;
 
-  for(i=0; i<int(ceilf( ((float) no_hits[0]) / blockDim.x)); ++i) {
+  for (int i = 0; i < (no_hits[0] + blockDim.x - 1) / blockDim.x; ++i) {
     current_track = blockDim.x * i + threadIdx.x;
-    if(current_track < no_hits[0]) {
+    if (current_track < no_hits[0]) {
       // Iterate in all tracks (current_track)
 
-      if(track_holders[current_track]) {
+      if (track_holders[current_track]) {
         // Atomic add
         int current_atomic = atomicAdd(&tracks_to_process_size, 1);
 
         // TODO: This condition shouldn't exist,
         // redo using method to process in batches if necessary
-        // if(current_atomic < MAX_POST_TRACKS)
+        // if (current_atomic < MAX_POST_TRACKS)
         tracks_to_process[current_atomic] = current_track;
       }
     }
@@ -646,9 +650,9 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 
   // Iterate in all current_tracks against all next_tracks.
   // Do this processing on batches of blockDim.x size
-  for(i=0; i<int(ceilf( ((float) tracks_to_process_size) / blockDim.x)); ++i) {
+  for (int i = 0; i < (tracks_to_process_size + blockDim.x - 1) / blockDim.x; ++i) {
     current_track = blockDim.x * i + threadIdx.x;
-    if(current_track < tracks_to_process_size) {
+    if (current_track < tracks_to_process_size) {
       // Store all tracks in sh_tracks
       sh_tracks[threadIdx.x] = tracks[tracks_to_process[current_track]];
 
@@ -658,14 +662,11 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 
     __syncthreads();
 
-    // if(sh_tracks[threadIdx.x].hits[0] == 987)
-    //   i = 20;
-
     // Iterate in all next_tracks
-    for(j=0; j<int(ceilf( ((float) tracks_to_process_size) / blockDim.x)); ++j) {
+    for (int j = 0; j < (tracks_to_process_size + blockDim.x - 1) / blockDim.x; ++j) {
       next_track = blockDim.x * j + threadIdx.x;
 
-      if(next_track < tracks_to_process_size) {
+      if (next_track < tracks_to_process_size) {
         // Store all tracks in sh_tracks
         sh_next_tracks[threadIdx.x] = tracks[tracks_to_process[next_track]];
 
@@ -676,16 +677,16 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
       __syncthreads();
 
       // All is loaded, commencing assault!
-      for(int k=0; k<BUNCH_POST_TRACKS; ++k) {
+      for (int k=0; k<BUNCH_POST_TRACKS; ++k) {
         next_track = blockDim.x * j + k;
 
-        if(current_track < tracks_to_process_size && next_track < tracks_to_process_size) {
+        if (current_track < tracks_to_process_size && next_track < tracks_to_process_size) {
           /* Compare all tracks to check uniqueness, based on
           - length
           - chi2
 
           preferent is a boolean storing this logic. It reads,
-        
+
           TODO: Change preference system by something more civilized
           next_track is preferent if
             it's not current_track,
@@ -703,17 +704,17 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
                     sh_next_chi2[k] < sh_chi2[threadIdx.x]; */
 
           // TODO: Maybe there's a better way...
-          if(preferent) {
+          if (preferent) {
             // Eliminate hits from current_track, based on next_track's
-            for(int current_hit=0; current_hit<MAX_TRACK_SIZE; ++current_hit) {
-              for(int next_hit=0; next_hit<MAX_TRACK_SIZE; ++next_hit) {
+            for (int current_hit=0; current_hit<MAX_TRACK_SIZE; ++current_hit) {
+              for (int next_hit=0; next_hit<MAX_TRACK_SIZE; ++next_hit) {
                 /* apply mask:
-                a[i] = 
+                a[i] =
                   (a[i] == b[j]) * -1 +
                   (a[i] != b[j]) * a[i]
                 */
                 sh_tracks[threadIdx.x].hits[current_hit] =
-                  (sh_tracks[threadIdx.x].hits[current_hit] == sh_next_tracks[k].hits[next_hit]) * -1 + 
+                  (sh_tracks[threadIdx.x].hits[current_hit] == sh_next_tracks[k].hits[next_hit]) * -1 +
                   (sh_tracks[threadIdx.x].hits[current_hit] != sh_next_tracks[k].hits[next_hit]) *
                     sh_tracks[threadIdx.x].hits[current_hit];
               }
@@ -723,13 +724,13 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
       }
     }
 
-    if(current_track < tracks_to_process_size) {
+    if (current_track < tracks_to_process_size) {
       // Check how many uniques do we have
       int unique = 0;
-      for(int hit=0; hit<MAX_TRACK_SIZE; ++hit)
+      for (int hit=0; hit<MAX_TRACK_SIZE; ++hit)
         unique += (sh_tracks[threadIdx.x].hits[hit]!=-1);
 
-      if(!POST_PROCESSING || ((float) unique) / sh_tracks[threadIdx.x].hitsNum > REQUIRED_UNIQUES) {
+      if (!POST_PROCESSING || ((float) unique) / sh_tracks[threadIdx.x].hitsNum > REQUIRED_UNIQUES) {
         int current_track_accepted = atomicAdd(&tracks_accepted_size, 1);
 
         track_indexes[current_track_accepted] = tracks_to_process[current_track];
@@ -739,7 +740,7 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 
   __syncthreads();
 
-  if(threadIdx.x==0)
+  if (threadIdx.x==0)
     num_tracks[0] = tracks_accepted_size;
 }
 
