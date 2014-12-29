@@ -93,7 +93,7 @@ void PrPixelSerialization::serializeEvent(Data & buffer) {
   // serialize POD members
   *(int32_t *)dst = m_event.noSensors; dst += noSensorsSize;
   *(int32_t *)dst = m_event.noHits;    dst += noHitsSize;
-  
+
   // serialize container contents
   dst = copy(m_event.sensorZs,        dst);
   dst = copy(m_event.sensorHitStarts, dst);
@@ -125,7 +125,7 @@ void PrPixelSerialization::deserializeTracks(
   const size_t count = trackData.size() / sizeof(GpuTrack);
 
   assert(track.hitsNum < MAX_TRACK_SIZE);
-  
+
   for (size_t i = 0; i != count; ++i) {
     int hitsNum = gpuTracks[i].hitsNum;
     if (hitsNum < 0 || hitsNum > MAX_TRACK_SIZE)

@@ -24,15 +24,15 @@ int gpuPixelSearchByTriplet(const Batch & input, vector<Data> & output) {
 
   // Silent execution
   // return gpuPixelSearchByTripletInvocation(input, output, discardStream);
-  // 
+  //
   // Debug (with cout)
   return gpuPixelSearchByTripletInvocation(input, output, cout);
 }
 
 /**
  * Common entrypoint for Gaudi and non-Gaudi
- * @param input  
- * @param trackBatch 
+ * @param input
+ * @param trackBatch
  * @param logger
  */
 int gpuPixelSearchByTripletInvocation(

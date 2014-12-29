@@ -56,7 +56,6 @@ __global__ void neighboursFinder() {
 
   // Prepare input
   if (threadIdx.x == 0 || threadIdx.x == 1 || threadIdx.x == 2) {
-    
     // trick to execute things in the same warp
     bool condition = (prev_sensor >= 0 && threadIdx.x == 0) || (next_sensor <= 48 && threadIdx.x == 2) || threadIdx.x == 1;
     if (condition) {
@@ -93,11 +92,11 @@ __global__ void neighboursFinder() {
 
     current_num_hits_to_load = int(ceilf(s[1].hitNums / blockDim.x));
     next_num_hits_to_load = int(ceilf(s[2].hitNums / blockDim.x));
-    
+
     best_fit = MAX_FLOAT;
     best_prev = -1;
     best_next = -1;
-    
+
     // Load elements into
     // - current_hit: The element we are treating
     // - prev_hits:   Previous hits (HITS_SHARED === blockDim.x)
@@ -133,18 +132,18 @@ __global__ void neighboursFinder() {
             t = - s[1].z / s[2].z - s[1].z;
             x = current_hit.x + t * (next_hits[m].x - current_hit.x);
             y = current_hit.y + t * (next_hits[m].y - current_hit.y);
-            fit = powf( (float) (x), 2.0) + 
+            fit = powf( (float) (x), 2.0) +
                 powf( (float) (y), 2.0);
-                
+
             fit_is_better = fit < best_fit;
             best_fit = fit_is_better * fit + !fit_is_better * best_fit;
-            best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + m) + 
+            best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + m) +
                   !fit_is_better * best_next;
           }
         }
       }
     }
-    
+
     // Store best fit into solution array.
     if(prev_sensor < 0) {
       nexts[s[1].hitStart + current_element] = best_next;
@@ -159,7 +158,7 @@ __global__ void neighboursFinder() {
     prev_num_hits_to_load = int(ceilf(s[0].hitNums / blockDim.x));
     current_num_hits_to_load = int(ceilf(s[1].hitNums / blockDim.x));
     next_num_hits_to_load = int(ceilf(s[2].hitNums / blockDim.x));
-    
+
     best_fit = MAX_FLOAT;
     best_prev = -1;
     best_next = -1;
@@ -212,23 +211,23 @@ __global__ void neighboursFinder() {
                 t = s[1].z - s[0].z / s[2].z - s[0].z;
                 x = prev_hits[m].x + t * (next_hits[n].x - prev_hits[m].x);
                 y = prev_hits[m].y + t * (next_hits[n].y - prev_hits[m].y);
-                d1 = sqrtf( powf( (float) (current_hit.x - x), 2.0) + 
+                d1 = sqrtf( powf( (float) (current_hit.x - x), 2.0) +
                       powf( (float) (current_hit.y - y), 2.0));
 
                 // t = - s[0].z / s[2].z - s[0].z;
                 // x = prev_hits[m].x + t * (next_hits[n].x - prev_hits[m].x);
                 // y = prev_hits[m].y + t * (next_hits[n].y - prev_hits[m].y);
-                // float d2 = sqrtf( powf( (float) (x), 2.0) + 
+                // float d2 = sqrtf( powf( (float) (x), 2.0) +
                 //       powf( (float) (y), 2.0));
 
                 // fit = powf(d1, 2.0) + d2;
                 fit = d1;
-                
+
                 fit_is_better = fit < best_fit;
                 best_fit = fit_is_better * fit + !fit_is_better * best_fit;
                 best_prev = fit_is_better * (s[0].hitStart + j * blockDim.x + m) +
                       !fit_is_better * best_prev;
-                best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + n) + 
+                best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + n) +
                       !fit_is_better * best_next;
               }
             }
@@ -275,29 +274,29 @@ __device__ float fitHits(Hit& h0, Hit& h1, Hit &h2, Sensor& s0, Sensor& s1, Sens
   float s_dist = fabs((float)( s1.z - s0.z ));
   float dxmax = PARAM_MAXXSLOPE * s_dist;
   float dymax = PARAM_MAXYSLOPE * s_dist;
-  
+
   bool accept_condition = fabs(h1.x - h0.x) < dxmax &&
               fabs(h1.y - h0.y) < dymax;
 
   /*float dxmax = PARAM_MAXXSLOPE * fabs((float)( s1.z - s0.z ));
   float dymax = PARAM_MAXYSLOPE * fabs((float)( s1.z - s0.z ));*/
-  
+
   // Distance to <0,0,0> in its XY plane.
   /*float t = - s0.z / (s1.z - s0.z);
   float x = h0.x + t * (h1.x - h0.x);
   float y = h0.y + t * (h1.y - h0.y);
-  float d1 = sqrtf( powf( (float) (x), 2.0f) + 
+  float d1 = sqrtf( powf( (float) (x), 2.0f) +
         powf( (float) (y), 2.0f));*/
 
   // Distance between the hits.
-  // float d1 = sqrtf( powf( (float) (h1.x - h0.x), 2.0f) + 
+  // float d1 = sqrtf( powf( (float) (h1.x - h0.x), 2.0f) +
   //          powf( (float) (h1.y - h0.y), 2.0f));
 
   // Distance between line <h0,h1> and h2 in XY plane (s2.z)
   // float t = s2.z - s0.z / (s1.z - s0.z);
   // float x = h0.x + t * (h1.x - h0.x);
   // float y = h0.y + t * (h1.y - h0.y);
-  // float d1 = sqrtf( powf( (float) (x - h2.x), 2.0f) + 
+  // float d1 = sqrtf( powf( (float) (x - h2.x), 2.0f) +
   //      powf( (float) (y - h2.y), 2.0f));
   // accept_condition &= (fabs(x - h2.x) < PARAM_TOLERANCE);
 
@@ -329,7 +328,7 @@ __device__ float fitHitToTrack(Track& t, Hit& h1, Sensor& s1) {
 
   // TODO: The check for chi2_condition can totally be done after this call
   bool chi2_condition = chi2 < PARAM_MAXCHI2;
-  
+
   return tol_condition * chi2_condition * chi2 + (!tol_condition || !chi2_condition) * MAX_FLOAT;
 }
 
@@ -458,7 +457,7 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
         for(int j=0; j<MAX_TRACK_SIZE; ++j) {
           t.hits[j] = -1;
         }
-    
+
         // TRACK CREATION
         // TODO: Modify with preprocessed list of hits.
         best_fit = MAX_FLOAT;
@@ -511,7 +510,7 @@ __global__ void gpuKalman(Track* tracks, bool* track_holders) {
             /*s0.hitNums = s1.hitNums;
             s0.hitStart = s1.hitStart;
             s0.z = s1.z;*/
-            
+
             s1.hitStart = sensor_hitStarts[next_sensor];
             s1.hitNums = sensor_hitNums[next_sensor];
             s1.z = sensor_Zs[next_sensor];
@@ -603,7 +602,7 @@ t0.hitsNum > t1.hitsNum ||
 */
 __global__ void postProcess(Track* tracks, bool* track_holders, int* track_indexes, int* num_tracks, int* tracks_to_process) {
   // tracks_to_process holds the list of tracks with track_holders[t] == true
-  
+
   // TODO: Try with sh_tracks_to_process
   // __shared__ int sh_tracks_to_process[MAX_POST_TRACKS];
 
@@ -612,7 +611,7 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
 
   __shared__ Track sh_next_tracks[BUNCH_POST_TRACKS];
   __shared__ float sh_next_chi2[BUNCH_POST_TRACKS];
-  
+
   // We will use an atomic to write on a vector concurrently on several values
   __shared__ int tracks_to_process_size;
   __shared__ int tracks_accepted_size;
@@ -685,7 +684,7 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
           - chi2
 
           preferent is a boolean storing this logic. It reads,
-        
+
           TODO: Change preference system by something more civilized
           next_track is preferent if
             it's not current_track,
@@ -708,12 +707,12 @@ __global__ void postProcess(Track* tracks, bool* track_holders, int* track_index
             for(int current_hit=0; current_hit<MAX_TRACK_SIZE; ++current_hit) {
               for(int next_hit=0; next_hit<MAX_TRACK_SIZE; ++next_hit) {
                 /* apply mask:
-                a[i] = 
+                a[i] =
                   (a[i] == b[j]) * -1 +
                   (a[i] != b[j]) * a[i]
                 */
                 sh_tracks[threadIdx.x].hits[current_hit] =
-                  (sh_tracks[threadIdx.x].hits[current_hit] == sh_next_tracks[k].hits[next_hit]) * -1 + 
+                  (sh_tracks[threadIdx.x].hits[current_hit] == sh_next_tracks[k].hits[next_hit]) * -1 +
                   (sh_tracks[threadIdx.x].hits[current_hit] != sh_next_tracks[k].hits[next_hit]) *
                     sh_tracks[threadIdx.x].hits[current_hit];
               }

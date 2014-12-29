@@ -23,7 +23,7 @@ cudaError_t invokeParallelSearch(
   int* num_tracks;
   Track* tracks;
 
-  logger << "Input pointer: " 
+  logger << "Input pointer: "
     << std::hex << "0x" << (long long int) &(input[0])
     << std::dec << std::endl;
 

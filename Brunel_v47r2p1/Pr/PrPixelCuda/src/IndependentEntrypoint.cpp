@@ -26,15 +26,15 @@
 /**
  * execute entrypoint of algorithm
  * Same signature as offloaded gaudi-algorithm
- * 
- * @param output 
- * @param input  
+ *
+ * @param output
+ * @param input
  */
 extern int independent_execute(const std::vector<std::vector<char> >& input, std::vector<std::vector<char> >& output);
 
 /**
  * Post execution entrypoint
- * @param output 
+ * @param output
  */
 extern void independent_post_execute(const std::vector<std::vector<char> >& output);
 
@@ -59,8 +59,8 @@ public:
 
 /**
  * Checks file existence
- * @param  name 
- * @return      
+ * @param  name
+ * @return
  */
 bool fileExists (const std::string& name) {
     if (FILE *file = fopen(name.c_str(), "r")) {
@@ -68,7 +68,7 @@ bool fileExists (const std::string& name) {
         return true;
     } else {
         return false;
-    }   
+    }
 }
 
 /**
@@ -121,14 +121,14 @@ void readFileIntoVector(std::string filename, std::vector<char> & output){
 /**
  * This is if the function is called on its own
  * (ie. non-gaudi execution)
- * 
+ *
  * In that case, the file input is expected.
  * As a convention, multiple files would be specified
  * with comma-separated values
- * 
+ *
  * @param  argc
  * @param  argv
- * @return     
+ * @return
  */
 int main(int argc, char *argv[])
 {
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
         printUsage(argv);
         return 0;
     }
-    
+
     filename = std::string(argv[1]);
 
     // Check how many files were specified and
