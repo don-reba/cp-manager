@@ -47,7 +47,7 @@ struct Track {
 	float tx;
 	float y0;
 	float ty;
-	
+
 	int hitsNum;
 	int hits[MAX_TRACK_SIZE];
 };

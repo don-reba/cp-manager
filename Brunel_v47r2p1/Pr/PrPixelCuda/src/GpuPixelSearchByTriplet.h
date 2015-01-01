@@ -15,9 +15,9 @@ int gpuPixelSearchByTriplet(const Batch & input, std::vector<Data> & output);
 
 /**
  * Common entry point for Gaudi and non-Gaudi
- * @param input  
- * @param output 
- * @param logger 
+ * @param input
+ * @param output
+ * @param logger
  */
 int gpuPixelSearchByTripletInvocation(
     const Batch       & eventBatch,
