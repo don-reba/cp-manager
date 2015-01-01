@@ -67,18 +67,18 @@ struct TrackFit {
 };
 
 /*
-__device__ __constant__ float 	f_m_maxXSlope			= 0.4f;
-__device__ __constant__ float 	f_m_maxYSlope			= 0.3f;
-__device__ __constant__ float 	f_m_maxZForRBeamCut		= 200.0f;
-__device__ __constant__ float 	f_m_maxR2Beam			= 1.0f;
-__device__ __constant__ int 	f_m_maxMissed			= 4;
-__device__ __constant__ float 	f_m_extraTol			= 0.150f;
-__device__ __constant__ float 	f_m_maxChi2ToAdd		= 100.0f;
-__device__ __constant__ float 	f_m_maxChi2SameSensor	= 16.0f;
-__device__ __constant__ float   f_m_maxChi2Short		= 6.0f;
-__device__ __constant__ float   f_m_maxChi2PerHit		= 16.0f;
-__device__ __constant__ int 	f_m_sensNum				= 48;
-__device__ __constant__ float   f_w						= 0.0144338f; // 0.050 / sqrt( 12. )
+__device__ __constant__ float f_m_maxXSlope         = 0.4f;
+__device__ __constant__ float f_m_maxYSlope         = 0.3f;
+__device__ __constant__ float f_m_maxZForRBeamCut   = 200.0f;
+__device__ __constant__ float f_m_maxR2Beam         = 1.0f;
+__device__ __constant__ int   f_m_maxMissed         = 4;
+__device__ __constant__ float f_m_extraTol          = 0.150f;
+__device__ __constant__ float f_m_maxChi2ToAdd      = 100.0f;
+__device__ __constant__ float f_m_maxChi2SameSensor = 16.0f;
+__device__ __constant__ float f_m_maxChi2Short      = 6.0f;
+__device__ __constant__ float f_m_maxChi2PerHit     = 16.0f;
+__device__ __constant__ int   f_m_sensNum           = 48;
+__device__ __constant__ float f_w                   = 0.0144338f; // 0.050 / sqrt( 12. )
 */
 
 #endif

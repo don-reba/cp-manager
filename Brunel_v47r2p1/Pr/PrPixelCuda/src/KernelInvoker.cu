@@ -12,7 +12,6 @@ extern float* h_hit_Ys;
 extern int*   h_hit_Zs;
 
 cudaError_t invokeParallelSearch(
-    dim3                         numBlocks,
     dim3                         numThreads,
     const std::vector<uint8_t> & input,
     std::vector<uint8_t>       & solution,
@@ -29,9 +28,6 @@ cudaError_t invokeParallelSearch(
 
   setHPointersFromInput(const_cast<uint8_t*>(&input[0]), input.size());
   printInfo(logger);
-
-  // int* h_prevs, *h_nexts;
-  // Histo histo;
 
   char  *dev_input             = 0;
   int   *dev_num_tracks        = 0;
@@ -53,22 +49,22 @@ cudaError_t invokeParallelSearch(
   //tracks = (Track*) &(solution[0]);
   num_tracks = (int*) malloc(sizeof(int));
 
-  int* h_prevs = (int*) malloc(h_no_hits[0] * sizeof(int));
-  int* h_nexts = (int*) malloc(h_no_hits[0] * sizeof(int));
-  bool* h_track_holders = (bool*) malloc(MAX_TRACKS * sizeof(bool));
-  h_track_indexes = (int*) malloc(MAX_TRACKS * sizeof(int));
+  int* h_prevs          = (int*)  malloc(h_no_hits[0] * sizeof(int));
+  int* h_nexts          = (int*)  malloc(h_no_hits[0] * sizeof(int));
+  bool* h_track_holders = (bool*) malloc(MAX_TRACKS   * sizeof(bool));
+  h_track_indexes       = (int*)  malloc(MAX_TRACKS   * sizeof(int));
 
   // Allocate GPU buffers
-  cudaCheck(cudaMalloc((void**)&dev_tracks, MAX_TRACKS * sizeof(Track)));
-  cudaCheck(cudaMalloc((void**)&dev_track_holders, MAX_TRACKS * sizeof(bool)));
-  cudaCheck(cudaMalloc((void**)&dev_track_indexes, MAX_TRACKS * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_tracks,            MAX_TRACKS * sizeof(Track)));
+  cudaCheck(cudaMalloc((void**)&dev_track_holders,     MAX_TRACKS * sizeof(bool)));
+  cudaCheck(cudaMalloc((void**)&dev_track_indexes,     MAX_TRACKS * sizeof(int)));
   cudaCheck(cudaMalloc((void**)&dev_tracks_to_process, MAX_TRACKS * sizeof(int)));
 
   cudaCheck(cudaMalloc((void**)&dev_prevs, h_no_hits[0] * sizeof(int)));
   cudaCheck(cudaMalloc((void**)&dev_nexts, h_no_hits[0] * sizeof(int)));
 
   // Copy input file from host memory to GPU buffers
-  cudaCheck(cudaMalloc((void**)&dev_input, input.size()));
+  cudaCheck(cudaMalloc((void**)&dev_input,      input.size()));
   cudaCheck(cudaMalloc((void**)&dev_num_tracks, sizeof(int)));
 
   // memcpys
@@ -88,7 +84,9 @@ cudaError_t invokeParallelSearch(
 
   //cudaEventRecord(start_kalman, 0);
 
-  gpuKalman<<<numBlocks, numThreads>>>(dev_tracks, dev_track_holders);
+  // 4 of the sensors are unused, because the algorithm needs 5-sensor spans
+  const int effective_no_sensors = *h_no_sensors - 4;
+  gpuKalman<<<effective_no_sensors, numThreads>>>(dev_tracks, dev_track_holders);
 
   //cudaEventRecord(start_postprocess);
 

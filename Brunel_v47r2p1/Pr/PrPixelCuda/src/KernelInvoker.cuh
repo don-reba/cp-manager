@@ -19,7 +19,6 @@ void printOutAllSensorHits(int* prevs, int* nexts, std::ostream& logger);
 void printInfo(std::ostream& logger);
 
 cudaError_t invokeParallelSearch(
-    dim3                         numBlocks,
     dim3                         numThreads,
     const std::vector<uint8_t> & input,
     std::vector<uint8_t>       & solution,
