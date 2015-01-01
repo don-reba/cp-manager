@@ -2,6 +2,10 @@
 
 #include <cstdio>
 
+#define HITS_SHARED 32
+#define MAX_FLOAT 100000000.0
+#define POST_PROCESSING 0
+
 __device__ int* no_sensors;
 __device__ int* no_hits;
 __device__ int* sensor_Zs;
@@ -14,8 +18,6 @@ __device__ int* hit_Zs;
 
 __device__ int* prevs;
 __device__ int* nexts;
-
-// the rest
 
 __global__ void prepareData(char* input, int* _prevs, int* _nexts, bool* track_holders) {
   no_sensors       = (int*)   (input + 0);
@@ -33,225 +35,6 @@ __global__ void prepareData(char* input, int* _prevs, int* _nexts, bool* track_h
 
   for (int i = 0; i < MAX_TRACKS; ++i)
     track_holders[i] = false;
-}
-
-__global__ void neighboursFinder() {
-  __shared__ Hit prev_hits[HITS_SHARED];
-  __shared__ Hit next_hits[HITS_SHARED];
-  __shared__ Sensor s[3];
-
-  int current_sensor, prev_sensor, next_sensor, address;
-
-  current_sensor = blockIdx.x;
-  prev_sensor = current_sensor - 2;
-  next_sensor = current_sensor + 2;
-
-  // Prepare input
-  if (threadIdx.x == 0 || threadIdx.x == 1 || threadIdx.x == 2) {
-
-    // trick to execute things in the same warp
-    // XXX check for off-by-one errors
-    bool condition = (prev_sensor >= 0 && threadIdx.x == 0) || (next_sensor <= gridDim.x && threadIdx.x == 2) || threadIdx.x == 1;
-    if (condition) {
-      address = prev_sensor * (threadIdx.x==0) +
-        current_sensor * (threadIdx.x==1) + next_sensor * (threadIdx.x==2);
-      s[threadIdx.x].z = sensor_Zs[address];
-      s[threadIdx.x].hitStart = sensor_hitStarts[address];
-      s[threadIdx.x].hitNums = sensor_hitNums[address];
-    }
-  }
-
-  __syncthreads();
-
-  Hit current_hit;
-  float best_fit;
-  int best_prev;
-  int best_next;
-  int current_element;
-  int next_num_hits_to_load;
-  int prev_num_hits_to_load;
-  int current_num_hits_to_load;
-  int prev_element;
-  int next_element;
-  float fit, t, x, y, d1;
-  bool fit_is_better;
-
-  // TODO: Account for special cases (2 first sensors, and 2 last sensors)
-  // if (prev_sensor < 0 || next_sensor > NUM_SENSORS) {
-  if (false) {
-    if (next_sensor > NUM_SENSORS) {
-      current_sensor -= 2;
-      next_sensor -= 2;
-    }
-
-    current_num_hits_to_load = (s[1].hitNums + blockDim.x - 1) / blockDim.x;
-    next_num_hits_to_load    = (s[2].hitNums + blockDim.x - 1) / blockDim.x;
-
-    best_fit = MAX_FLOAT;
-    best_prev = -1;
-    best_next = -1;
-
-    // Load elements into
-    // - current_hit: The element we are treating
-    // - prev_hits:   Previous hits (HITS_SHARED === blockDim.x)
-    // - next_hits:   Next hits (HITS_SHARED === blockDim.x)
-
-    for (int i = 0; i < current_num_hits_to_load; ++i) {
-      current_element = i * blockDim.x + threadIdx.x;
-
-      if (current_element < s[1].hitNums) {
-        current_hit.x = hit_Xs[s[1].hitStart + current_element];
-        current_hit.y = hit_Ys[s[1].hitStart + current_element];
-      }
-
-      for (int k=0; k<next_num_hits_to_load; ++k) {
-        next_element = k * blockDim.x + threadIdx.x;
-
-        if (next_element < s[2].hitNums) {
-          next_hits[threadIdx.x].x = hit_Xs[s[2].hitStart + next_element];
-          next_hits[threadIdx.x].y = hit_Ys[s[2].hitStart + next_element];
-        }
-
-        // Start comparison, minimize the best_fit for each current_element
-        if (current_element < s[1].hitNums) {
-          // Minimize best fit
-          for (int m=0; m<HITS_SHARED; ++m) {
-            // float fit;
-            // fit = prev_hits[m]
-
-            /* Special cases calculation
-            d is h0-h1 distance to <0,0,0> on plane s0.
-            */
-
-            t = - s[1].z / s[2].z - s[1].z;
-            x = current_hit.x + t * (next_hits[m].x - current_hit.x);
-            y = current_hit.y + t * (next_hits[m].y - current_hit.y);
-            fit = powf((float) (x), 2.0) +
-                powf((float) (y), 2.0);
-
-            fit_is_better = fit < best_fit;
-            best_fit = fit_is_better * fit + !fit_is_better * best_fit;
-            best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + m) +
-                  !fit_is_better * best_next;
-          }
-        }
-      }
-    }
-
-    // Store best fit into solution array.
-    if (prev_sensor < 0) {
-      nexts[s[1].hitStart + current_element] = best_next;
-    }
-    else {
-      prevs[s[1].hitStart + current_element] = best_next;
-    }
-  }
-
-  if (prev_sensor >= 0 && next_sensor <= NUM_SENSORS) {
-
-    prev_num_hits_to_load    = (s[0].hitNums + blockDim.x - 1) / blockDim.x;
-    current_num_hits_to_load = (s[1].hitNums + blockDim.x - 1) / blockDim.x;
-    next_num_hits_to_load    = (s[2].hitNums + blockDim.x - 1) / blockDim.x;
-
-    best_fit = MAX_FLOAT;
-    best_prev = -1;
-    best_next = -1;
-
-    // Load elements into
-    // - current_hit: The element we are treating
-    // - prev_hits:   Previous hits (HITS_SHARED === blockDim.x)
-    // - next_hits:   Next hits (HITS_SHARED === blockDim.x)
-
-    for (int i = 0; i < current_num_hits_to_load; ++i) {
-      current_element = i * blockDim.x + threadIdx.x;
-
-      if (current_element < s[1].hitNums) {
-        current_hit.x = hit_Xs[s[1].hitStart + current_element];
-        current_hit.y = hit_Ys[s[1].hitStart + current_element];
-      }
-
-      for (int j = 0; j < prev_num_hits_to_load; ++j) {
-        prev_element = j * blockDim.x + threadIdx.x;
-
-        if (prev_element < s[0].hitNums) {
-          prev_hits[threadIdx.x].x = hit_Xs[s[0].hitStart + prev_element];
-          prev_hits[threadIdx.x].y = hit_Ys[s[0].hitStart + prev_element];
-        }
-
-        for (int k=0; k<next_num_hits_to_load; ++k) {
-          next_element = k * blockDim.x + threadIdx.x;
-
-          if (next_element < s[2].hitNums) {
-            next_hits[threadIdx.x].x = hit_Xs[s[2].hitStart + next_element];
-            next_hits[threadIdx.x].y = hit_Ys[s[2].hitStart + next_element];
-          }
-
-          // Start comparison, minimize the best_fit for each current_element
-          if (current_element < s[1].hitNums) {
-            // Minimize best fit
-            for (int m=0; m<HITS_SHARED; ++m) {
-              for (int n=0; n<HITS_SHARED; ++n) {
-                // float fit;
-                // fit = prev_hits[m]
-
-                /* Calculation of the best fit:
-                hits on sensors 0, 1 and 2 are h0, h1 and h2. We are calculating
-                the best h0 and h2 for h1.
-
-                d1 is the distance from the line h0-h2 to h1 in plane sensor s1.
-                d2 is the distance from the line h0-h2 to <0,0,0> in plane sensor s0.
-                */
-
-                t = s[1].z - s[0].z / s[2].z - s[0].z;
-                x = prev_hits[m].x + t * (next_hits[n].x - prev_hits[m].x);
-                y = prev_hits[m].y + t * (next_hits[n].y - prev_hits[m].y);
-                d1 = sqrtf(powf( (float) (current_hit.x - x), 2.0) +
-                      powf((float) (current_hit.y - y), 2.0));
-
-                // t = - s[0].z / s[2].z - s[0].z;
-                // x = prev_hits[m].x + t * (next_hits[n].x - prev_hits[m].x);
-                // y = prev_hits[m].y + t * (next_hits[n].y - prev_hits[m].y);
-                // float d2 = sqrtf(powf( (float) (x), 2.0) +
-                //       powf((float) (y), 2.0));
-
-                // fit = powf(d1, 2.0) + d2;
-                fit = d1;
-
-                fit_is_better = fit < best_fit;
-                best_fit = fit_is_better * fit + !fit_is_better * best_fit;
-                best_prev = fit_is_better * (s[0].hitStart + j * blockDim.x + m) +
-                      !fit_is_better * best_prev;
-                best_next = fit_is_better * (s[2].hitStart + k * blockDim.x + n) +
-                      !fit_is_better * best_next;
-              }
-            }
-          }
-        }
-      }
-
-      // Store best fit into solution array.
-      if (current_element < s[1].hitNums) {
-        prevs[s[1].hitStart + current_element] = best_prev;
-        nexts[s[1].hitStart + current_element] = best_next;
-      }
-    }
-  }
-}
-
-__global__ void neighboursCleaner() {
-  int block_size  = (*no_hits + gridDim.x  - 1) / gridDim.x;
-  int thread_size = (block_size + blockDim.x - 1) / blockDim.x;
-
-  for (int j = 0; j < thread_size; ++j) {
-    int current_hit = blockIdx.x * block_size + blockDim.x * j + threadIdx.x;
-    if (current_hit < *no_hits) {
-      int next_hit = nexts[current_hit];
-      if (next_hit < 0 || prevs[next_hit] != current_hit) {
-        prevs[next_hit] = -1;
-        nexts[current_hit] = -1;
-      }
-    }
-  }
 }
 
 /** fitHits, gives the fit between h0 and h1.
@@ -567,20 +350,18 @@ __device__ float hitChi2(Track& t, Hit& h, int hit_z) {
 }
 
 
-/** The postProcess method takes care of discarding tracks
-which are redundant. In other words, it will (hopefully) increase
-the purity of our tracks.
+/** The postProcess method takes care of discarding redundant tracks. In other
+ words, it (hopefully) increases the purity of our tracks.
 
-- Inspect track_holders and generate track_indexes and num_tracks
+- Inspect track_holders and generate track_indexes and num_tracks.
 
 The main idea is to accept tracks which have unique (> REQUIRED_UNIQUES) hits.
-For this, each track is checked against all other more preferent tracks, and
-non common hits are kept.
+For this, each track is checked against all other more preferent tracks, and non
+common hits are kept.
 
-TODO: Change preference system by something more civilized.
-A track t0 has preference over another t1 one if:
-t0.hitsNum > t1.hitsNum ||
-(t0.hitsNum == t1.hitsNum && chi2(t0) < chi2(t1))
+TODO: Change the preference system into something more civilized.  A track t0
+has preference over another t1 one if: t0.hitsNum > t1.hitsNum || (t0.hitsNum ==
+t1.hitsNum && chi2(t0) < chi2(t1))
 */
 __global__ void postProcess(Track* tracks, bool* track_holders, int* track_indexes, int* num_tracks, int* tracks_to_process) {
   // tracks_to_process holds the list of tracks with track_holders[t] == true

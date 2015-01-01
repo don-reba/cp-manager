@@ -4,7 +4,6 @@
 #include <iostream>
 #include "Definitions.cuh"
 #include "Tools.cuh"
-// #include "Histo.h"
 
 #include <fstream>
 #include <string>
@@ -13,10 +12,10 @@
 #include <stdint.h>
 
 void getMaxNumberOfHits(char*& input, int& maxHits);
-void printTrack(Track* tracks, int i, std::ostream& logger);
-void printOutSensorHits(int sensorNumber, int* prevs, int* nexts, std::ostream& logger);
+void printTrack(Track* tracks, int i, const Event & event, std::ostream& logger);
+void printOutSensorHits(int sensorNumber, int* prevs, int* nexts, const Event & event, std::ostream& logger);
 void printOutAllSensorHits(int* prevs, int* nexts, std::ostream& logger);
-void printInfo(std::ostream& logger);
+void printInfo(const Event & event, std::ostream& logger);
 
 cudaError_t invokeParallelSearch(
     dim3                         numThreads,
