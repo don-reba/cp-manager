@@ -53,8 +53,6 @@ try {
     Timer timer;
     timer.start();
 
-    ifstream stream(path.c_str(), ios_base::binary);
-
     string handlerName;
     vector<uint8_t> recordedInput;
     vector<uint8_t> recordedOutput;

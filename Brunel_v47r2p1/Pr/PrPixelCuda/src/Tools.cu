@@ -1,24 +1,5 @@
 #include "Tools.cuh"
 
-#include <stdexcept>
-
-void parseEvent(uint8_t * input, size_t size, Event & event) {
-  uint8_t * end = input + size;
-
-  event.no_sensors       = (int32_t*)input; input += sizeof(int32_t);
-  event.no_hits          = (int32_t*)input; input += sizeof(int32_t);
-  event.sensor_Zs        = (int32_t*)input; input += sizeof(int32_t) * *event.no_sensors;
-  event.sensor_hitStarts = (int32_t*)input; input += sizeof(int32_t) * *event.no_sensors;
-  event.sensor_hitNums   = (int32_t*)input; input += sizeof(int32_t) * *event.no_sensors;
-  event.hit_IDs          = (int32_t*)input; input += sizeof(int32_t) * *event.no_hits;
-  event.hit_Xs           = (float*)  input; input += sizeof(float)   * *event.no_hits;
-  event.hit_Ys           = (float*)  input; input += sizeof(float)   * *event.no_hits;
-  event.hit_Zs           = (int32_t*)input; input += sizeof(int32_t) * *event.no_hits;
-
-  if (input != end)
-    throw std::runtime_error("failed to deserialize event");
-}
-
 /**
  * Combine all solutions, in the form:
  *

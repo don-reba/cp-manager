@@ -1,12 +1,11 @@
 #ifndef KERNEL_INVOKER
 #define KERNEL_INVOKER 1
 
-#include <iostream>
-#include "Definitions.cuh"
 #include "Tools.cuh"
 
+#include "Definitions.h"
+
 #include <fstream>
-#include <string>
 #include <sstream>
 #include <vector>
 #include <stdint.h>

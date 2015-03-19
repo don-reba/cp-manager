@@ -1,17 +1,22 @@
-#include "KernelInvoker.cuh"
 #include "Kernel.cuh"
+#include "KernelInvoker.cuh"
+#include "KernelPreprocessing.h"
+
+#include <boost/timer/timer.hpp>
+
+#include <iostream>
+#include <utility>
+#include <vector>
 
 cudaError_t invokeParallelSearch(
     dim3                         numThreads,
     const std::vector<uint8_t> & input,
     std::vector<uint8_t>       & solution,
     std::ostream               & logger) {
+  boost::timer::auto_cpu_timer t;
+
   // For now, just perform what we did before
   // (backwards compatibility)
-  int   *track_indices;
-  int   *num_tracks;
-  Track *tracks;
-
   logger << "Input pointer: "
     << std::hex << "0x" << (long long int) &(input[0])
     << std::dec << std::endl;
@@ -35,15 +40,12 @@ cudaError_t invokeParallelSearch(
 
   // Allocate memory
   // Allocate CPU buffers
-  tracks = (Track*) malloc(MAX_TRACKS * sizeof(Track));
-  //solution.resize(MAX_TRACKS * sizeof(Track));
-  //tracks = (Track*) &(solution[0]);
-  num_tracks = (int*) malloc(sizeof(int));
-
-  int* h_prevs          = (int*)  malloc(event.no_hits[0] * sizeof(int));
-  int* h_nexts          = (int*)  malloc(event.no_hits[0] * sizeof(int));
-  bool* h_track_holders = (bool*) malloc(MAX_TRACKS   * sizeof(bool));
-  track_indices       = (int*)  malloc(MAX_TRACKS   * sizeof(int));
+  Track *tracks          = (Track*) malloc(MAX_TRACKS * sizeof(Track));
+  int   *num_tracks      = (int*)   malloc(sizeof(int));
+  int   *h_prevs         = (int*)   malloc(event.no_hits[0] * sizeof(int));
+  int   *h_nexts         = (int*)   malloc(event.no_hits[0] * sizeof(int));
+  bool  *h_track_holders = (bool*)  malloc(MAX_TRACKS * sizeof(bool));
+  int   *track_indices   = (int*)   malloc(MAX_TRACKS * sizeof(int));
 
   // Allocate GPU buffers
   cudaCheck(cudaMalloc((void**)&dev_tracks,            MAX_TRACKS * sizeof(Track)));
@@ -59,10 +61,39 @@ cudaError_t invokeParallelSearch(
   cudaCheck(cudaMalloc((void**)&dev_num_tracks, sizeof(int)));
 
   // memcpys
-  cudaCheck(cudaMemcpy(dev_input, &(input[0]), input.size(), cudaMemcpyHostToDevice));
+  cudaCheck(cudaMemcpy(dev_input, input.data(), input.size(), cudaMemcpyHostToDevice));
+
+  // clear track_holders flags
+  cudaCheck(cudaMemset(dev_track_holders, 0, MAX_TRACKS * sizeof(bool)));
 
   // Launch a kernel on the GPU with one thread for each element.
-  prepareData<<<1, 1>>>(dev_input, dev_prevs, dev_nexts, dev_track_holders);
+  prepareData<<<1, 1>>>(dev_input, dev_prevs, dev_nexts);
+
+  //----------------------
+
+  const int threadCount         = 32;
+  const int candidatesPerThread = 100000;
+  std::vector<Span> spans;
+  splitHits(event, threadCount, candidatesPerThread, spans);
+
+  Span * devSpans;
+  const int devSpansSize = spans.size() * sizeof(Span);
+  cudaCheck(cudaMalloc((void**)&devSpans, devSpansSize));
+  cudaCheck(cudaMemcpy(devSpans, spans.data(), devSpansSize, cudaMemcpyHostToDevice));
+
+  const int numBlocks = spans.size() / threadCount;
+
+  Fit * devFittings;
+  cudaCheck(cudaMalloc((void**)&devFittings, spans.size() * sizeof(Fit)));
+
+  gpuKalmanBalanced<<<numBlocks, threadCount>>>(dev_tracks, devSpans, devFittings);
+  cudaCheckLast("gpuKalmanBalanced");
+
+  consolidateHits<<<1, 1>>>(devFittings, spans.size(), dev_tracks, dev_track_holders);
+  cudaCheckLast("consolidateHits");
+
+  // Launch a kernel on the GPU with one thread for each element.
+  //prepareData<<<1, 1>>>(dev_input, dev_prevs, dev_nexts, dev_track_holders);
 
   // gpuKalman
   logger << "gpuKalman" << std::endl;
@@ -76,13 +107,15 @@ cudaError_t invokeParallelSearch(
   //cudaEventRecord(start_kalman, 0);
 
   // 4 of the sensors are unused, because the algorithm needs 5-sensor spans
-  const int effective_no_sensors = *event.no_sensors - 4;
-  gpuKalman<<<effective_no_sensors, numThreads>>>(dev_tracks, dev_track_holders);
+  //const int effective_no_sensors = *event.no_sensors - 4;
+  //gpuKalman<<<effective_no_sensors, numThreads>>>(dev_tracks, dev_track_holders);
 
   //cudaEventRecord(start_postprocess);
 
   logger << "postProcess" << std::endl;
   postProcess<<<1, numThreads>>>(dev_tracks, dev_track_holders, dev_track_indexes, dev_num_tracks, dev_tracks_to_process);
+
+  cudaCheck(cudaDeviceSynchronize());
 
   //cudaEventRecord(stop, 0);
   //cudaEventSynchronize(stop);
@@ -125,6 +158,9 @@ cudaError_t invokeParallelSearch(
   free(h_track_holders);
   free(tracks);
   free(num_tracks);
+
+  cudaCheck(cudaFree(devSpans));
+  cudaCheck(cudaFree(devFittings));
 
   return cudaStatus;
 }
