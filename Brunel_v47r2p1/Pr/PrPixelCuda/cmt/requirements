@@ -11,11 +11,10 @@ use GpuHandler  * GpuManager
 
 # main constituent
 document cuda_library PrPixelCuda \
-  CudaException.cu                \
   GpuPixelSearchByTriplet.cpp     \
   Kernel.cu                       \
   KernelInvoker.cu                \
-  KernelPreprocessing.cpp         \
+  Logger.cpp                      \
   PrPixelCudaHandler.cpp          \
   Tools.cu
 

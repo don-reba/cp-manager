@@ -1,234 +1,291 @@
-#include "Kernel.cuh"
 #include "KernelInvoker.cuh"
-#include "KernelPreprocessing.h"
 
-#include <boost/timer/timer.hpp>
-
-#include <iostream>
-#include <utility>
-#include <vector>
+extern int*   h_no_sensors;
+extern int*   h_no_hits;
+extern int*   h_sensor_Zs;
+extern int*   h_sensor_hitStarts;
+extern int*   h_sensor_hitNums;
+extern unsigned int* h_hit_IDs;
+extern float* h_hit_Xs;
+extern float* h_hit_Ys;
+extern float* h_hit_Zs;
 
 cudaError_t invokeParallelSearch(
-    dim3                         numThreads,
-    const std::vector<uint8_t> & input,
-    std::vector<uint8_t>       & solution,
-    std::ostream               & logger) {
-  boost::timer::auto_cpu_timer t;
+    const int startingEvent,
+    const int eventsToProcess,
+    const std::vector<const std::vector<uint8_t>* > & input,
+    std::vector<std::vector<uint8_t> > & output) {
 
-  // For now, just perform what we did before
-  // (backwards compatibility)
-  logger << "Input pointer: "
-    << std::hex << "0x" << (long long int) &(input[0])
-    << std::dec << std::endl;
+  // DEBUG << "Input pointer: " 
+  //   << std::hex << "0x" << (long long int) &(input[0])
+  //   << std::dec << std::endl;
+  
+  const std::vector<uint8_t>* startingEvent_input = input[startingEvent];
+  setHPointersFromInput((uint8_t*) &(*startingEvent_input)[0], startingEvent_input->size());
+  // printInfo();
 
-  Event event;
-  parseEvent(const_cast<uint8_t*>(&input[0]), input.size(), event);
-  printInfo(event, logger);
+  std::map<int, int> zhit_to_module;
+  if (logger::ll.verbosityLevel > 0){
+    // map to convert from z of hit to module
+    for(int i=0; i<*h_no_sensors; ++i){
+      const int z = h_sensor_Zs[i];
+      zhit_to_module[z] = i;
+    }
 
-  char  *dev_input             = 0;
-  int   *dev_num_tracks        = 0;
-  int   *dev_track_indexes     = 0;
-  Track *dev_tracks            = 0;
-  bool  *dev_track_holders     = 0;
-  int   *dev_prevs             = 0;
-  int   *dev_nexts             = 0;
-  int   *dev_tracks_to_process = 0;
-  cudaError_t cudaStatus = cudaSuccess;
+    // Some hits z may not correspond to a sensor's,
+    // but be close enough
+    for(int i=0; i<*h_no_hits; ++i){
+      const int z = h_hit_Zs[i];
+      if (zhit_to_module.find(z) == zhit_to_module.end()){
+        const int sensor = findClosestModule(z, zhit_to_module);
+        zhit_to_module[z] = sensor;
+      }
+    }
+  }
+
+  // int j = 0;
+  // for (int z=0; z<input.size(); ++z){
+  //   setHPointersFromInput((uint8_t*) &(*input[z])[0], input[z]->size());
+  //   for (int i=0; i<*h_no_sensors; ++i) {
+  //     if (h_sensor_hitNums[i] > j){
+  //       j = h_sensor_hitNums[i];
+  //     }
+  //   }
+  // }
+  // DEBUG << "Max hitnums in event: " << j << std::endl;
+
+  // int* h_prevs, *h_nexts;
+  // Histo histo;
+  Track* dev_tracks;
+  char*  dev_input;
+  int*   dev_tracks_to_follow;
+  bool*  dev_hit_used;
+  int*   dev_atomicsStorage;
+  Track* dev_tracklets;
+  int*   dev_weak_tracks;
+  int*   dev_event_offsets;
+  int*   dev_hit_offsets;
 
   // Choose which GPU to run on, change this on a multi-GPU system.
-  cudaCheck(cudaSetDevice(0));
+  const int device_number = 0;
+  cudaCheck(cudaSetDevice(device_number));
+  cudaDeviceProp* device_properties = (cudaDeviceProp*) malloc(sizeof(cudaDeviceProp));
+  cudaGetDeviceProperties(device_properties, 0);
+
+  // Some startup settings
+  dim3 numBlocks(eventsToProcess);
+  dim3 numThreads(64);
+  cudaFuncSetCacheConfig(searchByTriplet, cudaFuncCachePreferShared);
 
   // Allocate memory
   // Allocate CPU buffers
-  Track *tracks          = (Track*) malloc(MAX_TRACKS * sizeof(Track));
-  int   *num_tracks      = (int*)   malloc(sizeof(int));
-  int   *h_prevs         = (int*)   malloc(event.no_hits[0] * sizeof(int));
-  int   *h_nexts         = (int*)   malloc(event.no_hits[0] * sizeof(int));
-  bool  *h_track_holders = (bool*)  malloc(MAX_TRACKS * sizeof(bool));
-  int   *track_indices   = (int*)   malloc(MAX_TRACKS * sizeof(int));
+  const int num_atomics = 5;
+  int* atomics = (int*) malloc(eventsToProcess * num_atomics * sizeof(int));
+
+  // Prepare event offset and hit offset
+  std::vector<int> event_offsets;
+  std::vector<int> hit_offsets;
+  int acc_size = 0, acc_hits = 0;
+  for (int i=0; i<eventsToProcess; ++i){
+    EventBeginning* event = (EventBeginning*) &(*(input[startingEvent + i]))[0];
+    const int event_size = input[startingEvent + i]->size();
+
+    event_offsets.push_back(acc_size);
+    hit_offsets.push_back(acc_hits);
+
+    acc_size += event_size;
+    acc_hits += event->numberOfHits;
+  }
 
   // Allocate GPU buffers
-  cudaCheck(cudaMalloc((void**)&dev_tracks,            MAX_TRACKS * sizeof(Track)));
-  cudaCheck(cudaMalloc((void**)&dev_track_holders,     MAX_TRACKS * sizeof(bool)));
-  cudaCheck(cudaMalloc((void**)&dev_track_indexes,     MAX_TRACKS * sizeof(int)));
-  cudaCheck(cudaMalloc((void**)&dev_tracks_to_process, MAX_TRACKS * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_tracks, eventsToProcess * MAX_TRACKS * sizeof(Track)));
+  cudaCheck(cudaMalloc((void**)&dev_tracklets, eventsToProcess * MAX_TRACKS * sizeof(Track)));
+  cudaCheck(cudaMalloc((void**)&dev_weak_tracks, eventsToProcess * MAX_TRACKS * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_tracks_to_follow, eventsToProcess * MAX_TRACKS * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_atomicsStorage, eventsToProcess * num_atomics * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_event_offsets, event_offsets.size() * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_hit_offsets, hit_offsets.size() * sizeof(int)));
+  cudaCheck(cudaMalloc((void**)&dev_hit_used, acc_hits * sizeof(bool)));
+  cudaCheck(cudaMalloc((void**)&dev_input, acc_size));
 
-  cudaCheck(cudaMalloc((void**)&dev_prevs, event.no_hits[0] * sizeof(int)));
-  cudaCheck(cudaMalloc((void**)&dev_nexts, event.no_hits[0] * sizeof(int)));
+  // Copy stuff from host memory to GPU buffers
+  cudaCheck(cudaMemcpy(dev_event_offsets, &event_offsets[0], event_offsets.size() * sizeof(int), cudaMemcpyHostToDevice));
+  cudaCheck(cudaMemcpy(dev_hit_offsets, &hit_offsets[0], hit_offsets.size() * sizeof(int), cudaMemcpyHostToDevice));
 
-  // Copy input file from host memory to GPU buffers
-  cudaCheck(cudaMalloc((void**)&dev_input,      input.size()));
-  cudaCheck(cudaMalloc((void**)&dev_num_tracks, sizeof(int)));
-
-  // memcpys
-  cudaCheck(cudaMemcpy(dev_input, input.data(), input.size(), cudaMemcpyHostToDevice));
-
-  // clear track_holders flags
-  cudaCheck(cudaMemset(dev_track_holders, 0, MAX_TRACKS * sizeof(bool)));
-
-  // Launch a kernel on the GPU with one thread for each element.
-  prepareData<<<1, 1>>>(dev_input, dev_prevs, dev_nexts);
-
-  //----------------------
-
-  const int threadCount         = 32;
-  const int candidatesPerThread = 100000;
-  std::vector<Span> spans;
-  splitHits(event, threadCount, candidatesPerThread, spans);
-
-  Span * devSpans;
-  const int devSpansSize = spans.size() * sizeof(Span);
-  cudaCheck(cudaMalloc((void**)&devSpans, devSpansSize));
-  cudaCheck(cudaMemcpy(devSpans, spans.data(), devSpansSize, cudaMemcpyHostToDevice));
-
-  const int numBlocks = spans.size() / threadCount;
-
-  Fit * devFittings;
-  cudaCheck(cudaMalloc((void**)&devFittings, spans.size() * sizeof(Fit)));
-
-  gpuKalmanBalanced<<<numBlocks, threadCount>>>(dev_tracks, devSpans, devFittings);
-  cudaCheckLast("gpuKalmanBalanced");
-
-  consolidateHits<<<1, 1>>>(devFittings, spans.size(), dev_tracks, dev_track_holders);
-  cudaCheckLast("consolidateHits");
-
-  // Launch a kernel on the GPU with one thread for each element.
-  //prepareData<<<1, 1>>>(dev_input, dev_prevs, dev_nexts, dev_track_holders);
-
-  // gpuKalman
-  logger << "gpuKalman" << std::endl;
-  //cudaEvent_t start_kalman, start_postprocess, stop;
-  //float t0, t1, t2;
-
-  //cudaEventCreate(&start_kalman);
-  //cudaEventCreate(&start_postprocess);
-  //cudaEventCreate(&stop);
-
-  //cudaEventRecord(start_kalman, 0);
-
-  // 4 of the sensors are unused, because the algorithm needs 5-sensor spans
-  //const int effective_no_sensors = *event.no_sensors - 4;
-  //gpuKalman<<<effective_no_sensors, numThreads>>>(dev_tracks, dev_track_holders);
-
-  //cudaEventRecord(start_postprocess);
-
-  logger << "postProcess" << std::endl;
-  postProcess<<<1, numThreads>>>(dev_tracks, dev_track_holders, dev_track_indexes, dev_num_tracks, dev_tracks_to_process);
-
-  cudaCheck(cudaDeviceSynchronize());
-
-  //cudaEventRecord(stop, 0);
-  //cudaEventSynchronize(stop);
-
-  //cudaEventElapsedTime(&t0, start_kalman, start_postprocess);
-  //cudaEventElapsedTime(&t1, start_postprocess, stop);
-  //cudaEventElapsedTime(&t2, start_kalman, stop);
-  //cudaEventDestroy(start_kalman);
-  //cudaEventDestroy(start_postprocess);
-  //cudaEventDestroy(stop);
-
-  // get the results
-  cudaCheck(cudaMemcpy(h_track_holders, dev_track_holders, MAX_TRACKS * sizeof(bool), cudaMemcpyDeviceToHost));
-  cudaCheck(cudaMemcpy(track_indices, dev_track_indexes, MAX_TRACKS * sizeof(int), cudaMemcpyDeviceToHost));
-  cudaCheck(cudaMemcpy(tracks, dev_tracks, MAX_TRACKS * sizeof(Track), cudaMemcpyDeviceToHost));
-  cudaCheck(cudaMemcpy(num_tracks, dev_num_tracks, sizeof(int), cudaMemcpyDeviceToHost));
-
-  // number of tracks after stage#1
-  int no_tracks_stage1 = 0;
-  for (int i = 0; i < event.no_hits[0]; ++i) {
-    if (h_track_holders[i])
-      ++no_tracks_stage1;
+  acc_size = 0;
+  for (int i=0; i<eventsToProcess; ++i){
+    cudaCheck(cudaMemcpy(&dev_input[acc_size], &(*(input[startingEvent + i]))[0], input[startingEvent + i]->size(), cudaMemcpyHostToDevice));
+    acc_size += input[startingEvent + i]->size();
   }
 
-  // copy selected track to the solution vector
-  if (*num_tracks > 0) {
-    solution.resize(*num_tracks * sizeof(Track));
-    Track * solutionTracks = (Track*)&solution[0];
-    for (size_t i = 0; i != *num_tracks; ++i)
-      solutionTracks[i] = tracks[track_indices[i]];
-  }
+  // Initialize what we need
+  cudaCheck(cudaMemset(dev_hit_used, false, acc_hits * sizeof(bool)));
+  cudaCheck(cudaMemset(dev_atomicsStorage, 0, eventsToProcess * num_atomics * sizeof(int)));
 
+  // searchByTriplet
+  DEBUG << "Now, on your " << device_properties->name << ": searchByTriplet with " << eventsToProcess << " event"
+    << (eventsToProcess>1 ? "s" : "") << "..." << std::endl;
+  cudaEvent_t start_searchByTriplet, stop_searchByTriplet;
+  float t0;
+
+  cudaEventCreate(&start_searchByTriplet);
+  cudaEventCreate(&stop_searchByTriplet);
+
+  cudaEventRecord(start_searchByTriplet, 0 );
+  
+  // Dynamic allocation - , 3 * numThreads.x * sizeof(float)
+  searchByTriplet<<<numBlocks, numThreads>>>(dev_tracks, (const char*) dev_input, dev_tracks_to_follow,
+    dev_hit_used, dev_atomicsStorage, dev_tracklets, dev_weak_tracks, dev_event_offsets, dev_hit_offsets);
+
+  cudaEventRecord( stop_searchByTriplet, 0 );
+  cudaEventSynchronize( stop_searchByTriplet );
+  cudaEventElapsedTime( &t0, start_searchByTriplet, stop_searchByTriplet );
+
+  cudaEventDestroy( start_searchByTriplet );
+  cudaEventDestroy( stop_searchByTriplet );
+
+  cudaCheck( cudaPeekAtLastError() );
+
+  DEBUG << "Done!" << std::endl;
+
+  // Get results
+  DEBUG << "Number of tracks found per event:" << std::endl << " ";
+  cudaCheck(cudaMemcpy(atomics, dev_atomicsStorage, eventsToProcess * num_atomics * sizeof(int), cudaMemcpyDeviceToHost));
+  for (int i=0; i<eventsToProcess; ++i){
+    const int numberOfTracks = atomics[i];
+    DEBUG << numberOfTracks << ", ";
+    
+    output[startingEvent + i].resize(numberOfTracks * sizeof(Track));
+    cudaCheck(cudaMemcpy(&(output[startingEvent + i])[0], &dev_tracks[i * MAX_TRACKS], numberOfTracks * sizeof(Track), cudaMemcpyDeviceToHost));
+  }
+  DEBUG << std::endl;
+
+  // Print info about the solution
+  // const int numberOfTracks = output[0].size() / sizeof(Track);
+  // Track* tracks_in_solution = (Track*) &(output[0])[0];
   // print debug info
-  for (int i = 0; i < num_tracks[0]; ++i)
-    printTrack(tracks, track_indices[i], event, logger);
-  logger << "Processed " << num_tracks[0] << " tracks" << std::endl;
+  // if (logger::ll.verbosityLevel > 0){
+  //   for(int i=0; i<numberOfTracks; ++i){
+  //     printTrack(tracks_in_solution, i, zhit_to_module);
+  //   }
+  // }
+  // DEBUG << "Got " << numberOfTracks << " tracks" << std::endl;
+  
+  DEBUG << "It took " << t0 << " milliseconds." << std::endl;
 
-  free(h_prevs);
-  free(h_nexts);
-  free(h_track_holders);
-  free(tracks);
-  free(num_tracks);
+  free(atomics);
 
-  cudaCheck(cudaFree(devSpans));
-  cudaCheck(cudaFree(devFittings));
-
-  return cudaStatus;
+  return cudaSuccess;
 }
 
-// #track, h0, h1, h2, h3, ..., hn, length, chi2
-void printTrack(Track* tracks, int track_no, const Event & event, std::ostream& logger) {
-  logger << track_no << ": ";
+/**
+ * Prints tracks
+ * Track #n, length <length>:
+ *  <ID> module <module>, x <x>, y <y>, z <z>
+ * 
+ * @param tracks      
+ * @param trackNumber 
+ */
+void printTrack(Track* tracks, const int trackNumber, const std::map<int, int>& zhit_to_module){
+  const Track t = tracks[trackNumber];
+  DEBUG << "Track #" << trackNumber << ", length " << (int) t.hitsNum << std::endl;
 
-  Track t = tracks[track_no];
-  for (int i = 0; i < t.hitsNum; ++i)
-    logger << event.hit_IDs[t.hits[i]] << ", ";
+  for(int i=0; i<t.hitsNum; ++i){
+    const int hitNumber = t.hits[i];
+    const unsigned int id = h_hit_IDs[hitNumber];
+    const float x = h_hit_Xs[hitNumber];
+    const float y = h_hit_Ys[hitNumber];
+    const float z = h_hit_Zs[hitNumber];
+    const int module = zhit_to_module.at((int) z);
 
-  logger << "length: " << (int) t.hitsNum << std::endl;
+    DEBUG << " " << std::setw(8) << id
+      << " module " << std::setw(2) << module
+      << ", x " << std::setw(6) << x
+      << ", y " << std::setw(6) << y
+      << ", z " << std::setw(6) << z << std::endl;
+  }
+
+  DEBUG << std::endl;
 }
 
-void printOutAllSensorHits(int* prevs, int* nexts, const Event & event, std::ostream& logger) {
-  logger << "All valid sensor hits: " << std::endl;
-  for (int i = 0; i < *event.no_sensors; ++i) {
-    for (int j = 0; j < event.sensor_hitNums[i]; ++j) {
-      int hit = event.sensor_hitStarts[i] + j;
+/**
+ * The z of the hit may not correspond to any z in the sensors.
+ * @param  z              
+ * @param  zhit_to_module 
+ * @return                sensor number
+ */
+int findClosestModule(const int z, const std::map<int, int>& zhit_to_module){
+  if (zhit_to_module.find(z) != zhit_to_module.end())
+    return zhit_to_module.at(z);
 
-      if (nexts[hit] != -1)
-        logger << hit << ", " << nexts[hit] << std::endl;
+  int error = 0;
+  while(true){
+    error++;
+    const int lowerAttempt = z - error;
+    const int higherAttempt = z + error;
+
+    if (zhit_to_module.find(lowerAttempt) != zhit_to_module.end()){
+      return zhit_to_module.at(lowerAttempt);
+    }
+    if (zhit_to_module.find(higherAttempt) != zhit_to_module.end()){
+      return zhit_to_module.at(higherAttempt);
     }
   }
 }
 
-void printOutSensorHits(int sensorNumber, int* prevs, int* nexts, const Event & event, std::ostream& logger) {
-  for (int i = 0; i < event.sensor_hitNums[sensorNumber]; ++i) {
-    int hstart = event.sensor_hitStarts[sensorNumber];
+void printOutAllSensorHits(int* prevs, int* nexts){
+  DEBUG << "All valid sensor hits: " << std::endl;
+  for(int i=0; i<h_no_sensors[0]; ++i){
+    for(int j=0; j<h_sensor_hitNums[i]; ++j){
+      int hit = h_sensor_hitStarts[i] + j;
 
-    logger << hstart + i << ": " << prevs[hstart + i] << ", " << nexts[hstart + i] << std::endl;
+      if(nexts[hit] != -1){
+        DEBUG << hit << ", " << nexts[hit] << std::endl;
+      }
+    }
   }
 }
 
-void printInfo(const Event & event, std::ostream& logger) {
-  logger << "Read info:" << std::endl
-    << " no sensors: " << event.no_sensors << std::endl
-    << " no hits: " << event.no_hits << std::endl
+void printOutSensorHits(int sensorNumber, int* prevs, int* nexts){
+  for(int i=0; i<h_sensor_hitNums[sensorNumber]; ++i){
+    int hstart = h_sensor_hitStarts[sensorNumber];
+
+    DEBUG << hstart + i << ": " << prevs[hstart + i] << ", " << nexts[hstart + i] << std::endl;
+  }
+}
+
+void printInfo() {
+  DEBUG << "Read info:" << std::endl
+    << " no sensors: " << h_no_sensors[0] << std::endl
+    << " no hits: " << h_no_hits[0] << std::endl
     << "First 5 sensors: " << std::endl;
 
-  for (int i = 0; i < 5; ++i) {
-    logger << " Zs: " << event.sensor_Zs[i] << std::endl
-      << " hitStarts: " << event.sensor_hitStarts[i] << std::endl
-      << " hitNums: " << event.sensor_hitNums[i] << std::endl << std::endl;
+  for (int i=0; i<5; ++i){
+    DEBUG << " Zs: " << h_sensor_Zs[i] << std::endl
+      << " hitStarts: " << h_sensor_hitStarts[i] << std::endl
+      << " hitNums: " << h_sensor_hitNums[i] << std::endl << std::endl;
   }
 
-  logger << "First 5 hits: " << std::endl;
+  DEBUG << "First 5 hits: " << std::endl;
 
-  for (int i = 0; i < 5; ++i) {
-    logger << " hit_id: " << event.hit_IDs[i] << std::endl;
-    logger << " hit_X:  " << event.hit_Xs[i]  << std::endl;
-    logger << " hit_Y:  " << event.hit_Ys[i]  << std::endl;
-    logger << " hit_Z:  " << event.hit_Zs[i]  << std::endl;
-    logger << std::endl;
+  for (int i=0; i<5; ++i){
+    DEBUG << " hit_id: " << h_hit_IDs[i] << std::endl
+      << " hit_X: " << h_hit_Xs[i] << std::endl
+      << " hit_Y: " << h_hit_Ys[i] << std::endl
+      << " hit_Z: " << h_hit_Zs[i] << std::endl << std::endl;
   }
 }
 
-void getMaxNumberOfHits(char*& input, int& maxHits) {
-  int * l_no_sensors       = (int*) input;
-  int * l_no_hits          = (int*) (l_no_sensors + 1);
-  int * l_sensor_Zs        = (int*) (l_no_hits + 1);
-  int * l_sensor_hitStarts = (int*) (l_sensor_Zs + l_no_sensors[0]);
-  int * l_sensor_hitNums   = (int*) (l_sensor_hitStarts + l_no_sensors[0]);
+void getMaxNumberOfHits(char*& input, int& maxHits){
+  int* l_no_sensors = (int*) &input[0];
+  int* l_no_hits = (int*) (l_no_sensors + 1);
+  int* l_sensor_Zs = (int*) (l_no_hits + 1);
+  int* l_sensor_hitStarts = (int*) (l_sensor_Zs + l_no_sensors[0]);
+  int* l_sensor_hitNums = (int*) (l_sensor_hitStarts + l_no_sensors[0]);
 
   maxHits = 0;
-  for (int i = 0; i < l_no_sensors[0]; ++i) {
-    if (l_sensor_hitNums[i] > maxHits)
+  for(int i=0; i<l_no_sensors[0]; ++i){
+    if(l_sensor_hitNums[i] > maxHits)
       maxHits = l_sensor_hitNums[i];
   }
 }

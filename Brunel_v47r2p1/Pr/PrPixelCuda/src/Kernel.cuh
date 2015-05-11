@@ -1,24 +1,14 @@
-#pragma once
+#ifndef CUDA_KERNEL
+#define CUDA_KERNEL 1
 
-#ifdef CUDA_TEST
-#include "cuda-cleanup.h"
+#include "Definitions.cuh"
+
+__device__ float fitHits(const Hit& h0, const Hit& h1, const Hit& h2, const float dxmax, const float dymax);
+__device__ float fitHitToTrack(const float tx, const float ty, const Hit& h0, const float h1_z, const Hit& h2);
+
+__global__ void searchByTriplet(Track* const dev_tracks, const char* const dev_input,
+    int* const dev_tracks_to_follow_q1,
+    bool* const dev_hit_used, int* const dev_atomicsStorage, Track* const dev_tracklets,
+    int* const dev_weak_tracks, int* const dev_event_offsets, int* const dev_hit_offsets);
+
 #endif
-
-#include "Definitions.h"
-
-__device__ float fitHits(Hit& h0, Hit& h1, Sensor& s0, Sensor& s1);
-__device__ float fitHitToTrack(Track& t, Hit& h1, Sensor& s1);
-__device__ void acceptTrack(Track& t, TrackFit& fit, Hit& h0, Hit& h1, Sensor& s0, Sensor& s1, int h0_num, int h1_num);
-__device__ void updateTrack(Track& t, TrackFit& fit, Hit& h1, Sensor& s1, int h1_num);
-__device__ void updateTrackCoords(Track& t, TrackFit& fit);
-__device__ float trackChi2(Track& t);
-__device__ float hitChi2(Track& t, Hit& h, int hit_z);
-
-__global__ void prepareData(char* input, int* _prevs, int* _nexts);
-__global__ void gpuKalman(Track* tracks, bool* track_holders);
-__global__ void postProcess(Track* tracks, bool* track_holders, int* track_indexes, int* num_tracks, int* tracks_to_process);
-
-__global__ void gpuKalmanBalanced(Span  * spans, Fit * fittings);
-__global__ void consolidateHits(Fit * fittings, int n, Track * tracks, bool * trackHolders);
-
-__device__ void addTrack(const Fit & fit, Track * tracks, bool * trackHolders);

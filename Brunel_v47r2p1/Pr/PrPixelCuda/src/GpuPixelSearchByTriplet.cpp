@@ -1,57 +1,62 @@
+
 #include "GpuPixelSearchByTriplet.h"
 
-#include "FileStdLogger.h"
+int independent_execute(
+    const std::vector<std::vector<uint8_t> > & input,
+    std::vector<std::vector<uint8_t> > & output) {
 
-#include "Tools.cuh"
-#include "KernelInvoker.cuh"
+  std::vector<const std::vector<uint8_t>* > converted_input;
+  converted_input.resize(input.size());
 
-using namespace std;
+  for (int i=0; i<input.size(); ++i) {
+    converted_input[i] = &(input[i]);
+  }
 
-int independentExecute(const Batch & input, vector<Data>& output) {
-  return gpuPixelSearchByTripletInvocation(input, output, cout);
+  std::cout << std::fixed << std::setprecision(2);
+  logger::ll.verbosityLevel = 3;
+
+  return gpuPixelSearchByTripletInvocation(converted_input, output);
 }
 
-void independentPostExecute(const vector<Data> & output) {
-  cout << "post_execute invoked" << endl;
-  cout << "Size of output: " << output.size() << " B" << endl;
-
-  // Do some printing
+void independent_post_execute(const std::vector<std::vector<uint8_t> > & output) {
+    DEBUG << "post_execute invoked" << std::endl;
+    DEBUG << "Size of output: " << output.size() << " B" << std::endl;
 }
 
-int gpuPixelSearchByTriplet(const Batch & input, vector<Data> & output) {
-  FileStdLogger discardStream;
+int gpuPixelSearchByTriplet(
+    const std::vector<const std::vector<uint8_t>* > & input,
+    std::vector<std::vector<uint8_t> > & output) {
 
   // Silent execution
-  return gpuPixelSearchByTripletInvocation(input, output, discardStream);
-
-  // Debug (with cout)
-  // return gpuPixelSearchByTripletInvocation(input, output, cout);
+  std::cout << std::fixed << std::setprecision(2);
+  logger::ll.verbosityLevel = 0;
+  return gpuPixelSearchByTripletInvocation(input, output);
 }
 
 /**
  * Common entrypoint for Gaudi and non-Gaudi
  * @param input  
- * @param trackBatch 
- * @param logger
+ * @param output 
  */
 int gpuPixelSearchByTripletInvocation(
-    const Batch  & eventBatch,
-    vector<Data> & trackBatch,
-    ostream      & logger) {
-  logger << "Invoking gpuPixelSearchByTriplet with " << eventBatch.size() << " events" << endl;
+    const std::vector<const std::vector<uint8_t>* > & input,
+    std::vector<std::vector<uint8_t> > & output) {
+  DEBUG << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
 
-  // define how many blocks / threads we need to deal with numberofevents
+  // Define how many blocks / threads we need to deal with numberOfEvents
+  // Each execution will return a different output
+  output.resize(input.size());
+  
+  // Execute maximum n number of events every time
+  const int max_events_to_process_per_kernel = 1000;
 
-  // for each event, we will execute 32 threads.
-  // call a kernel for each event, let cuda engine decide when to issue the kernels.
-  dim3 numThreads(32);
+  for (int i=0; i<input.size(); i+=max_events_to_process_per_kernel){
+    int events_to_process = input.size() - i;
+    if (events_to_process > max_events_to_process_per_kernel)
+      events_to_process = max_events_to_process_per_kernel;
 
-  // each execution will return a different output
-  trackBatch.resize(eventBatch.size());
-
-  // this should be done in streams (non-blocking)
-  for (int i=0; i<eventBatch.size(); ++i)
-    cudaCheck(invokeParallelSearch(numThreads, *eventBatch[i], trackBatch[i], logger));
+    cudaCheck(invokeParallelSearch(i, events_to_process, input, output));
+  }
 
   cudaCheck(cudaDeviceReset());
 

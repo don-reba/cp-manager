@@ -1,25 +1,31 @@
-#pragma once
 
-#include <vector>
-#include <cstdint>
-#include <ostream>
+#ifndef GPUPIXELSEARCHBYTRIPLET
+#define GPUPIXELSEARCHBYTRIPLET 1
 
-typedef std::vector<uint8_t>     Data;
-typedef std::vector<const Data*> Batch;
+#include "FileStdLogger.h"
+#include "Tools.cuh"
+#include "KernelInvoker.cuh"
+#include "Logger.h"
 
-int independentExecute(const Batch & input, std::vector<Data> & output);
+#include <stdint.h>
 
-void independentPostExecute(const std::vector<Data>& output);
+int independent_execute(
+    const std::vector<std::vector<uint8_t> > & input,
+    std::vector<std::vector<uint8_t> > & output);
 
-int gpuPixelSearchByTriplet(const Batch & input, std::vector<Data> & output);
+void independent_post_execute(const std::vector<std::vector<uint8_t> > & output);
+
+int gpuPixelSearchByTriplet(
+    const std::vector<const std::vector<uint8_t>* > & input,
+    std::vector<std::vector<uint8_t> > & output);
 
 /**
- * Common entry point for Gaudi and non-Gaudi
- * @param input
- * @param output
- * @param logger
+ * Common entrypoint for Gaudi and non-Gaudi
+ * @param input  
+ * @param output 
  */
 int gpuPixelSearchByTripletInvocation(
-    const Batch       & eventBatch,
-    std::vector<Data> & trackBatch,
-    std::ostream      & logger);
+    const std::vector<const std::vector<uint8_t>* > & input,
+    std::vector<std::vector<uint8_t> > & output);
+
+#endif

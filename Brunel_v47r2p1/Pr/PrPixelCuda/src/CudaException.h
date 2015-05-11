@@ -1,4 +1,6 @@
-#pragma once
+
+#ifndef CUDA_EXCEPTION
+#define CUDA_EXCEPTION 1
 
 #include "cuda_runtime.h"
 
@@ -16,3 +18,5 @@ class CudaException : public std::runtime_error {
 
     static std::string makeMessage(cudaError_t err, const char * statement);
 };
+
+#endif

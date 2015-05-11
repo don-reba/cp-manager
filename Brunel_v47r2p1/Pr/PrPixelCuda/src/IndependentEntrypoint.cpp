@@ -26,17 +26,20 @@
 /**
  * execute entrypoint of algorithm
  * Same signature as offloaded gaudi-algorithm
- *
- * @param output
- * @param input
+ * 
+ * @param output 
+ * @param input  
  */
-extern int independent_execute(const std::vector<std::vector<char> >& input, std::vector<std::vector<char> >& output);
+extern int independent_execute(
+    const std::vector<std::vector<unsigned char> >& input,
+    std::vector<std::vector<unsigned char> >& output);
 
 /**
  * Post execution entrypoint
- * @param output
+ * @param output 
  */
-extern void independent_post_execute(const std::vector<std::vector<char> >& output);
+extern void independent_post_execute(
+    const std::vector<std::vector<unsigned char> >& output);
 
 
 void printUsage(char* argv[]){
@@ -51,16 +54,16 @@ void printUsage(char* argv[]){
 class StrException : public std::exception
 {
 public:
-   std::string s;
-   StrException(std::string ss) : s(ss) {}
-   ~StrException() throw () {} // Updated
-   const char* what() const throw() { return s.c_str(); }
+    std::string s;
+    StrException(std::string ss) : s(ss) {}
+    ~StrException() throw () {} // Updated
+    const char* what() const throw() { return s.c_str(); }
 };
 
 /**
  * Checks file existence
- * @param  name
- * @return
+ * @param  name 
+ * @return      
  */
 bool fileExists (const std::string& name) {
     if (FILE *file = fopen(name.c_str(), "r")) {
@@ -68,7 +71,7 @@ bool fileExists (const std::string& name) {
         return true;
     } else {
         return false;
-    }
+    }   
 }
 
 /**
@@ -82,7 +85,7 @@ bool fileExists (const std::string& name) {
  * int dataSize
  * char* data
  */
-void readFileIntoVector(std::string filename, std::vector<char> & output){
+void readFileIntoVector(std::string filename, std::vector<unsigned char> & output){
     // Check if file exists
     if (!fileExists(filename)){
         throw StrException("Error: File " + filename + " does not exist.");
@@ -114,21 +117,21 @@ void readFileIntoVector(std::string filename, std::vector<char> & output){
 
     // read content of infile with a vector
     output.resize(dataSize);
-    infile.read (&(output[0]), dataSize);
+    infile.read ((char*) &(output[0]), dataSize);
     infile.close();
 }
 
 /**
  * This is if the function is called on its own
  * (ie. non-gaudi execution)
- *
+ * 
  * In that case, the file input is expected.
  * As a convention, multiple files would be specified
  * with comma-separated values
- *
+ * 
  * @param  argc
  * @param  argv
- * @return
+ * @return     
  */
 int main(int argc, char *argv[])
 {
@@ -142,7 +145,7 @@ int main(int argc, char *argv[])
         printUsage(argv);
         return 0;
     }
-
+    
     filename = std::string(argv[1]);
 
     // Check how many files were specified and
@@ -162,13 +165,13 @@ int main(int argc, char *argv[])
         size_t prevFound = 0;
         while(prevFound != std::string::npos){
             if (posFound == std::string::npos){
-                readFileIntoVector(filename.substr(prevFound, posFound), input[input_index]);
+                readFileIntoVector(filename.substr(prevFound, posFound-prevFound), input[input_index]);
                 prevFound = posFound;
             }
             else {
-                readFileIntoVector(filename.substr(prevFound, posFound), input[input_index]);
+                readFileIntoVector(filename.substr(prevFound, posFound-prevFound), input[input_index]);
                 prevFound = posFound + 1;
-                posFound = filename.find(delimiter, posFound+1);
+                posFound = filename.find(delimiter, posFound + 1);
             }
             input_index++;
         }
@@ -185,14 +188,14 @@ int main(int argc, char *argv[])
         if (i != input.size()-1) std::cout << ", ";
     }
 
-    // std::cout << std::endl << "Pointers: ";
-
+    // std::cout << std::endl << "Pointers: " << std::hex;
     // for (int i=0; i<input.size(); ++i){
-    //     std::cout << std::hex << "0x" << (long long int) &(input[i][0]);
+    //     std::cout << "0x" << (long long int) &(input[i][0]);
     //     if (i != input.size()-1) std::cout << ", ";
     // }
+    // std::cout << std::dec;
 
-    std::cout << std::dec << std::endl << "Kernel execution invoked..." << std::endl << std::endl;
+    std::cout << std::endl << "Kernel execution invoked..." << std::endl << std::endl;
 
     // Call offloaded algo
     std::vector<std::vector<unsigned char> > output;

@@ -28,7 +28,7 @@ endif
 
 $($(CONSTITUENT)_output)$($(CONSTITUENT)installname) :: $($(CONSTITUENT)_output)$(CONSTITUENT)_device.o $(OBJS)
 	$(echo) linking CUDA library...
-	$(cpp) --shared -L/usr/local/cuda-6.5/lib64 -lcudart $(use_linkopts) -o $@ $^
+	$(cpp) --shared -L/usr/local/cuda-7.0/lib64 -lcudart $(use_linkopts) -o $@ $^
 
 # device object file creation
 

@@ -17,7 +17,7 @@ void PrPixelCudaHandler::operator() (
   gpuPixelSearchByTriplet(batch, trackCollection);
 
   for (int i = 0, size = trackCollection.size(); i != size; ++i){
-    uint8_t * buffer = allocResult(i, trackCollection[i].size(), allocResultParam);
+    uint8_t * buffer = (uint8_t*)allocResult(i, trackCollection[i].size(), allocResultParam);
     copy(trackCollection[i].begin(), trackCollection[i].end(), buffer);
   }
 }
