@@ -17,7 +17,7 @@
 #include <sstream>
 #include <string>
 
-// Dumb type, just making constructor public
+// Dumb type, just making the constructor public
 class FileStdLogger : public std::ostream {
 private:
     std::streambuf* b;
@@ -62,7 +62,7 @@ public:
     std::ostream* _void_stream;
     std::streambuf* _old;
 
-    VoidLogger(std::ostream* void_stream) : 
+    VoidLogger(std::ostream* void_stream) :
         _void_stream(void_stream) {
         _old = _void_stream->rdbuf(this);
     }

@@ -28,3 +28,5 @@ library          PrPixel    ../src/*.cpp
 # define component library link options
 #=====================================================================
 apply_pattern    component_library library=PrPixel
+
+macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED"

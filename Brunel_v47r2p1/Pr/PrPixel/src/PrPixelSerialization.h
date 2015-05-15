@@ -28,9 +28,12 @@ public:
 
 public:
   void cleanEvent();
-  void addHit(PrPixelHit* hit, int sensorNum, int hitID, float hitX, float hitY, int hitZ);
+  void addHit(PrPixelHit* hit, int sensorNum, int hitID, float hitX, float hitY, float hitZ);
   void serializeEvent(Data & buffer);
   void deserializeTracks(const Data & trackData, PrPixelTracks & m_tracks);
+
+private:
+  void print(const PixelEvent & event) const;
 
 private:
   PixelEvent m_event;

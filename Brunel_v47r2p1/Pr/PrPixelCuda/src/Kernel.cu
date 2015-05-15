@@ -1,5 +1,4 @@
-﻿
-#include "Kernel.cuh"
+﻿#include "Kernel.cuh"
 
 /**
  * @brief Gives the fit between h0, h1 and h2

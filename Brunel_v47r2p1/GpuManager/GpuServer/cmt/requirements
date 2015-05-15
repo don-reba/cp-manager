@@ -30,5 +30,6 @@ macro_append Boost_linkopts " $(Boost_linkopts_program_options)"
 macro_append Boost_linkopts " $(Boost_linkopts_system)"
 macro_append Boost_linkopts " $(Boost_linkopts_thread)"
 macro_append cppflags " -DBOOST_SYSTEM_NO_DEPRECATED"
+macro_append cppflags " -g"
 
 end_private

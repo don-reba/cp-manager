@@ -23,7 +23,7 @@ struct PixelEvent {
   std::vector<int32_t> hitIDs;
   std::vector<float>   hitXs;
   std::vector<float>   hitYs;
-  std::vector<int32_t> hitZs;
+  std::vector<float>   hitZs;
 };
 
 #endif

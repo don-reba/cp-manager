@@ -1,5 +1,10 @@
 #include "KernelInvoker.cuh"
 
+#include <boost/functional/hash.hpp>
+
+#include <iostream>
+#include <iomanip>
+
 extern int*   h_no_sensors;
 extern int*   h_no_hits;
 extern int*   h_sensor_Zs;
@@ -13,30 +18,29 @@ extern float* h_hit_Zs;
 cudaError_t invokeParallelSearch(
     const int startingEvent,
     const int eventsToProcess,
-    const std::vector<const std::vector<uint8_t>* > & input,
-    std::vector<std::vector<uint8_t> > & output) {
+    const std::vector<const Data*> & input,
+    std::vector<Data>              & output) {
 
   // DEBUG << "Input pointer: " 
   //   << std::hex << "0x" << (long long int) &(input[0])
   //   << std::dec << std::endl;
   
-  const std::vector<uint8_t>* startingEvent_input = input[startingEvent];
+  const Data* startingEvent_input = input[startingEvent];
   setHPointersFromInput((uint8_t*) &(*startingEvent_input)[0], startingEvent_input->size());
-  // printInfo();
 
   std::map<int, int> zhit_to_module;
-  if (logger::ll.verbosityLevel > 0){
+  if (logger::ll.verbosityLevel > 0) {
     // map to convert from z of hit to module
-    for(int i=0; i<*h_no_sensors; ++i){
+    for(int i=0; i < *h_no_sensors; ++i) {
       const int z = h_sensor_Zs[i];
       zhit_to_module[z] = i;
     }
 
     // Some hits z may not correspond to a sensor's,
     // but be close enough
-    for(int i=0; i<*h_no_hits; ++i){
+    for(int i=0; i<*h_no_hits; ++i) {
       const int z = h_hit_Zs[i];
-      if (zhit_to_module.find(z) == zhit_to_module.end()){
+      if (zhit_to_module.find(z) == zhit_to_module.end()) {
         const int sensor = findClosestModule(z, zhit_to_module);
         zhit_to_module[z] = sensor;
       }
@@ -44,10 +48,10 @@ cudaError_t invokeParallelSearch(
   }
 
   // int j = 0;
-  // for (int z=0; z<input.size(); ++z){
+  // for (int z=0; z<input.size(); ++z) {
   //   setHPointersFromInput((uint8_t*) &(*input[z])[0], input[z]->size());
   //   for (int i=0; i<*h_no_sensors; ++i) {
-  //     if (h_sensor_hitNums[i] > j){
+  //     if (h_sensor_hitNums[i] > j) {
   //       j = h_sensor_hitNums[i];
   //     }
   //   }
@@ -86,7 +90,7 @@ cudaError_t invokeParallelSearch(
   std::vector<int> event_offsets;
   std::vector<int> hit_offsets;
   int acc_size = 0, acc_hits = 0;
-  for (int i=0; i<eventsToProcess; ++i){
+  for (int i=0; i<eventsToProcess; ++i) {
     EventBeginning* event = (EventBeginning*) &(*(input[startingEvent + i]))[0];
     const int event_size = input[startingEvent + i]->size();
 
@@ -113,7 +117,7 @@ cudaError_t invokeParallelSearch(
   cudaCheck(cudaMemcpy(dev_hit_offsets, &hit_offsets[0], hit_offsets.size() * sizeof(int), cudaMemcpyHostToDevice));
 
   acc_size = 0;
-  for (int i=0; i<eventsToProcess; ++i){
+  for (int i=0; i<eventsToProcess; ++i) {
     cudaCheck(cudaMemcpy(&dev_input[acc_size], &(*(input[startingEvent + i]))[0], input[startingEvent + i]->size(), cudaMemcpyHostToDevice));
     acc_size += input[startingEvent + i]->size();
   }
@@ -149,14 +153,15 @@ cudaError_t invokeParallelSearch(
   DEBUG << "Done!" << std::endl;
 
   // Get results
-  DEBUG << "Number of tracks found per event:" << std::endl << " ";
+  DEBUG << "Number of tracks found per event:\n";
   cudaCheck(cudaMemcpy(atomics, dev_atomicsStorage, eventsToProcess * num_atomics * sizeof(int), cudaMemcpyDeviceToHost));
-  for (int i=0; i<eventsToProcess; ++i){
+  for (int i = 0; i < eventsToProcess; ++i) {
     const int numberOfTracks = atomics[i];
-    DEBUG << numberOfTracks << ", ";
+    DEBUG << numberOfTracks << " ";
     
-    output[startingEvent + i].resize(numberOfTracks * sizeof(Track));
-    cudaCheck(cudaMemcpy(&(output[startingEvent + i])[0], &dev_tracks[i * MAX_TRACKS], numberOfTracks * sizeof(Track), cudaMemcpyDeviceToHost));
+    Data & tracks = output[startingEvent + i];
+    tracks.resize(numberOfTracks * sizeof(Track));
+    cudaCheck(cudaMemcpy(tracks.data(), &dev_tracks[i * MAX_TRACKS], numberOfTracks * sizeof(Track), cudaMemcpyDeviceToHost));
   }
   DEBUG << std::endl;
 
@@ -164,8 +169,8 @@ cudaError_t invokeParallelSearch(
   // const int numberOfTracks = output[0].size() / sizeof(Track);
   // Track* tracks_in_solution = (Track*) &(output[0])[0];
   // print debug info
-  // if (logger::ll.verbosityLevel > 0){
-  //   for(int i=0; i<numberOfTracks; ++i){
+  // if (logger::ll.verbosityLevel > 0) {
+  //   for(int i=0; i<numberOfTracks; ++i) {
   //     printTrack(tracks_in_solution, i, zhit_to_module);
   //   }
   // }
@@ -186,17 +191,17 @@ cudaError_t invokeParallelSearch(
  * @param tracks      
  * @param trackNumber 
  */
-void printTrack(Track* tracks, const int trackNumber, const std::map<int, int>& zhit_to_module){
-  const Track t = tracks[trackNumber];
-  DEBUG << "Track #" << trackNumber << ", length " << (int) t.hitsNum << std::endl;
+void printTrack(const Track * tracks, const int trackNumber, const std::map<int, int>& zhit_to_module) {
+  const Track & t = tracks[trackNumber];
+  DEBUG << "Track #" << trackNumber << ", length " << t.hitsNum << std::endl;
 
-  for(int i=0; i<t.hitsNum; ++i){
-    const int hitNumber = t.hits[i];
-    const unsigned int id = h_hit_IDs[hitNumber];
-    const float x = h_hit_Xs[hitNumber];
-    const float y = h_hit_Ys[hitNumber];
-    const float z = h_hit_Zs[hitNumber];
-    const int module = zhit_to_module.at((int) z);
+  for(int i=0; i < t.hitsNum; ++i) {
+    const int          hitNumber = t.hits[i];
+    const unsigned int id        = h_hit_IDs[hitNumber];
+    const float        x         = h_hit_Xs[hitNumber];
+    const float        y         = h_hit_Ys[hitNumber];
+    const float        z         = h_hit_Zs[hitNumber];
+    const int          module    = zhit_to_module.at((int) z);
 
     DEBUG << " " << std::setw(8) << id
       << " module " << std::setw(2) << module
@@ -214,40 +219,40 @@ void printTrack(Track* tracks, const int trackNumber, const std::map<int, int>& 
  * @param  zhit_to_module 
  * @return                sensor number
  */
-int findClosestModule(const int z, const std::map<int, int>& zhit_to_module){
+int findClosestModule(const int z, const std::map<int, int>& zhit_to_module) {
   if (zhit_to_module.find(z) != zhit_to_module.end())
     return zhit_to_module.at(z);
 
   int error = 0;
-  while(true){
+  while(true) {
     error++;
     const int lowerAttempt = z - error;
     const int higherAttempt = z + error;
 
-    if (zhit_to_module.find(lowerAttempt) != zhit_to_module.end()){
+    if (zhit_to_module.find(lowerAttempt) != zhit_to_module.end()) {
       return zhit_to_module.at(lowerAttempt);
     }
-    if (zhit_to_module.find(higherAttempt) != zhit_to_module.end()){
+    if (zhit_to_module.find(higherAttempt) != zhit_to_module.end()) {
       return zhit_to_module.at(higherAttempt);
     }
   }
 }
 
-void printOutAllSensorHits(int* prevs, int* nexts){
+void printOutAllSensorHits(int* prevs, int* nexts) {
   DEBUG << "All valid sensor hits: " << std::endl;
-  for(int i=0; i<h_no_sensors[0]; ++i){
-    for(int j=0; j<h_sensor_hitNums[i]; ++j){
+  for(int i=0; i < *h_no_sensors; ++i) {
+    for(int j=0; j<h_sensor_hitNums[i]; ++j) {
       int hit = h_sensor_hitStarts[i] + j;
 
-      if(nexts[hit] != -1){
+      if(nexts[hit] != -1) {
         DEBUG << hit << ", " << nexts[hit] << std::endl;
       }
     }
   }
 }
 
-void printOutSensorHits(int sensorNumber, int* prevs, int* nexts){
-  for(int i=0; i<h_sensor_hitNums[sensorNumber]; ++i){
+void printOutSensorHits(int sensorNumber, int* prevs, int* nexts) {
+  for(int i=0; i<h_sensor_hitNums[sensorNumber]; ++i) {
     int hstart = h_sensor_hitStarts[sensorNumber];
 
     DEBUG << hstart + i << ": " << prevs[hstart + i] << ", " << nexts[hstart + i] << std::endl;
@@ -255,28 +260,46 @@ void printOutSensorHits(int sensorNumber, int* prevs, int* nexts){
 }
 
 void printInfo() {
-  DEBUG << "Read info:" << std::endl
-    << " no sensors: " << h_no_sensors[0] << std::endl
-    << " no hits: " << h_no_hits[0] << std::endl
-    << "First 5 sensors: " << std::endl;
+  std::cout << "noSensors " << *h_no_sensors << ", noHits " << *h_no_hits << std::endl;
+  std::vector<int32_t> sensorZs        (h_sensor_Zs,        h_sensor_Zs        + *h_no_sensors);
+  std::vector<int32_t> sensorHitStarts (h_sensor_hitStarts, h_sensor_hitStarts + *h_no_sensors);
+  std::vector<int32_t> sensorHitsNums  (h_sensor_hitNums,   h_sensor_hitNums   + *h_no_sensors);
+  std::vector<uint32_t> hitIDs (h_hit_IDs, h_hit_IDs + *h_no_hits);
+  std::vector<float> hitXs (h_hit_Xs, h_hit_Xs + *h_no_hits);
+  std::vector<float> hitYs (h_hit_Ys, h_hit_Ys + *h_no_hits);
+  std::vector<float> hitZs (h_hit_Zs, h_hit_Zs + *h_no_hits);
+  std::cout << std::hex;
+  std::cout << "sensor zs: 0x" << boost::hash_value(sensorZs)        << std::endl;
+  std::cout << "sensor hs: 0x" << boost::hash_value(sensorHitStarts) << std::endl;
+  std::cout << "sensor hn: 0x" << boost::hash_value(sensorHitsNums)  << std::endl;
+  std::cout << "hit id:    0x" << boost::hash_value(hitIDs)          << std::endl;
+  std::cout << "hit xs:    0x" << boost::hash_value(hitXs)           << std::endl;
+  std::cout << "hit ys:    0x" << boost::hash_value(hitYs)           << std::endl;
+  std::cout << "hit zs:    0x" << boost::hash_value(hitZs)           << std::endl;
+  std::cout << std::dec;
 
-  for (int i=0; i<5; ++i){
-    DEBUG << " Zs: " << h_sensor_Zs[i] << std::endl
-      << " hitStarts: " << h_sensor_hitStarts[i] << std::endl
-      << " hitNums: " << h_sensor_hitNums[i] << std::endl << std::endl;
-  }
-
-  DEBUG << "First 5 hits: " << std::endl;
-
-  for (int i=0; i<5; ++i){
-    DEBUG << " hit_id: " << h_hit_IDs[i] << std::endl
-      << " hit_X: " << h_hit_Xs[i] << std::endl
-      << " hit_Y: " << h_hit_Ys[i] << std::endl
-      << " hit_Z: " << h_hit_Zs[i] << std::endl << std::endl;
-  }
+  //DEBUG << "Read info:" << std::endl
+  //  << " no sensors: " << h_no_sensors[0] << std::endl
+  //  << " no hits: " << h_no_hits[0] << std::endl
+  //  << "First 5 sensors: " << std::endl;
+  //
+  //for (int i=0; i<5; ++i) {
+  //  DEBUG << " Zs: " << h_sensor_Zs[i] << std::endl
+  //    << " hitStarts: " << h_sensor_hitStarts[i] << std::endl
+  //    << " hitNums: " << h_sensor_hitNums[i] << std::endl << std::endl;
+  //}
+  //
+  //DEBUG << "First 5 hits: " << std::endl;
+  //
+  //for (int i=0; i<5; ++i) {
+  //  DEBUG << " hit_id: " << h_hit_IDs[i] << std::endl
+  //    << " hit_X: " << h_hit_Xs[i] << std::endl
+  //    << " hit_Y: " << h_hit_Ys[i] << std::endl
+  //    << " hit_Z: " << h_hit_Zs[i] << std::endl << std::endl;
+  //}
 }
 
-void getMaxNumberOfHits(char*& input, int& maxHits){
+void getMaxNumberOfHits(char*& input, int& maxHits) {
   int* l_no_sensors = (int*) &input[0];
   int* l_no_hits = (int*) (l_no_sensors + 1);
   int* l_sensor_Zs = (int*) (l_no_hits + 1);
@@ -284,7 +307,7 @@ void getMaxNumberOfHits(char*& input, int& maxHits){
   int* l_sensor_hitNums = (int*) (l_sensor_hitStarts + l_no_sensors[0]);
 
   maxHits = 0;
-  for(int i=0; i<l_no_sensors[0]; ++i){
+  for(int i=0; i<l_no_sensors[0]; ++i) {
     if(l_sensor_hitNums[i] > maxHits)
       maxHits = l_sensor_hitNums[i];
   }

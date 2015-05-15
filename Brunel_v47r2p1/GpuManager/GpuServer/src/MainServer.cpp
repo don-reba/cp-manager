@@ -131,6 +131,8 @@ uint8_t * MainServer::allocVector(
     size_t index,
     size_t size,
     IGpuHandler::AllocParam param) {
+  if (size == 0)
+    return nullptr;
   typedef vector<Data*> Batch;
   Batch * batch = reinterpret_cast<Batch*>(param);
   Data * data = batch->at(index);
@@ -189,9 +191,8 @@ try {
       timer.stop();
     } catch (const std::exception & e) {
       // propagate the exception to all client in the batch
-      for (size_t i = 0, size = batch.size(); i != size; ++i) {
+      for (size_t i = 0, size = batch.size(); i != size; ++i)
         batch[i]->SetExceptionMessage(e.what());
-      }
     }
 
     // gather statistics

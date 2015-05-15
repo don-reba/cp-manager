@@ -17,8 +17,7 @@ DECLARE_ALGORITHM_FACTORY(PrPixelTracking)
 //=============================================================================
 // Standard constructor, initializes variables
 //=============================================================================
-PrPixelTracking::PrPixelTracking(const std::string &name,
-                                 ISvcLocator *pSvcLocator)
+PrPixelTracking::PrPixelTracking(const std::string &name, ISvcLocator *pSvcLocator)
     :
 #ifdef DEBUG_HISTO
       GaudiTupleAlg(name, pSvcLocator),
@@ -147,16 +146,15 @@ StatusCode PrPixelTracking::execute() {
   }
 
   // Do some typecasting into a format understandable by GPU
-  m_hitManager->m_serializer.serializeEvent(m_serializedEvent);
+  std::vector<uint8_t> serializedEvent;
+  m_hitManager->m_serializer.serializeEvent(serializedEvent);
   
-  if (m_serializedEvent.empty())
+  if (serializedEvent.empty())
     info() << "--- Serialized event is empty! This should not happen!" << endmsg;
   
-  if (m_isDebug){
-    info() << "--- Submitting data to gpuService" << endmsg;
-    info() << "--- serializedEvent: 0x" << std::hex << (long long int)&m_serializedEvent[0] <<
-      std::dec << ", size " << m_serializedEvent.size() << endmsg;
-  }
+  debug() << "--- Submitting data to gpuService" << endmsg;
+  debug() << "--- serializedEvent: 0x" << std::hex << (long long int)&serializedEvent[0] <<
+    std::dec << ", size " << serializedEvent.size() << endmsg;
 
   if (m_doTiming) m_timerTool->stop(m_timePrepare);
 
@@ -166,10 +164,20 @@ StatusCode PrPixelTracking::execute() {
   std::vector<uint8_t> trackCollection;
 
   try {
-    gpuService->submitData("PrPixelCudaHandler", &m_serializedEvent[0], m_serializedEvent.size(), allocTracks, &trackCollection);
-    
-    info() << "--- Deserializing tracks" << endmsg;
-    m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
+    gpuService->submitData(
+        "PrPixelCudaHandler",
+        serializedEvent.data(),
+        serializedEvent.size(),
+        allocTracks,
+        &trackCollection);
+    try {
+      debug() << "--- Deserializing tracks" << endmsg;
+      m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
+    } catch (const std::exception & e) {
+      error() << "deserialization failed; " << e.what() << std::endl;
+    } catch (...) {
+      error() << "deserialization failed; reason unknown" << std::endl;
+    }
   } catch (const std::exception & e) {
     error() << "submission failed; " << e.what() << std::endl;
   } catch (...) {
@@ -179,7 +187,8 @@ StatusCode PrPixelTracking::execute() {
   if (m_doTiming) m_timerTool->stop(m_timePairs);
 
   // Convert temporary tracks to LHCb tracks.
-  if (m_doTiming) m_timerTool->start(m_timeFinal);
+  if (m_doTiming)
+    m_timerTool->start(m_timeFinal);
   makeLHCbTracks();
   if (m_doTiming) {
     m_timerTool->stop(m_timeFinal);

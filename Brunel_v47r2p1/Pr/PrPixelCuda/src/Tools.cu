@@ -13,7 +13,7 @@ float* h_hit_Xs;
 float* h_hit_Ys;
 float* h_hit_Zs;
 
-void setHPointersFromInput(uint8_t * input, size_t size){
+void setHPointersFromInput(uint8_t * input, size_t size) {
   uint8_t * end = input + size;
 
   h_no_sensors       = (int32_t*)input; input += sizeof(int32_t);

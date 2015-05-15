@@ -70,8 +70,6 @@ class PrPixelTracking : public GaudiAlgorithm {
   std::string m_outputLocation;
   /// Hit manager tool
   PrPixelHitManager *m_hitManager;
-  /// Serialized event
-  std::vector<uint8_t> m_serializedEvent;
 
   /// Slope limits for seed pairs
   float m_maxXSlope;

@@ -6,7 +6,11 @@
 
 #include "PrPixelSerialization.h"
 
+#include <sstream>
 #include <stdexcept>
+#include <iomanip>
+
+#include <boost/functional/hash.hpp>
 
 using namespace std;
 
@@ -35,7 +39,7 @@ uint8_t * copy(const std::vector<T> & collection, uint8_t * buffer) {
 // PrPixelSerialization implementation
 //------------------------------------
 
-void PrPixelSerialization::cleanEvent(){
+void PrPixelSerialization::cleanEvent() {
   m_lastAddedSensor = -1;
 
   m_event.noSensors = 0;
@@ -51,10 +55,8 @@ void PrPixelSerialization::cleanEvent(){
   m_indexedHits.clear();
 }
 
-void PrPixelSerialization::addHit(PrPixelHit* hit, int sensorNum, int hitID, float hitX, float hitY, int hitZ){
-  // std::cout << "addHit - sensorNum " << sensorNum << ", hitID " << hitID
-  //   << ", hitX " << hitX << ", hitY " << hitY << ", hitZ " << hitZ << std::endl;
-  if(sensorNum != m_lastAddedSensor){
+void PrPixelSerialization::addHit(PrPixelHit* hit, int sensorNum, int hitID, float hitX, float hitY, float hitZ) {
+  if(sensorNum != m_lastAddedSensor) {
     // Add a new sensor
     m_lastAddedSensor = sensorNum;
     m_event.sensorHitStarts.push_back(m_event.noHits);
@@ -79,9 +81,9 @@ void PrPixelSerialization::serializeEvent(Data & buffer) {
   // compute total size and allocate memory
   const size_t noSensorsSize       = sizeof(int);
   const size_t noHitsSize          = sizeof(int);
-  const size_t sensorZsSize        = m_event.sensorZs.size() * sizeof(int);
+  const size_t sensorZsSize        = m_event.sensorZs.size()        * sizeof(int);
   const size_t sensorHitStartsSize = m_event.sensorHitStarts.size() * sizeof(int);
-  const size_t sensorHitsNumsSize  = m_event.sensorHitsNums.size() * sizeof(int);
+  const size_t sensorHitsNumsSize  = m_event.sensorHitsNums.size()  * sizeof(int);
   const size_t hitIDsSize          = m_event.hitIDs.size() * sizeof(int);
   const size_t hitXsSize           = m_event.hitXs.size() * sizeof(float);
   const size_t hitYsSize           = m_event.hitYs.size() * sizeof(float);
@@ -103,12 +105,6 @@ void PrPixelSerialization::serializeEvent(Data & buffer) {
   dst = copy(m_event.hitYs,           dst);
   dst = copy(m_event.hitZs,           dst);
 
-  std::cout << "noSensors " << m_event.noSensors << ", noHits " << m_event.noHits
-    << ", sensorZsSize " << sensorZsSize << ", sensorHitStartsSize " << sensorHitStartsSize
-    << ", sensorHitsNumsSize " << sensorHitsNumsSize << ", hitIDsSize " << hitIDsSize
-    << ", hitXsSize " << hitXsSize << ", hitYsSize " << hitYsSize << ", hitZsSize " << hitZsSize
-    << std::endl;
-
   assert(dst == &buffer[0] + buffer.size());
 }
 
@@ -117,8 +113,11 @@ void PrPixelSerialization::deserializeTracks(
     PrPixelTracks & tracks) {
   if (trackData.empty())
     throw runtime_error("empty track data");
-  if (trackData.size() % sizeof(GpuTrack) != 0)
-    throw runtime_error("invalid track data size");
+  if (trackData.size() % sizeof(GpuTrack) != 0) {
+    ostringstream msg;
+    msg << "invalid track data size: " << trackData.size();
+    throw runtime_error(msg.str());
+  }
 
   const GpuTrack * gpuTracks = reinterpret_cast<const GpuTrack*>(trackData.data());
 
@@ -128,8 +127,22 @@ void PrPixelSerialization::deserializeTracks(
 
   for (size_t i = 0; i != count; ++i) {
     int hitsNum = gpuTracks[i].hitsNum;
-    if (hitsNum < 0 || hitsNum > MAX_TRACK_SIZE)
-      throw runtime_error("invalid track hitsNum");
+    if (hitsNum < 0 || hitsNum > MAX_TRACK_SIZE) {
+      ostringstream msg;
+      msg << "invalid track hitsNum: " << hitsNum;
+      throw runtime_error(msg.str());
+    }
     tracks.push_back(PrPixelTrack(gpuTracks[i], m_indexedHits, m_event.hitIDs));
   }
+}
+
+void PrPixelSerialization::print(const PixelEvent & event) const {
+  cout << "noSensors " << event.noSensors << ", noHits " << event.noHits << std::endl;
+  cout << "sensor zs: 0x" << hex << boost::hash_value(event.sensorZs)        << endl;
+  cout << "sensor hs: 0x" << hex << boost::hash_value(event.sensorHitStarts) << endl;
+  cout << "sensor hn: 0x" << hex << boost::hash_value(event.sensorHitsNums)  << endl;
+  cout << "hit id:    0x" << hex << boost::hash_value(event.hitIDs)          << endl;
+  cout << "hit xs:    0x" << hex << boost::hash_value(event.hitXs)           << endl;
+  cout << "hit ys:    0x" << hex << boost::hash_value(event.hitYs)           << endl;
+  cout << "hit zs:    0x" << hex << boost::hash_value(event.hitZs)           << endl;
 }

@@ -1,16 +1,16 @@
-
 #include "GpuPixelSearchByTriplet.h"
 
-int independent_execute(
-    const std::vector<std::vector<uint8_t> > & input,
-    std::vector<std::vector<uint8_t> > & output) {
+#include <algorithm>
 
-  std::vector<const std::vector<uint8_t>* > converted_input;
+int independent_execute(
+    const std::vector<Data> & input,
+    std::vector<Data>       & output) {
+
+  std::vector<const Data* > converted_input;
   converted_input.resize(input.size());
 
-  for (int i=0; i<input.size(); ++i) {
-    converted_input[i] = &(input[i]);
-  }
+  for (int i = 0; i < input.size(); ++i)
+    converted_input[i] = &input[i];
 
   std::cout << std::fixed << std::setprecision(2);
   logger::ll.verbosityLevel = 3;
@@ -24,8 +24,8 @@ void independent_post_execute(const std::vector<std::vector<uint8_t> > & output)
 }
 
 int gpuPixelSearchByTriplet(
-    const std::vector<const std::vector<uint8_t>* > & input,
-    std::vector<std::vector<uint8_t> > & output) {
+    const std::vector<const Data*> & input,
+    std::vector<Data>              & output) {
 
   // Silent execution
   std::cout << std::fixed << std::setprecision(2);
@@ -39,23 +39,16 @@ int gpuPixelSearchByTriplet(
  * @param output 
  */
 int gpuPixelSearchByTripletInvocation(
-    const std::vector<const std::vector<uint8_t>* > & input,
-    std::vector<std::vector<uint8_t> > & output) {
+    const std::vector<const Data* > & input,
+    std::vector<Data>               & output) {
   DEBUG << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
-
-  // Define how many blocks / threads we need to deal with numberOfEvents
-  // Each execution will return a different output
-  output.resize(input.size());
   
   // Execute maximum n number of events every time
-  const int max_events_to_process_per_kernel = 1000;
+  const int maxEventsPerKernel = 1000;
 
-  for (int i=0; i<input.size(); i+=max_events_to_process_per_kernel){
-    int events_to_process = input.size() - i;
-    if (events_to_process > max_events_to_process_per_kernel)
-      events_to_process = max_events_to_process_per_kernel;
-
-    cudaCheck(invokeParallelSearch(i, events_to_process, input, output));
+  for (int i = 0, size = input.size(); i < size; i += maxEventsPerKernel) {
+    const int eventsToProcess = std::min(size - i, maxEventsPerKernel);
+    cudaCheck(invokeParallelSearch(i, eventsToProcess, input, output));
   }
 
   cudaCheck(cudaDeviceReset());

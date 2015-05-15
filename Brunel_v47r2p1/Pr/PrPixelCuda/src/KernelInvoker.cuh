@@ -20,14 +20,14 @@ void getMaxNumberOfHits(char*& input, int& maxHits);
 void printOutSensorHits(int sensorNumber, int* prevs, int* nexts);
 void printOutAllSensorHits(int* prevs, int* nexts);
 void printInfo();
-void printTrack(Track* tracks, const int trackNumber, const std::map<int, int>& zhit_to_module);
-int findClosestModule(const int z, const std::map<int, int>& zhit_to_module);
+void printTrack(const Track * tracks, const int trackNumber, const std::map<int, int> & zhit_to_module);
+int findClosestModule(const int z, const std::map<int, int> & zhit_to_module);
 
 cudaError_t invokeParallelSearch(
     const int startingEvent,
     const int eventsToProcess,
-    const std::vector<const std::vector<uint8_t>* > & input,
-    std::vector<std::vector<uint8_t> > & output);
+    const std::vector<const Data* > & input,
+    std::vector<Data>               & output);
 
 struct EventBeginning {
   int numberOfSensors;
