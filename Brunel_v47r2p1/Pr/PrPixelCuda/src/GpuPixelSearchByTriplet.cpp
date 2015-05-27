@@ -45,7 +45,7 @@ int gpuPixelSearchByTripletInvocation(
   DEBUG << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
   
   // Execute maximum n number of events every time
-  const int max_events_to_process_per_kernel = 4096;
+  const int maxEventsPerKernel = 4096;
 
   for (int i = 0, size = input.size(); i < size; i += maxEventsPerKernel) {
     const int eventsToProcess = std::min(size - i, maxEventsPerKernel);

@@ -4,10 +4,11 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#include <cfloat>
+#include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
-#include <cfloat>
 
 #include <vector>
 
@@ -37,7 +38,7 @@
 #define MAX_SCATTER 0.000016f
 #define SENSOR_DATA_HITNUMS 3
 
-typedef std::vector<uint8_t> Data;
+typedef std::vector<std::uint8_t> Data;
 
 struct Sensor {
 	unsigned int hitStart;
@@ -59,6 +60,8 @@ struct Hit {
 };
 
 struct Track { // 4 + 24 * 4 = 100 B
+  float x0, tx, y0, ty; // deprecated
+
 	unsigned int hitsNum;
 	unsigned int hits[MAX_TRACK_SIZE];
 
