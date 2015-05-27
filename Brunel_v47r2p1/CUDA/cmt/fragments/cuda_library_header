@@ -34,7 +34,7 @@ $($(CONSTITUENT)_output)$($(CONSTITUENT)installname) :: $($(CONSTITUENT)_output)
 
 $($(CONSTITUENT)_output)$(CONSTITUENT)_device.o :: $(OBJS)
 	$(echo) generating CUDA device object file...
-	$(cuda_bin) --compiler-bindir $(cpp) --compiler-options '$(includes) -g -fPIC' --gpu-architecture $(cuda_arch) --output-file $@ --device-link $^
+	$(cuda_bin) --compiler-bindir $(cpp) --compiler-options '$(includes) -fPIC $(cudacppflags)' --gpu-architecture $(cuda_arch) $(cudaflags) --output-file $@ --device-link $^
 
 # cleanup
 
