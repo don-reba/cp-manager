@@ -53,6 +53,12 @@ void sendData(
   }
 }
 
+vector<directory_entry> gatherPaths(const string & path) {
+  if (is_directory(path))
+    return vector<directory_entry>(directory_iterator(path), directory_iterator());
+  return { directory_entry(path) };
+}
+
 int main(int argc, char * argv[])
 try {
   const char * defaultServicePath = "/tmp/GpuManager";
@@ -63,8 +69,7 @@ try {
 
   PerfLog perfLog("drv-perf.log");
 
-  vector<directory_entry> paths;
-  copy(directory_iterator(cl.dataPath()), directory_iterator(), back_inserter(paths));
+  vector<directory_entry> paths { gatherPaths(cl.dataPath()) };
   if (paths.empty())
     return EXIT_SUCCESS;
   sort(paths.begin(), paths.end(), DirectoryCompare);

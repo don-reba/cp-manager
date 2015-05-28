@@ -18,8 +18,8 @@ bool CommandLine::parse(int argc, char * argv[]) {
     ("help", "display this help message"                                                              )
     ("service", value(&m_servicePath)->default_value(m_servicePath), "socket path"                    )
     ("threads", value(&m_threadCount)->default_value(1), "the number of requests to run concurrently" )
-    ("verify",  value(&m_verifyOutput)->zero_tokens(),  "verify received output"                      )
-    ("data",    value(&m_dataPath)->required(),       "directory with input gpuserver input records"  );
+    ("verify",  value(&m_verifyOutput)->zero_tokens(),   "verify received output"                     )
+    ("data",    value(&m_dataPath)->required(),      "a single gpuserver input record or a directory" );
 
   variables_map vm;
   try {
