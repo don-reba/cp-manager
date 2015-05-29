@@ -17,7 +17,7 @@
 #define NUM_ATOMICS 5
 #define SH_HIT_PROCESS_MULT 1
 
-#define MAX_TRACKS 8000
+#define MAX_TRACKS 10000
 #define MAX_TRACK_SIZE 24
 
 #define REQUIRED_UNIQUES 0.6f
