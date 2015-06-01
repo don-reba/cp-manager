@@ -5,7 +5,7 @@
 
 #ifndef TOOLS
 #define TOOLS 1
- 
+
 #include "cuda_runtime.h"
 
 #include <cstring>
@@ -24,7 +24,7 @@
 }
 
 template <class T>
-std::string toString(T t){
+std::string toString(T t) {
     std::stringstream ss;
     std::string s;
     ss << t;

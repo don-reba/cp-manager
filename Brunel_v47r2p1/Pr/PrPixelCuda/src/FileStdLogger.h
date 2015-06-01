@@ -40,12 +40,12 @@ public:
         _old = _file_std_io->rdbuf(this);
     }
 
-    ~MessageLogger(){
+    ~MessageLogger() {
         _file_std_io->rdbuf(_old);
     }
 
-    int overflow(int c){
-        if (c == '\n'){
+    int overflow(int c) {
+        if (c == '\n') {
             std::cout << _buf << std::endl;
             (*_file_io) << _buf << std::endl;
             _buf = "";
@@ -67,11 +67,11 @@ public:
         _old = _void_stream->rdbuf(this);
     }
 
-    ~VoidLogger(){
+    ~VoidLogger() {
         _void_stream->rdbuf(_old);
     }
 
-    int overflow(int c){
+    int overflow(int c) {
         // Just don't do anything
         return c;
     }

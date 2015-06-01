@@ -35,14 +35,14 @@ int gpuPixelSearchByTriplet(
 
 /**
  * Common entrypoint for Gaudi and non-Gaudi
- * @param input  
- * @param output 
+ * @param input
+ * @param output
  */
 int gpuPixelSearchByTripletInvocation(
     const std::vector<const Data* > & input,
     std::vector<Data>               & output) {
   DEBUG << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
-  
+
   // Execute maximum n number of events every time
   const int maxEventsPerKernel = 1000;
 

@@ -21,12 +21,14 @@ cudaError_t invokeParallelSearch(
     const std::vector<const Data*> & input,
     std::vector<Data>              & output) {
 
-  // DEBUG << "Input pointer: " 
+  // DEBUG << "Input pointer: "
   //   << std::hex << "0x" << (long long int) &(input[0])
   //   << std::dec << std::endl;
-  
+
   const Data* startingEvent_input = input[startingEvent];
-  setHPointersFromInput((uint8_t*) &(*startingEvent_input)[0], startingEvent_input->size());
+  setHPointersFromInput(
+      startingEvent_input->data(),
+      startingEvent_input->size());
 
   std::map<int, int> zhit_to_module;
   if (logger::ll.verbosityLevel > 0) {
@@ -136,7 +138,7 @@ cudaError_t invokeParallelSearch(
   cudaEventCreate(&stop_searchByTriplet);
 
   cudaEventRecord(start_searchByTriplet, 0 );
-  
+
   // Dynamic allocation - , 3 * numThreads.x * sizeof(float)
   searchByTriplet<<<numBlocks, numThreads>>>(dev_tracks, (const char*) dev_input, dev_tracks_to_follow,
     dev_hit_used, dev_atomicsStorage, dev_tracklets, dev_weak_tracks, dev_event_offsets, dev_hit_offsets);
@@ -158,7 +160,7 @@ cudaError_t invokeParallelSearch(
   for (int i = 0; i < eventsToProcess; ++i) {
     const int numberOfTracks = atomics[i];
     DEBUG << numberOfTracks << " ";
-    
+
     Data & tracks = output[startingEvent + i];
     tracks.resize(numberOfTracks * sizeof(Track));
     cudaCheck(cudaMemcpy(tracks.data(), &dev_tracks[i * MAX_TRACKS], numberOfTracks * sizeof(Track), cudaMemcpyDeviceToHost));
@@ -175,7 +177,7 @@ cudaError_t invokeParallelSearch(
   //   }
   // }
   // DEBUG << "Got " << numberOfTracks << " tracks" << std::endl;
-  
+
   DEBUG << "It took " << t0 << " milliseconds." << std::endl;
 
   free(atomics);
@@ -187,9 +189,9 @@ cudaError_t invokeParallelSearch(
  * Prints tracks
  * Track #n, length <length>:
  *  <ID> module <module>, x <x>, y <y>, z <z>
- * 
- * @param tracks      
- * @param trackNumber 
+ *
+ * @param tracks
+ * @param trackNumber
  */
 void printTrack(const Track * tracks, const int trackNumber, const std::map<int, int>& zhit_to_module) {
   const Track & t = tracks[trackNumber];
@@ -215,8 +217,8 @@ void printTrack(const Track * tracks, const int trackNumber, const std::map<int,
 
 /**
  * The z of the hit may not correspond to any z in the sensors.
- * @param  z              
- * @param  zhit_to_module 
+ * @param  z
+ * @param  zhit_to_module
  * @return                sensor number
  */
 int findClosestModule(const int z, const std::map<int, int>& zhit_to_module) {

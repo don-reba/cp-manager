@@ -39,9 +39,9 @@ void setHPointersFromInput(uint8_t * input, size_t size) {
  *
  * per event:
  *     char* output
- *     
- * @param solutions 
- * @param output    
+ *
+ * @param solutions
+ * @param output
  */
 void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output){
     int numberOfEvents = solutions.size();
@@ -58,7 +58,7 @@ void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vecto
         return_size += solutions_size;
         memcpy(outputPointer, &solutions_size, sizeof(int));
     }
-    
+
     // After resizing, the pointer may change, so recalculate
     output.resize(output.size() + return_size);
     outputPointer = ((char*) &(output[0])) + (numberOfEvents + 1) * sizeof(int);
