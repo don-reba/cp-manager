@@ -39,11 +39,11 @@ void setHPointersFromInput(uint8_t * input, size_t size) {
  *
  * per event:
  *     char* output
- *     
- * @param solutions 
- * @param output    
+ *
+ * @param solutions
+ * @param output
  */
-void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output){
+void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output) {
     int numberOfEvents = solutions.size();
     output.resize((numberOfEvents + 1) * sizeof(int));
     char* outputPointer = ((char*) &(output[0]));
@@ -52,29 +52,29 @@ void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vecto
     outputPointer += sizeof(int);
 
     int return_size = 0;
-    for (int i=0; i<solutions.size(); ++i){
+    for (int i=0; i<solutions.size(); ++i) {
         // Requires lvalue
         int solutions_size = solutions[i].size();
         return_size += solutions_size;
         memcpy(outputPointer, &solutions_size, sizeof(int));
     }
-    
+
     // After resizing, the pointer may change, so recalculate
     output.resize(output.size() + return_size);
     outputPointer = ((char*) &(output[0])) + (numberOfEvents + 1) * sizeof(int);
 
-    for (int i=0; i<solutions.size(); ++i){
+    for (int i=0; i<solutions.size(); ++i) {
         memcpy(outputPointer, &(solutions[i][0]), solutions[i].size());
         outputPointer += solutions[i].size();
     }
 }
 
-std::map<std::string, float> calcResults(std::vector<float>& times){
+std::map<std::string, float> calcResults(std::vector<float>& times) {
     // sqrt ( E( (X - m)2) )
     std::map<std::string, float> results;
     float deviation = 0.0f, variance = 0.0f, mean = 0.0f, min = float_max(), max = 0.0f;
 
-    for(auto it = times.begin(); it != times.end(); it++){
+    for(auto it = times.begin(); it != times.end(); it++) {
         const float seconds = (*it);
         mean += seconds;
         variance += seconds * seconds;
@@ -114,20 +114,20 @@ int divide (float* a, float* b, float* c, unsigned int* d, int start, int end) {
     int left;
     int right;
     float pivot;
- 
+
     pivot = a[start];
     left = start;
     right = end;
- 
+
     while (left < right) {
         while (a[right] > pivot) {
             right--;
         }
- 
+
         while ((left < right) && (a[left] <= pivot)) {
             left++;
         }
- 
+
         if (left < right) {
             swap(a[left], a[right]);
             swap(b[left], b[right]);
@@ -135,12 +135,12 @@ int divide (float* a, float* b, float* c, unsigned int* d, int start, int end) {
             swap(d[left], d[right]);
         }
     }
- 
+
     swap(a[right], a[start]);
     swap(b[right], b[start]);
     swap(c[right], c[start]);
     swap(d[right], d[start]);
- 
+
     return right;
 }
 
