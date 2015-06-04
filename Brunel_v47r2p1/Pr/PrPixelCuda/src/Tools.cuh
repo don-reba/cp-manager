@@ -1,12 +1,5 @@
-
-/**
- * Tools.h
- */
-
 #ifndef TOOLS
 #define TOOLS 1
-
-#include "CudaException.h"
 
 #include "cuda_runtime.h"
 
