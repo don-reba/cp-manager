@@ -574,8 +574,8 @@ __global__ void searchByTriplet(Track* const dev_tracks, const char* const dev_i
                 // Coalesced memory accesses
                 ASSERT(tid < blockDim_sh_hit)
                 sh_hit_x[tid] = hit_Xs[h2_index];
-          			sh_hit_y[tid] = hit_Ys[h2_index];
-          			sh_hit_z[tid] = hit_Zs[h2_index];
+                sh_hit_y[tid] = hit_Ys[h2_index];
+                sh_hit_z[tid] = hit_Zs[h2_index];
               }
             }
             __syncthreads();

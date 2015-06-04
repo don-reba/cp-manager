@@ -1,5 +1,4 @@
-#ifndef PRPIXEL_TYPES
-#define PRPIXEL_TYPES 1
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -10,8 +9,8 @@ struct GpuTrack {
   float tx;
   float y0;
   float ty;
-  int32_t hitsNum;
-  int32_t hits[MAX_TRACK_SIZE];
+  uint32_t hitsNum;
+  uint32_t hits[MAX_TRACK_SIZE];
 };
 
 struct PixelEvent {
@@ -25,5 +24,3 @@ struct PixelEvent {
   std::vector<float>   hitYs;
   std::vector<float>   hitZs;
 };
-
-#endif

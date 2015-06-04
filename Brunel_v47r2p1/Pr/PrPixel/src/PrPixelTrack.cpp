@@ -26,7 +26,7 @@ PrPixelTrack::PrPixelTrack()
 }
 
 PrPixelTrack::PrPixelTrack(
-    const GpuTrack              & track,
+    const GpuTrack                   & track,
     const std::map<int, PrPixelHit*> & indexedHits,
     const std::vector<int>           & eventHitIDs){
   m_x0 = track.x0;
@@ -60,7 +60,7 @@ void PrPixelTrack::fit() {
   const float wy = (*ith)->wy();
   v1 = _mm_load_ss( &wy );
   v_wxwy = _mm_shuffle_ps(v0, v1, _MM_SHUFFLE(0,0,3,3)); // wx,wx,wy,wy
-  
+
   v1 = _mm_shuffle_ps(v0, v0, _MM_SHUFFLE(2,1,2,0)); // x,z,y,z
   v2 = _mm_shuffle_ps(v0, v0, _MM_SHUFFLE(2,2,2,2)); // z,z,z,z
   v3 = _mm_mul_ps(v1, v_wxwy); // wx*x, wx*z, wy*y, wy*z
@@ -72,13 +72,13 @@ void PrPixelTrack::fit() {
 
   ++ith;
   for (; ith != end; ++ith) {
-    
+
     v0 = _mm_loadu_ps( (*ith)->p_x() ); // x,y,z,wx
 
     const float wy = (*ith)->wy();
     v1 = _mm_load_ss( &wy );
     v_wxwy = _mm_shuffle_ps(v0, v1, _MM_SHUFFLE(0,0,3,3)); // wx,wx,wy,wy
-    
+
     v1 = _mm_shuffle_ps(v0, v0, _MM_SHUFFLE(2,1,2,0)); // x,z,y,z
     v2 = _mm_shuffle_ps(v0, v0, _MM_SHUFFLE(2,2,2,2)); // z,z,z,z
     v3 = _mm_mul_ps(v1, v_wxwy); // wx*x, wx*z, wy*y, wy*z
@@ -91,7 +91,7 @@ void PrPixelTrack::fit() {
 
   // float den =  (b->m_sz2 * b->m_s0 - b->m_sz * b->m_sz);
   // float den2 = (b->m_uz2 * b->m_u0 - b->m_uz * b->m_uz);
-  
+
   v1 = _mm_shuffle_ps(v_sxz, v_sx, _MM_SHUFFLE(3,1,3,1));
   v2 = _mm_shuffle_ps(v_s0, v_sx, _MM_SHUFFLE(3,1,2,0));
   v3 = _mm_mul_ps(v1, v2);
@@ -103,7 +103,7 @@ void PrPixelTrack::fit() {
   // if (fabs(den2) < 10e-10) den2 = 1.f;
   // abs value of den
   v6 = _mm_andnot_ps(v_sign_mask, v7);
-  
+
   // den = den & mask + 1 & ~mask
   v1 = _mm_cmplt_ps(v6, v_compValue); // v1 is mask of denX < 10e-10
   v2 = _mm_andnot_ps(v1, v7);
@@ -183,7 +183,7 @@ Gaudi::TrackSymMatrix PrPixelTrack::covariance(const float z) const {
 
   v5 = _mm_shuffle_ps(v_s0, v1, _MM_SHUFFLE(3,2,2,0)); // m00, m11, m22, m33
   v7 = _mm_div_ps(v5, v3); // m00/den20, m11/den31, m22/den20, m33/den31
-  
+
   _mm_storeu_ps(&(vec_cov[0]), v7);
   cov(2,2) = vec_cov[0];
   cov(3,3) = vec_cov[1];

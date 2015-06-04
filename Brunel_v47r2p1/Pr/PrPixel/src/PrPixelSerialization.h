@@ -1,11 +1,10 @@
-#ifndef PRPIXEL_SERIALIZATION
-#define PRPIXEL_SERIALIZATION 1
-
 //-----------------------------------------------------------------------------
 // PrPixelSerializer
 //
 // 2014-03-10 : Alexey Badalov, Daniel Campora
 //-----------------------------------------------------------------------------
+
+#pragma once
 
 #include <cstdint>
 #include <vector>
@@ -40,5 +39,3 @@ private:
   int m_lastAddedSensor;
   std::map<int, PrPixelHit*> m_indexedHits;
 };
-
-#endif

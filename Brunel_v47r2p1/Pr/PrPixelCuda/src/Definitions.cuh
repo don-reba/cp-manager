@@ -1,5 +1,4 @@
-#ifndef DEFINITIONS_CUH
-#define DEFINITIONS_CUH 1
+#pragma once
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -48,53 +47,50 @@
 #include "assert.h"
 #define ASSERT(EXPR) assert(EXPR);
 #else
-#define ASSERT(EXPR) 
+#define ASSERT(EXPR)
 #endif
 
 typedef std::vector<std::uint8_t> Data;
 
 struct Sensor {
-	unsigned int hitStart;
-	unsigned int hitNums;
+  unsigned int hitStart;
+  unsigned int hitNums;
 
-    __device__ Sensor(){}
-    __device__ Sensor(const int _hitStart, const int _hitNums) : 
-        hitStart(_hitStart), hitNums(_hitNums) {}
+  __device__ Sensor(){}
+  __device__ Sensor(const int _hitStart, const int _hitNums) :
+    hitStart(_hitStart), hitNums(_hitNums) {}
 };
 
 struct Hit {
-	float x;
-	float y;
-	float z;
+  float x;
+  float y;
+  float z;
 
-    __device__ Hit(){}
-    __device__ Hit(const float _x, const float _y, const float _z) :
-        x(_x), y(_y), z(_z) {}
+  __device__ Hit(){}
+  __device__ Hit(const float _x, const float _y, const float _z) :
+    x(_x), y(_y), z(_z) {}
 };
 
 struct Track { // 4 + 24 * 4 = 100 B
   float x0, tx, y0, ty; // deprecated
 
-	unsigned int hitsNum;
-	unsigned int hits[MAX_TRACK_SIZE];
+  uint32_t hitsNum;
+  uint32_t hits[MAX_TRACK_SIZE];
 
-    __device__ Track(){}
-    __device__ Track(const unsigned int _hitsNum, unsigned int _h0, unsigned int _h1, unsigned int _h2) : 
-        hitsNum(_hitsNum) {
-        
-        hits[0] = _h0;
-        hits[1] = _h1;
-        hits[2] = _h2;
+  __device__ Track(){}
+  __device__ Track(const unsigned int hitsNum, unsigned int h0, unsigned int h1, unsigned int h2) :
+    hitsNum(hitsNum) {
+      hits[0] = h0;
+      hits[1] = h1;
+      hits[2] = h2;
     }
 };
 
 struct Tracklet {
-    unsigned int hitsNum;
-    unsigned int h0, h1, h2, hnext;
+  unsigned int hitsNum;
+  unsigned int h0, h1, h2, hnext;
 
-    __device__ Tracklet(){}
-    __device__ Tracklet(const unsigned int _hitsNum, unsigned int _h0, unsigned int _h1, unsigned int _h2) : 
-        hitsNum(_hitsNum), h0(_h0), h1(_h1), h2(_h2) {}
+  __device__ Tracklet(){}
+  __device__ Tracklet(const unsigned int _hitsNum, unsigned int _h0, unsigned int _h1, unsigned int _h2) :
+    hitsNum(_hitsNum), h0(_h0), h1(_h1), h2(_h2) {}
 };
-
-#endif
