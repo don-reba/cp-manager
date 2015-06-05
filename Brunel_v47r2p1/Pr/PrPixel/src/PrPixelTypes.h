@@ -9,8 +9,8 @@ struct GpuTrack {
   float tx;
   float y0;
   float ty;
-  uint32_t hitsNum;
-  uint32_t hits[MAX_TRACK_SIZE];
+  int32_t hitsNum;
+  int32_t hits[MAX_TRACK_SIZE];
 };
 
 struct PixelEvent {

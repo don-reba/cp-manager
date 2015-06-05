@@ -1,5 +1,7 @@
 #include "KernelInvoker.cuh"
 
+#include <stdexcept>
+
 extern int*   h_no_sensors;
 extern int*   h_no_hits;
 extern int*   h_sensor_Zs;
@@ -23,17 +25,26 @@ cudaError_t invokeParallelSearch(
   const Data* startingEvent_input = input[startingEvent];
   setHPointersFromInput((uint8_t*) &(*startingEvent_input)[0], startingEvent_input->size());
 
+  std::vector<std::vector<size_t>> permutations(eventsToProcess);
+
   // Order *all* the input vectors by h_hit_Xs natural order
   // per sensor
   int number_of_sensors = *h_no_sensors;
-  for (int i=0; i<eventsToProcess; ++i) {
+  for (int i = 0; i < eventsToProcess; ++i) {
     int acc_hitnums = 0;
     const std::vector<uint8_t>* event_input = input[i];
     setHPointersFromInput((uint8_t*) &(*event_input)[0], event_input->size());
 
-    for (int j=0; j<number_of_sensors; j++) {
+    std::vector<size_t> & permutation = permutations[i];
+    size_t hit_i = 0;
+
+    for (int j = 0; j < number_of_sensors; j++) {
       const int hitnums = h_sensor_hitNums[j];
-      quicksort(h_hit_Xs, h_hit_Ys, h_hit_Zs, h_hit_IDs, acc_hitnums, acc_hitnums + hitnums - 1);
+
+      for (size_t i = 0; i != hitnums; ++i)
+        permutation.push_back(hit_i++);
+
+      quicksort(h_hit_Xs, h_hit_Ys, h_hit_Zs, h_hit_IDs, permutation.data(), acc_hitnums, acc_hitnums + hitnums - 1);
       acc_hitnums += hitnums;
     }
   }
@@ -199,12 +210,25 @@ cudaError_t invokeParallelSearch(
   // Get results
   DEBUG << "Number of tracks found per event:" << std::endl << " ";
   cudaCheck(cudaMemcpy(atomics, dev_atomicsStorage, eventsToProcess * atomic_space * sizeof(int), cudaMemcpyDeviceToHost));
-  for (int i=0; i<eventsToProcess; ++i) {
+  for (int i = 0; i < eventsToProcess; ++i) {
     const int numberOfTracks = atomics[i];
     DEBUG << numberOfTracks << ", ";
 
     output[startingEvent + i].resize(numberOfTracks * sizeof(Track));
     cudaCheck(cudaMemcpy(&(output[startingEvent + i])[0], &dev_tracks[i * MAX_TRACKS], numberOfTracks * sizeof(Track), cudaMemcpyDeviceToHost));
+
+    Track * tracks = reinterpret_cast<Track*>(output[startingEvent + i].data());
+
+    // restore hit indices as before sorting
+    //auto permutation = permutations[i];
+    //for (int i = 0; i != numberOfTracks; ++i) {
+    //  for (int j = 0; j != tracks[i].hitsNum; ++j) {
+    //    auto hit = tracks[i].hits[j];
+    //    if (hit > permutation.size())
+    //      throw std::runtime_error("permutation failed");
+    //    tracks[i].hits[j] = permutation[hit];
+    //  }
+    //}
   }
   DEBUG << std::endl;
 

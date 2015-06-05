@@ -102,15 +102,15 @@ float float_max() {
     return *(float*)& fvalue[0];
 }
 
-void quicksort (float* a, float* b, float* c, unsigned int* d, int start, int end) {
+void quicksort (float* a, float* b, float* c, unsigned int* d, size_t * e, int start, int end) {
     if (start < end) {
-        const int pivot = divide(a, b, c, d, start, end);
-        quicksort(a, b, c, d, start, pivot - 1);
-        quicksort(a, b, c, d, pivot + 1, end);
+        const int pivot = divide(a, b, c, d, e, start, end);
+        quicksort(a, b, c, d, e, start, pivot - 1);
+        quicksort(a, b, c, d, e, pivot + 1, end);
     }
 }
 
-int divide (float* a, float* b, float* c, unsigned int* d, int start, int end) {
+int divide (float* a, float* b, float* c, unsigned int* d, size_t * e, int start, int end) {
     int left;
     int right;
     float pivot;
@@ -133,6 +133,7 @@ int divide (float* a, float* b, float* c, unsigned int* d, int start, int end) {
             swap(b[left], b[right]);
             swap(c[left], c[right]);
             swap(d[left], d[right]);
+            swap(e[left], e[right]);
         }
     }
 
@@ -140,6 +141,7 @@ int divide (float* a, float* b, float* c, unsigned int* d, int start, int end) {
     swap(b[right], b[start]);
     swap(c[right], c[start]);
     swap(d[right], d[start]);
+    swap(e[right], e[start]);
 
     return right;
 }

@@ -33,9 +33,10 @@ public:
 
 private:
   void print(const PixelEvent & event) const;
+  void print(const GpuTrack * tracks, size_t n) const;
 
 private:
-  PixelEvent m_event;
-  int m_lastAddedSensor;
+  PixelEvent                 m_event;
+  int                        m_lastAddedSensor;
   std::map<int, PrPixelHit*> m_indexedHits;
 };
