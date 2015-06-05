@@ -8,6 +8,7 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <iostream>
 #include <iomanip>
 
 #include <boost/functional/hash.hpp>
@@ -123,7 +124,7 @@ void PrPixelSerialization::deserializeTracks(
 
   const size_t count = trackData.size() / sizeof(GpuTrack);
 
-  assert(track.hitsNum < MAX_TRACK_SIZE);
+  //print(gpuTracks, count);
 
   for (size_t i = 0; i != count; ++i) {
     int hitsNum = gpuTracks[i].hitsNum;
@@ -145,4 +146,26 @@ void PrPixelSerialization::print(const PixelEvent & event) const {
   cout << "hit xs:    0x" << hex << boost::hash_value(event.hitXs)           << endl;
   cout << "hit ys:    0x" << hex << boost::hash_value(event.hitYs)           << endl;
   cout << "hit zs:    0x" << hex << boost::hash_value(event.hitZs)           << endl;
+}
+
+void PrPixelSerialization::print(const GpuTrack * tracks, size_t n) const {
+  const int    maxHits   = 10;
+  const size_t maxTracks = 3;
+
+  cout << n << " tracks\n";
+  for (int i = 0, count = min(maxTracks, n); i != count; ++i) {
+    const GpuTrack & t(tracks[i]);
+
+    cout << t.x0 << "(" << t.tx << ") " << t.y0 << "(" << t.ty << "), " << t.hitsNum;
+    if (t.hitsNum > 0) {
+      cout << ":";
+      for (int i = 0, count = min(maxHits, t.hitsNum); i != count; ++i)
+        cout << " " << t.hits[i];
+      if (t.hitsNum > maxHits)
+        cout << "...";
+      cout << endl;
+    }
+  }
+  if (n > maxTracks)
+    cout << "...\n";
 }

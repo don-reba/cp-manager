@@ -13,8 +13,8 @@ float* h_hit_Xs;
 float* h_hit_Ys;
 float* h_hit_Zs;
 
-void setHPointersFromInput(uint8_t * input, size_t size) {
-  uint8_t * end = input + size;
+void setHPointersFromInput(const uint8_t * input, size_t size) {
+  const uint8_t * end = input + size;
 
   h_no_sensors       = (int32_t*)input; input += sizeof(int32_t);
   h_no_hits          = (int32_t*)input; input += sizeof(int32_t);
@@ -43,7 +43,7 @@ void setHPointersFromInput(uint8_t * input, size_t size) {
  * @param solutions
  * @param output
  */
-void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output){
+void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output) {
     int numberOfEvents = solutions.size();
     output.resize((numberOfEvents + 1) * sizeof(int));
     char* outputPointer = ((char*) &(output[0]));
@@ -52,7 +52,7 @@ void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vecto
     outputPointer += sizeof(int);
 
     int return_size = 0;
-    for (int i=0; i<solutions.size(); ++i){
+    for (int i=0; i<solutions.size(); ++i) {
         // Requires lvalue
         int solutions_size = solutions[i].size();
         return_size += solutions_size;
@@ -63,7 +63,7 @@ void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vecto
     output.resize(output.size() + return_size);
     outputPointer = ((char*) &(output[0])) + (numberOfEvents + 1) * sizeof(int);
 
-    for (int i=0; i<solutions.size(); ++i){
+    for (int i=0; i<solutions.size(); ++i) {
         memcpy(outputPointer, &(solutions[i][0]), solutions[i].size());
         outputPointer += solutions[i].size();
     }

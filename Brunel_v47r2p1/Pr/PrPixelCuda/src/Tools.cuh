@@ -1,10 +1,4 @@
-
-/**
- * Tools.h
- */
-
-#ifndef TOOLS
-#define TOOLS 1
+#pragma once
 
 #include "cuda_runtime.h"
 
@@ -32,7 +26,5 @@ std::string toString(T t) {
     return s;
 }
 
-void setHPointersFromInput(uint8_t * input, size_t size);
+void setHPointersFromInput(const uint8_t * input, size_t size);
 void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output);
-
-#endif
