@@ -43,7 +43,7 @@ int gpuPixelSearchByTripletInvocation(
     const std::vector<const Data* > & input,
     std::vector<Data>               & output) {
   DEBUG << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
-  
+
   // Execute maximum n number of events every time
   const int maxEventsPerKernel = 4096;
 

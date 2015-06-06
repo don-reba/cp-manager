@@ -84,7 +84,7 @@ StatusCode PrPixelHitManager::initialize() {
   m_nHits = 0;
   m_nClusters = 0;
   m_eventReady = false;
-  
+
   m_nextInPool = m_pool.begin();
 
   return StatusCode::SUCCESS;

@@ -81,7 +81,7 @@ StatusCode PrPixelTracking::initialize() {
   StatusCode sc = GaudiAlgorithm::initialize();
   if (sc.isFailure()) return sc;
   m_isDebug = msgLevel(MSG::DEBUG);
-  
+
   // Set up the hit manager.
   m_hitManager = tool<PrPixelHitManager>("PrPixelHitManager");
   m_hitManager->setMaxClusterSize(m_maxClusterSize);
@@ -148,10 +148,10 @@ StatusCode PrPixelTracking::execute() {
   // Do some typecasting into a format understandable by GPU
   std::vector<uint8_t> serializedEvent;
   m_hitManager->m_serializer.serializeEvent(serializedEvent);
-  
+
   if (serializedEvent.empty())
     info() << "--- Serialized event is empty! This should not happen!" << endmsg;
-  
+
   debug() << "--- Submitting data to gpuService" << endmsg;
   debug() << "--- serializedEvent: 0x" << std::hex << (long long int)&serializedEvent[0] <<
     std::dec << ", size " << serializedEvent.size() << endmsg;
@@ -369,7 +369,7 @@ void PrPixelTracking::makeLHCbTracks() {
   LHCb::Tracks *outputTracks = new LHCb::Tracks();
   put(outputTracks, m_outputLocation);
   unsigned int key = 0;
-  auto endTracks = m_tracks.end(); 
+  auto endTracks = m_tracks.end();
   for (auto itt = m_tracks.begin(); itt != endTracks; ++itt) {
     // Skip 3-hit tracks with float-used hits.
     if ((*itt).hits().size() == 3) {
@@ -473,7 +473,7 @@ void PrPixelTracking::makeLHCbTracks() {
 // Add hits from the specified module to the track
 //=========================================================================
 PrPixelHit *PrPixelTracking::bestHit(PrPixelModule *module, const float xTol,
-                                     const float maxScatter, 
+                                     const float maxScatter,
                                      const PrPixelHit *h1,
                                      const PrPixelHit *h2) const {
   if (module->empty()) return NULL;
@@ -563,7 +563,7 @@ PrPixelHit *PrPixelTracking::bestHit(PrPixelModule *module, const float xTol,
 //=========================================================================
 // Debug the content of a hit
 //=========================================================================
-void PrPixelTracking::printHit(const PrPixelHit *hit, 
+void PrPixelTracking::printHit(const PrPixelHit *hit,
                                const std::string& title) const {
   info() << title;
   info() << format(" module%3d x%8.3f y%8.3f z%8.2f used%2d", hit->module(),
@@ -590,7 +590,7 @@ void PrPixelTracking::printTrack(PrPixelTrack& track) const {
 //=========================================================================
 // Print a hit on a track.
 //=========================================================================
-void PrPixelTracking::printHitOnTrack(const PrPixelHit* hit, 
+void PrPixelTracking::printHitOnTrack(const PrPixelHit* hit,
                                       const bool ifMatch) const {
   bool isMatching = matchKey(hit);
   isMatching = (isMatching && ifMatch) || (!isMatching && !ifMatch);

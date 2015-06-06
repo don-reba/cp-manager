@@ -68,7 +68,7 @@ void addHit ( GpuTrack *tr, int offset) {
   tr->hits.push_back(offset);
 }
 
-void setTrack(GpuTrack *tr, int hit0_offset, int hit1_offset){
+void setTrack(GpuTrack *tr, int hit0_offset, int hit1_offset) {
   // track_ids[hit0_offset] = tr->internalId;
   tr->trackHitsNum = 1;
 
@@ -98,7 +98,7 @@ void setTrack(GpuTrack *tr, int hit0_offset, int hit1_offset){
   addHit (tr, hit1_offset);
 }
 
-double chi2Hit( double x, double y, double hitX, double hitY, double hitW){
+double chi2Hit( double x, double y, double hitX, double hitY, double hitW) {
   double dx = x - hitX;
   double dy = y - hitY;
   return dx * dx * (hitW) + dy * dy * (hitW);
@@ -121,7 +121,7 @@ double chi2(GpuTrack *t)
   double ch = 0.0;
   int nDoF  = -4;
   int hitNumber;
-  for (size_t i = 0; i < t->hits.size(); i++){
+  for (size_t i = 0; i < t->hits.size(); i++) {
     hitNumber = t->hits[i];
     ch += chi2Track(t, hitNumber);
     nDoF += 2;
@@ -155,17 +155,17 @@ bool addHitsOnSensor(SensorInfo *sensor, double xTol, double maxChi2, GpuTrack *
   bool added = false;
   int tmpOffset = 0;
   double xPred;
-  for(int iH=hitStart; iH<=lastHit; ++iH){
+  for(int iH=hitStart; iH<=lastHit; ++iH) {
 
     debug << hit_IDs[iH] << ", ";
     tmpOffset = offset + iH;
 
-    if ( hit_IDs[iH] == 172290464 ){
+    if ( hit_IDs[iH] == 172290464 ) {
       debug << " -- The chi2 of 172290464 is: " << chi2Track(tr, tmpOffset) << std::endl;
       debug << "x: " << hit_Xs[tmpOffset] << ", y:" << hit_Ys[tmpOffset] << endl;
     }
 
-    if ( hit_IDs[iH] == 163710761 ){
+    if ( hit_IDs[iH] == 163710761 ) {
       debug << " -- The chi2 of 163710761 is: " << chi2Track(tr, tmpOffset) << std::endl;
       debug << "x: " << hit_Xs[tmpOffset] << ", y:" << hit_Ys[tmpOffset] << endl;
       debug << "maxChi2: " << maxChi2 << endl;
@@ -186,7 +186,7 @@ bool addHitsOnSensor(SensorInfo *sensor, double xTol, double maxChi2, GpuTrack *
   return added;
 }
 
-void removeHit(GpuTrack *tr, int worstHitOffset){
+void removeHit(GpuTrack *tr, int worstHitOffset) {
   tr->trackHitsNum--;
 
   double z = hit_Zs[worstHitOffset];
@@ -225,9 +225,9 @@ void removeWorstHit(GpuTrack* tr)
     topChi2 = 0.0;
 
     // This for loop gets the worst hit
-    for (size_t i = 0; i < tr->hits.size(); i++){
+    for (size_t i = 0; i < tr->hits.size(); i++) {
       double myChi2 = chi2Track(tr, tr->hits[i]);
-      if (myChi2 > topChi2){
+      if (myChi2 > topChi2) {
         topChi2 = myChi2;
         worstHitOffset = tr->hits[i];
       }
@@ -257,7 +257,7 @@ bool all3SensorsAreDifferent(GpuTrack/* *t*/) {
 
 int nbUnused(GpuTrack *t, bool*& hit_isUseds, int event_hit_displ) {
   int nn = 0;
-  for (vector<int>::iterator it = t->hits.begin(); it != t->hits.end(); ++it){
+  for (vector<int>::iterator it = t->hits.begin(); it != t->hits.end(); ++it) {
     if (!hit_isUseds[(*it) - event_hit_displ])
       ++nn;
   }
@@ -266,7 +266,7 @@ int nbUnused(GpuTrack *t, bool*& hit_isUseds, int event_hit_displ) {
 
 // Note: parallel_tracks_vector should have n items allocated already.
 void TBBSearchByPair::operator() (const blocked_range<int>& r) const{
-  for (int i = r.begin(); i != r.end(); ++i){
+  for (int i = r.begin(); i != r.end(); ++i) {
     searchByPair(i, parallel_tracks_vector[i]);
   }
 }
@@ -317,9 +317,9 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
     dyMax = m_maxYSlope * fabs( sensor1.z - sensor0.z );
 
     first1 = 0;
-    for (hit0_no = 0; hit0_no < sensor0.hitsNum; hit0_no++){
+    for (hit0_no = 0; hit0_no < sensor0.hitsNum; hit0_no++) {
       int hit0_offset = event_hit_displ + sensor0.startPosition + hit0_no;
-      if ( hit_isUseds[hit0_offset - event_hit_displ] ){
+      if ( hit_isUseds[hit0_offset - event_hit_displ] ) {
         continue;
       }
       double x0  = hit_Xs[hit0_offset];
@@ -342,16 +342,16 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
           first1 = hit1_no + 1; // Start on the item (hit1_no+1) for next iteration
           continue;
         }
-        if ( x1 > xMax ){
+        if ( x1 > xMax ) {
           break; // hits are ordered by x (clever)
         }
-        if ( hit_isUseds[hit1_offset - event_hit_displ] ){
+        if ( hit_isUseds[hit1_offset - event_hit_displ] ) {
           continue;
         }
 
         // Check hit is within y limits
         double y1  = hit_Ys[hit1_offset];
-        if ( fabs( y1 - y0 ) > dyMax ){
+        if ( fabs( y1 - y0 ) > dyMax ) {
           continue;
         }
 
@@ -366,7 +366,7 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
           double z_beam  = zBeam(&m_track);
           if ( z_beam > sensor0.z ) {
             double r2Beam = r2AtZ(z_beam, &m_track);
-            if ( r2Beam > m_maxR2Beam ){
+            if ( r2Beam > m_maxR2Beam ) {
               continue;
             }
           }
@@ -401,7 +401,7 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
             nbMissed += extraStep;
             extraStep = 1;
           }
-          if ( m_maxMissed < nbMissed ){
+          if ( m_maxMissed < nbMissed ) {
             break;
           }
 
@@ -428,7 +428,7 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
             } else {
               nbMissed += extraStep;
             }
-            if ( m_maxMissed < nbMissed ){
+            if ( m_maxMissed < nbMissed ) {
               break;
             }
             extraSens += extraStep;
@@ -438,7 +438,7 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
 
         removeWorstHit(&m_track);
 
-        if ( m_track.trackHitsNum < 3 ){
+        if ( m_track.trackHitsNum < 3 ) {
           debug << "Track only has " << m_track.trackHitsNum << " hits!" << endl;
           continue;
         }
@@ -466,11 +466,11 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
           // debug << "Not all three sensors are different" << endl;
           continue;
           } */
-          if( nbUnused(&m_track, hit_isUseds, event_hit_displ) != 3){
+          if( nbUnused(&m_track, hit_isUseds, event_hit_displ) != 3) {
             // debug << "There is less than 3 non-used hits" << endl;
             continue;
           }
-          if( chi2(&m_track) > m_maxChi2Short){
+          if( chi2(&m_track) > m_maxChi2Short) {
             // debug << "Chi2 test not passed" << endl;
             continue;
           }
@@ -486,8 +486,8 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
         addHitIDs(m_track.hits);
 
         // Tag used hits IF the GpuTrack is bigger than 3!!
-        if (m_track.trackHitsNum > 3){
-          for (size_t i = 0; i < m_track.hits.size(); i++){
+        if (m_track.trackHitsNum > 3) {
+          for (size_t i = 0; i < m_track.hits.size(); i++) {
             hit_isUseds[m_track.hits[i] - event_hit_displ] = 1;
           }
           break;
@@ -499,9 +499,9 @@ void searchByPair(int eventId, vector<GpuTrack>& tracks_vector) {
   free(hit_isUseds);
 }
 
-void addHitIDs(vector<int>& localHitIDs){
+void addHitIDs(vector<int>& localHitIDs) {
   vector<int> realHitIDs;
-  for (size_t i = 0; i < localHitIDs.size(); i++){
+  for (size_t i = 0; i < localHitIDs.size(); i++) {
     realHitIDs.push_back(hit_IDs[localHitIDs[i]]);
   }
   hits.push_back(realHitIDs);

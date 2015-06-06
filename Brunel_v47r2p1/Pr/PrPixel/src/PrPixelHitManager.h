@@ -96,7 +96,7 @@ class PrPixelHitManager : public GaudiTool, public IIncidentListener {
 
   // Datatypes for GPU connectivity
   PrPixelSerialization m_serializer;
-  
+
  private:
   /// Cache Super Pixel patterns for isolated Super Pixel clustering.
   void cacheSPPatterns();
@@ -107,7 +107,7 @@ class PrPixelHitManager : public GaudiTool, public IIncidentListener {
   // List of hits: here are the hits stored
   std::vector<PrPixelHit> m_pool;
   /// Next free place in the hit list
-  std::vector<PrPixelHit>::iterator m_nextInPool;    
+  std::vector<PrPixelHit>::iterator m_nextInPool;
   /// Number of hits handed to the tracking in this event.
   unsigned int m_nHits;
   /// Number of clusters in this event.

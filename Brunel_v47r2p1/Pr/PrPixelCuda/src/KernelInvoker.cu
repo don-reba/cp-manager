@@ -21,7 +21,7 @@ cudaError_t invokeParallelSearch(
   // DEBUG << "Input pointer: "
   //   << std::hex << "0x" << (long long int) &(input[0])
   //   << std::dec << std::endl;
-  
+
   const Data* startingEvent_input = input[startingEvent];
   setHPointersFromInput((uint8_t*) &(*startingEvent_input)[0], startingEvent_input->size());
 

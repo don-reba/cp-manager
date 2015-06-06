@@ -28,13 +28,13 @@ PrPixelTrack::PrPixelTrack()
 PrPixelTrack::PrPixelTrack(
     const GpuTrack                   & track,
     const std::map<int, PrPixelHit*> & indexedHits,
-    const std::vector<int>           & eventHitIDs){
+    const std::vector<int>           & eventHitIDs) {
   m_x0 = track.x0;
   m_tx = track.tx;
   m_y0 = track.y0;
   m_ty = track.ty;
 
-  for (int i = 0; i != track.hitsNum; ++i){
+  for (int i = 0; i != track.hitsNum; ++i) {
     // Treat if the indexedHits and eventHitIDs contain indeed those IDs
     assert(eventHitIDs.find(track.hits[i]) != eventHitIDs.end());
     const auto eid = eventHitIDs.at(track.hits[i]);
