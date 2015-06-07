@@ -30,6 +30,9 @@ class PrPixelTrack {
       const GpuTrack                   & track,
       const std::map<int, PrPixelHit*> & indexedHits,
       const std::vector<int>           & eventHitIDs);
+  PrPixelTrack(
+      const GpuTrack                 & track,
+      const std::vector<PrPixelHit*> & hitMap);
 
   /// Destructor
   virtual ~PrPixelTrack() {}

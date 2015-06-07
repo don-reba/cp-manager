@@ -39,32 +39,6 @@ StatusCode PrPixelMonitor::initialize() {
 // Main execution
 //=============================================================================
 StatusCode PrPixelMonitor::execute() {
-
-  const unsigned int firstModule = m_hitManager->firstModule();
-  const unsigned int lastModule = m_hitManager->lastModule();
-  for (unsigned int i = firstModule; i < lastModule; ++i) {
-    for (auto hit : m_hitManager->hits(i)) {
-      const float x = hit->x();
-      const float y = hit->y();
-      const float z = hit->z();
-      const float r = sqrt(x * x + y * y);
-      if (!hit->isUsed()) {
-        plot3D(x, y, z, "UnusedHits3D", "Distribution of Unused Hits",
-               -50., 50., -50., 50., -500., 800., 100, 100, 200);
-        plot2D(r, z, "UnusedHitsRZ", "Distribution of Unused Hits",
-               0., 60., -500., 800., 100, 100);
-        plot2D(x, y, "UnusedHitsXY", "Distribution of Unused Hits",
-               -50., 50., -50., 50., 100, 100);
-      }
-      plot3D(x, y, z, "Hits3D", "Distribution of Hits",
-             -50., 50., -50., 50., -500., 800., 100, 100, 200);
-      plot2D(r, z, "HitsRZ", "Distribution of Hits",
-             0., 60., -500., 800., 100, 100);
-      plot2D(x, y, "HitsXY", "Distribution of Hits",
-             -50., 50., -50., 50., 100, 100);
-    }
-  }
-
   const unsigned int nHits = m_hitManager->nbHits();
   const unsigned int nHitsUsed = m_hitManager->nbHitsUsed();
   plot(nHits, "HitsPerEvent", "Number of hits per event", 0.0, 8000.0, 80);

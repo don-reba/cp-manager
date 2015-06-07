@@ -114,7 +114,7 @@ class PrPixelHit {
   /// Weight (1 / error) in Y
   float m_wyerr;
   /// Module number
-  unsigned int m_module;
+  int m_module;
   /// Channel ID
   LHCb::LHCbID m_id;
   /// Already used by (associated to) a track?

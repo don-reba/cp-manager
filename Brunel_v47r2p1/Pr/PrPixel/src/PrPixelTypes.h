@@ -5,10 +5,6 @@
 
 #define MAX_TRACK_SIZE 24
 struct GpuTrack {
-  float x0;
-  float tx;
-  float y0;
-  float ty;
   int32_t hitsNum;
   int32_t hits[MAX_TRACK_SIZE];
 };

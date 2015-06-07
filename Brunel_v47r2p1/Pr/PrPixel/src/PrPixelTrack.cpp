@@ -13,9 +13,7 @@
 // Standard constructor, initializes variables
 //=============================================================================
 PrPixelTrack::PrPixelTrack()
-    : m_tx(0.), m_ty(0.),
-      m_x0(0.), m_y0(0.) {
-
+    : m_tx(0.0f), m_ty(0.0f), m_x0(0.0f), m_y0(0.0f) {
   m_hits.reserve(20);
 
   // vector constants initialization
@@ -28,12 +26,8 @@ PrPixelTrack::PrPixelTrack()
 PrPixelTrack::PrPixelTrack(
     const GpuTrack                   & track,
     const std::map<int, PrPixelHit*> & indexedHits,
-    const std::vector<int>           & eventHitIDs) {
-  m_x0 = track.x0;
-  m_tx = track.tx;
-  m_y0 = track.y0;
-  m_ty = track.ty;
-
+    const std::vector<int>           & eventHitIDs)
+    : m_tx(0.0f), m_ty(0.0f), m_x0(0.0f), m_y0(0.0f) {
   for (int i = 0; i != track.hitsNum; ++i) {
     // Treat if the indexedHits and eventHitIDs contain indeed those IDs
     assert(eventHitIDs.find(track.hits[i]) != eventHitIDs.end());
@@ -42,6 +36,14 @@ PrPixelTrack::PrPixelTrack(
     assert(indexedHits.find(eid) != indexedHits.end());
     m_hits.push_back(indexedHits.at(eid));
   }
+}
+
+PrPixelTrack::PrPixelTrack(
+    const GpuTrack                 & track,
+    const std::vector<PrPixelHit*> & hitMap)
+    : m_tx(0.0f), m_ty(0.0f), m_x0(0.0f), m_y0(0.0f) {
+  for (int i = 0; i != track.hitsNum; ++i)
+    m_hits.push_back(hitMap.at(track.hits[i]));
 }
 
 //=========================================================================

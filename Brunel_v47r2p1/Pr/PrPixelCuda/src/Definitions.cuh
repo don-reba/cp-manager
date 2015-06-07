@@ -72,8 +72,6 @@ struct Hit {
 };
 
 struct Track { // 4 + 24 * 4 = 100 B
-  float x0, tx, y0, ty; // deprecated
-
   uint32_t hitsNum;
   uint32_t hits[MAX_TRACK_SIZE];
 

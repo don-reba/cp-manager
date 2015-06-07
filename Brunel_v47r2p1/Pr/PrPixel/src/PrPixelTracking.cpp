@@ -4,6 +4,7 @@
 #include "Event/Track.h"
 #include "Event/StateParameters.h"
 // Local
+#include "EventSerializer.h"
 #include "PrPixelTracking.h"
 
 //-----------------------------------------------------------------------------
@@ -137,18 +138,22 @@ StatusCode PrPixelTracking::execute() {
   // From what PrPixel has:
   //  PrPixel format -> SoA (done alongside buildHits) -> AoS
   if (m_clearHits) m_hitManager->clearHits();
-  m_hitManager->m_serializer.cleanEvent();
 
   if (m_runOnRawBanks) {
     m_hitManager->buildHitsFromRawBank();
   } else {
     m_hitManager->buildHits();
   }
+  m_hitManager->sortByX();
 
-  // Do some typecasting into a format understandable by GPU
+  // Convert event into a format understandable by GPU
+  EventSerializer      serializer;
   std::vector<uint8_t> serializedEvent;
-  m_hitManager->m_serializer.serializeEvent(serializedEvent);
-
+  try {
+    serializedEvent = serializer.serializeEvent(m_hitManager->hitPool(), m_hitManager->nbHits());
+  } catch (const std::exception & e) {
+      error() << "serialization failed; " << e.what() << endmsg;
+  }
   if (serializedEvent.empty())
     info() << "--- Serialized event is empty! This should not happen!" << endmsg;
 
@@ -161,7 +166,7 @@ StatusCode PrPixelTracking::execute() {
   if (m_doTiming) m_timerTool->start(m_timePairs);
 
   // Perform search on the GPU
-  std::vector<uint8_t> trackCollection;
+  std::vector<uint8_t> serializedTracks;
 
   try {
     gpuService->submitData(
@@ -169,19 +174,19 @@ StatusCode PrPixelTracking::execute() {
         serializedEvent.data(),
         serializedEvent.size(),
         allocTracks,
-        &trackCollection);
+        &serializedTracks);
     try {
       debug() << "--- Deserializing tracks" << endmsg;
-      m_hitManager->m_serializer.deserializeTracks(trackCollection, m_tracks);
+      m_tracks = serializer.deserializeTracks(serializedTracks);
     } catch (const std::exception & e) {
-      error() << "deserialization failed; " << e.what() << std::endl;
+      error() << "deserialization failed; " << e.what() << endmsg;
     } catch (...) {
-      error() << "deserialization failed; reason unknown" << std::endl;
+      error() << "deserialization failed; reason unknown" << endmsg;
     }
   } catch (const std::exception & e) {
-    error() << "submission failed; " << e.what() << std::endl;
+    error() << "submission failed; " << e.what() << endmsg;
   } catch (...) {
-    error() << "submission failed; reason unknown" << std::endl;
+    error() << "submission failed; reason unknown" << endmsg;
   }
 
   if (m_doTiming) m_timerTool->stop(m_timePairs);
@@ -196,169 +201,6 @@ StatusCode PrPixelTracking::execute() {
   }
 
   return StatusCode::SUCCESS;
-}
-
-//=============================================================================
-// Extend track towards smaller z,
-// on both sides of the detector as soon as one hit is missed.
-//=============================================================================
-void PrPixelTracking::extendTrack(const PrPixelHit *h1, const PrPixelHit *h2) {
-
-  // Initially scan every second module (stay on the same side).
-  int step = 2;
-  // Start two modules behind the last one.
-  int next = h2->module() - step;
-  // Count modules without hits found.
-  unsigned int nbMissed = 0;
-  while (next >= 0) {
-    PrPixelModule *module = m_hitManager->module(next);
-    // Attempt to add new hits from this module with given tolerances
-    PrPixelHit *h3 = bestHit(module, m_extraTol, m_maxScatter, h1, h2);
-    if (h3) {
-      m_track.addHit(h3);
-      // Reset missed hit counter.
-      nbMissed = 0;
-      // Update the pair of hits to be used for extrapolating.
-      h1 = h2;
-      h2 = h3;
-    } else {
-      // No hits found.
-      if (step == 2) {
-        // Look on the other side.
-        module = m_hitManager->module(next + 1);
-        h3 = bestHit(module, m_extraTol, m_maxScatter, h1, h2);
-        if (!h3) {
-          nbMissed += step;
-        } else {
-          m_track.addHit(h3);
-          h1 = h2;
-          h2 = h3;
-        }
-        // Switch to scanning every module (left and right).
-        step = 1;
-      } else {
-        ++nbMissed;
-      }
-    }
-    if (m_maxMissed < nbMissed) break;
-    next -= step;
-  }
-}
-
-//=========================================================================
-//  Search starting with a pair of consecutive modules.
-//=========================================================================
-void PrPixelTracking::searchByPair() {
-
-  // Get the range of modules to start search on,
-  // starting with the one at largest Z.
-  const int lastModule = m_hitManager->lastModule();
-  const int firstModule = m_hitManager->firstModule() + 4;
-  for (int sens0 = lastModule; firstModule <= sens0; sens0 -= 1) {
-    // Pick-up the "paired" module one station backwards
-    const int sens1 = sens0 - 2;
-    PrPixelModule *module0 = m_hitManager->module(sens0);
-    PrPixelModule *module1 = m_hitManager->module(sens1);
-    const float z0 = module0->z();
-    const float z1 = module1->z();
-    const float dz = z0 - z1;
-    // Calculate the search window from the slope limits.
-    const float dxMax = m_maxXSlope * fabs(dz);
-    const float dyMax = m_maxYSlope * fabs(dz);
-    // Loop over hits in the first module (larger Z) in the pair.
-    auto end0 = module0->hits().cend();
-    auto end1 = module1->hits().cend();
-    auto first1 = module1->hits().cbegin();
-    for (auto ith0 = module0->hits().cbegin(); end0 != ith0; ++ith0) {
-      // Skip hits already assigned to tracks.
-      if ((*ith0)->isUsed()) continue;
-      const float x0 = (*ith0)->x();
-      const float y0 = (*ith0)->y();
-      // Calculate x-pos. limits on the other module.
-      const float xMin = x0 - dxMax;
-      const float xMax = x0 + dxMax;
-      if (m_debugTool && matchKey(*ith0)) {
-        info() << format("s1%3d xMin%9.3f xMax%9.3f ", sens1, xMin, xMax);
-        printHit(*ith0, "St0");
-      }
-      // Loop over hits in the second module (smaller Z) in the pair.
-      for (auto ith1 = first1; end1 != ith1; ++ith1) {
-        const float x1 = (*ith1)->x();
-        // Skip hits below the X-pos. limit.
-        if (x1 < xMin) {
-          first1 = ith1 + 1;
-          continue;
-        }
-        // Stop search when above the X-pos. limit.
-        if (x1 > xMax) break;
-        // Skip hits already assigned to tracks.
-        if ((*ith1)->isUsed()) continue;
-        // Check y compatibility.
-        const float y1 = (*ith1)->y();
-        // Skip hits out of Y-pos. limit.
-        if (fabs(y1 - y0) > dyMax) continue;
-
-        m_debug = m_isDebug;
-        if (m_debugTool) {
-          if (matchKey(*ith0) && matchKey(*ith1)) m_debug = true;
-          if (m_debug) {
-            info() << format("s1%3d dxRel %7.3f dyRel %7.3f    ", sens1,
-                             (x1 - xMin) / (xMax - xMin),
-                             fabs((*ith1)->y() - y0) / dyMax);
-            printHit(*ith1);
-          }
-        }
-        // Make a seed track out of these two hits.
-        m_track.set(*ith0, *ith1);
-        // Extend the seed track towards smaller Z.
-        extendTrack(*ith0, *ith1);
-        const unsigned int nHits = m_track.hits().size();
-        if (nHits < 3) continue;
-
-        // Final checks
-        if (nHits == 3) {
-          // In case of short tracks, all three hits should be unused.
-          if (m_track.nbUnused() != 3) {
-            if (m_debug) {
-              info() << "  -- reject, only " << m_track.nbUnused()
-                     << " unused hits." << endmsg;
-              printTrack(m_track);
-            }
-            continue;
-          }
-          // Fit the track and apply a cut on the chi2.
-          m_track.fit();
-          if (m_track.chi2() > m_maxChi2Short) {
-            if (m_debug) {
-              info() << " -- reject, chi2 " << m_track.chi2() << " too high."
-                     << endmsg;
-              printTrack(m_track);
-            }
-            continue;
-          }
-        } else {
-          if (m_track.nbUnused() < m_fractionUnused * nHits) {
-            if (m_debug) {
-              info() << "  -- reject, only " << m_track.nbUnused() << "/"
-                     << m_track.hits().size() << " hits are unused." << endmsg;
-              printTrack(m_track);
-            }
-            continue;
-          }
-        }
-
-        m_tracks.push_back(m_track);
-        if (m_debug) {
-          info() << "=== Store track Nb " << m_tracks.size() << endmsg;
-          printTrack(m_track);
-        }
-        if (nHits > 3) {
-          m_track.tagUsedHits();
-          break;
-        }
-      }
-    }
-  }
 }
 
 //=========================================================================
@@ -467,97 +309,6 @@ void PrPixelTracking::makeLHCbTracks() {
   }
   m_tracks.clear();
 
-}
-
-//=========================================================================
-// Add hits from the specified module to the track
-//=========================================================================
-PrPixelHit *PrPixelTracking::bestHit(PrPixelModule *module, const float xTol,
-                                     const float maxScatter,
-                                     const PrPixelHit *h1,
-                                     const PrPixelHit *h2) const {
-  if (module->empty()) return NULL;
-  const float x1 = h1->x();
-  const float x2 = h2->x();
-  const float y1 = h1->y();
-  const float y2 = h2->y();
-  const float z1 = h1->z();
-  const float z2 = h2->z();
-  const float td = 1.0 / (z2 - z1);
-  const float txn = (x2 - x1);
-  const float tx = txn * td;
-  const float tyn = (y2 - y1);
-  const float ty = tyn * td;
-  // Extrapolate to the z-position of the module
-  const float xGuess = x1 + tx * (module->z() - z1);
-
-  // If the first hit is already below this limit we can stop here.
-  if (module->lastHitX() < xGuess - xTol) return NULL;
-  if (module->firstHitX() > xGuess + xTol) return NULL;
-
-  // Do a binary search through the hits.
-  unsigned int hit_start(0);
-  unsigned int step(module->hits().size());
-  const unsigned int module_nhits(step);
-  const PrPixelHits &module_hits(module->hits());
-  while (2 < step) {  // quick skip of hits that are above the X-limit
-    step /= 2;
-    if ((module_hits[hit_start + step])->x() < xGuess - xTol) hit_start += step;
-  }
-
-  // Find the hit that matches best.
-  unsigned int nFound = 0;
-  float bestScatter = maxScatter;
-  PrPixelHit *bestHit = NULL;
-  PrPixelHit *hit(NULL);
-  for (unsigned int i = hit_start; i < module_nhits; ++i) {
-    hit = module_hits[i];
-    const float hit_z = hit->z();
-    const float hit_x = hit->x();
-    const float hit_y = hit->y();
-    const float dz = hit_z - z1;
-    const float xPred = x1 + tx * dz;
-    const float yPred = y1 + ty * dz;
-#ifdef DEBUG_HISTO
-    plot((hit->x() - xPred) / xTol, "HitExtraErrPerTol",
-         "Hit X extrapolation error / tolerance", -4.0, +4.0, 400);
-#endif
-    // If x-position is above prediction + tolerance, keep looking.
-    if (hit_x + xTol < xPred) continue;
-    // If x-position is below prediction - tolerance, stop the search.
-    if (hit_x - xTol > xPred) break;
-    const float dy = yPred - hit_y;
-    // Skip hits outside the y-position tolerance.
-    if (fabs(dy) > xTol) continue;
-    const float scatterDenom = 1.0 / (hit_z - z2);
-    const float dx = xPred - hit_x;
-    const float scatterNum = (dx * dx) + (dy * dy);
-    const float scatter = scatterNum * scatterDenom * scatterDenom;
-    if (scatter < bestScatter) {
-      bestHit = hit;
-      bestScatter = scatter;
-    }
-    if (scatter < maxScatter) ++nFound;
-#ifdef DEBUG_HISTO
-    plot(sqrt(scatter), "HitScatter", "hit scatter [rad]", 0.0, 0.5, 500);
-    plot2D(dx, dy, "Hit_dXdY",
-           "Difference between hit and prediction in x and y [mm]", -1, 1, -1,
-           1, 500, 500);
-#endif
-  }
-#ifdef DEBUG_HISTO
-  plot(nFound, "HitExtraCount",
-       "Number of hits within the extrapolation window with chi2 within limits",
-       0.0, 10.0, 10);
-#endif
-  if (bestHit) {
-#ifdef DEBUG_HISTO
-    plot(sqrt(bestScatter), "HitBestScatter", "best hit scatter [rad]", 0.0,
-         0.1, 100);
-#endif
-    if (m_debug) printHitOnTrack(bestHit, false);
-  }
-  return bestHit;
 }
 
 //=========================================================================

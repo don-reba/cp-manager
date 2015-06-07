@@ -222,16 +222,6 @@ void PrPixelHitManager::cacheSPPatterns() {
 // run...
 //=========================================================================
 StatusCode PrPixelHitManager::rebuildGeometry() {
-
-  // Delete the existing modules.
-  std::vector<PrPixelModule *>::iterator itm;
-  m_modules.clear();
-  m_module_pool.clear();
-  m_firstModule = 999;
-  m_lastModule = 0;
-
-  int previousLeft = -1;
-  int previousRight = -1;
   std::vector<DeVPSensor *>::const_iterator its = m_vp->sensorsBegin();
 
   // get pointers to local x coordinates and pitches
@@ -264,46 +254,6 @@ StatusCode PrPixelHitManager::rebuildGeometry() {
     m_ltg[idx++] = ltg_trans.X();
     m_ltg[idx++] = ltg_trans.Y();
     m_ltg[idx++] = ltg_trans.Z();
-
-    // Get the number of the module this sensor is on.
-    const unsigned int number = (*its)->module();
-    if (number < m_modules.size()) {
-      // Check if this module has already been setup.
-      if (m_modules[number]) continue;
-    } else {
-      m_modules.resize(number + 1, 0);
-    }
-
-    // Create a new module and add it to the list.
-    m_module_pool.push_back(PrPixelModule(number, (*its)->isRight()));
-    PrPixelModule *module = &m_module_pool.back();
-    module->setZ((*its)->z());
-    if ((*its)->isRight()) {
-      module->setPrevious(previousRight);
-      previousRight = number;
-    } else {
-      module->setPrevious(previousLeft);
-      previousLeft = number;
-    }
-    m_modules[number] = module;
-    if (m_firstModule > number) m_firstModule = number;
-    if (m_lastModule < number) m_lastModule = number;
-  }
-  // the module pool might have been resized -- make sure
-  // all module pointers are valid.
-  for (unsigned int i = 0; i < m_module_pool.size(); ++i) {
-    PrPixelModule *module = &m_module_pool[i];
-    m_modules[module->number()] = module;
-  }
-  if (msgLevel(MSG::DEBUG)) {
-    debug() << "Found modules from " << m_firstModule << " to " << m_lastModule
-            << endmsg;
-    for (itm = m_modules.begin(); m_modules.end() != itm; ++itm) {
-      if (*itm) {
-        debug() << "  Module " << (*itm)->number() << " prev "
-                << (*itm)->previous() << endmsg;
-      }
-    }
   }
 
   return StatusCode::SUCCESS;
@@ -323,10 +273,6 @@ void PrPixelHitManager::handle(const Incident &incident) {
 //=========================================================================
 void PrPixelHitManager::clearHits() {
   if (m_nHits > m_maxSize) m_maxSize = m_nHits;
-  std::vector<PrPixelModule>::iterator itm;
-  for (itm = m_module_pool.begin(); m_module_pool.end() != itm; ++itm) {
-    (*itm).reset();
-  }
   if (!m_trigger) {
     for (unsigned int i = 0; i < m_nClusters; ++i) {
       m_channelIDs[i].clear();
@@ -471,7 +417,6 @@ void PrPixelHitManager::buildHitsFromSPRawBank(
           m_xFractions[m_nHits] = fx;
           m_yFractions[m_nHits] = fy;
           m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-          m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
           m_nHits++;
         }
 
@@ -497,7 +442,6 @@ void PrPixelHitManager::buildHitsFromSPRawBank(
           m_xFractions[m_nHits] = fx;
           m_yFractions[m_nHits] = fy;
           m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-          m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
           m_nHits++;
         }
 
@@ -663,7 +607,6 @@ void PrPixelHitManager::buildHitsFromSPRawBank(
           const float gy = ltg[3] * local_x + ltg[4] * local_y + ltg[10];
           const float gz = ltg[6] * local_x + ltg[7] * local_y + ltg[11];
           m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-          m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
           m_nHits++;
         }
       } else {  // we are running in offline mode, compute all 3D points
@@ -686,22 +629,11 @@ void PrPixelHitManager::buildHitsFromSPRawBank(
         m_allHits[m_nClusters++].setHit(cid, gx, gy, gz, w, w, module);
         if (n <= m_maxClusterSize) {  // but do not hand all hits to the tracking
           m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-          m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
           m_nHits++;
         }
       }
     }  // loop over all potential seed pixels
   }    // loop over all banks
-
-  // DO NOT MOVE THIS IN THE ABOVE LOOP IN A FUTILE OPTIMIZATION ATTEMPT!  The
-  // m_pool container could have been resized during clustering in which case
-  // all pointers and iterators would be rendered invalid. We HAVE to do this
-  // here!
-  for (unsigned int i = 0; i < m_nHits; ++i) {
-    PrPixelHit *hit = &(m_pool[i]);
-    PrPixelModule *module = m_modules[hit->module()];
-    module->addHit(hit);
-  }
 }
 
 //=========================================================================
@@ -721,8 +653,6 @@ void PrPixelHitManager::buildHitsFromLCRawBank(
   for (unsigned int ib = 0; ib < nb; ++ib) {
     const LHCb::RawBank &bank = *tBanks[ib];
     const unsigned int module = bank.sourceID();
-
-    if (module >= m_modules.size()) break;
 
     const unsigned int *bank_data = bank.data();
     const unsigned int header = bank_data[0];
@@ -768,14 +698,11 @@ void PrPixelHitManager::buildHitsFromLCRawBank(
       if (!m_trigger) {
         m_channelIDs[m_nHits].push_back(cid);
         m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-        m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
         m_nHits++;
       }
       m_xFractions[m_nHits] = xfract;
       m_xFractions[m_nHits] = yfract;
       m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-      m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
-      m_modules[module]->addHit(&(m_pool[m_nHits++]));
     }  // loop over clusters in bank
   }    // loop over banks
 
@@ -894,17 +821,28 @@ void PrPixelHitManager::storeOfflineClusters() {
 // Sort hits by X within every module to speed up the track search
 //=========================================================================
 void PrPixelHitManager::sortByX() {
-  std::vector<PrPixelModule *>::iterator itm;
-  for (itm = m_modules.begin(); m_modules.end() != itm; ++itm) {
-    if (*itm) {
-      if (!((*itm)->empty())) {
-        std::sort((*itm)->hits().begin(), (*itm)->hits().end(),
-                  PrPixelHit::LowerByX());
-        (*itm)->setFirstHitX((*itm)->hits().front()->x());
-        (*itm)->setLastHitX((*itm)->hits().back()->x());
-      }
-    }
+  if (m_nHits < 1)
+    return;
+
+  auto lessByX = [](const PrPixelHit & h1, const PrPixelHit & h2) { return h1.x() < h2.x(); };
+
+  int start = 0;
+  for (size_t i = 1; i != m_nHits; ++i) {
+    if (m_pool[start].module() == m_pool[i].module())
+      continue;
+
+    sort(
+        m_pool.begin() + start,
+        m_pool.begin() + i,
+        lessByX);
+
+    start = i;
   }
+
+  sort(
+      m_pool.begin() + start,
+      m_pool.begin() + m_nHits,
+      lessByX);
 }
 
 //=========================================================================
@@ -915,30 +853,26 @@ void PrPixelHitManager::buildHits() {
   if (m_eventReady) return;
   m_eventReady = true;
 
-  // Get the clusters.
-  LHCb::VPClusters *clusters =
-      GaudiTool::get<LHCb::VPClusters>(LHCb::VPClusterLocation::Default);
+  LHCb::VPClusters *clusters = GaudiTool::get<LHCb::VPClusters>(LHCb::VPClusterLocation::Default);
+
   // If necessary adjust the size of the hit pool.
-  if (clusters->size() > m_pool.size()) {
+  if (clusters->size() > m_pool.size())
     m_pool.resize(clusters->size() + 100);
-  }
+
   // Assume binary resolution of hit position. This is the weight.
   const float w = std::sqrt(12.0) / (0.055);
-  // Loop over clusters.
-  LHCb::VPClusters::const_iterator itc;
-  LHCb::VPClusters::const_iterator itc_end(clusters->end());
-  for (itc = clusters->begin(); itc_end != itc; ++itc) {
-    const unsigned int module = (*itc)->channelID().module();
-    if (module >= m_modules.size()) break;
+
+  for (const auto & cluster : *clusters) {
+    const unsigned int module = cluster->channelID().module();
 
     // store 3D point
-    LHCb::VPChannelID cid = (*itc)->channelID();
+    LHCb::VPChannelID cid = cluster->channelID();
     const unsigned int sensor_chip = cid.chip();
     const unsigned int sensor = cid.sensor();
     const unsigned int cy = cid.row();
     const unsigned int cx = cid.col() + CHIP_COLUMNS * sensor_chip;
-    const float dx = (*itc)->fraction().first * m_x_pitch[cx];
-    const float dy = (*itc)->fraction().second * m_pixel_size;
+    const float dx = cluster->fraction().first * m_x_pitch[cx];
+    const float dy = cluster->fraction().second * m_pixel_size;
     float local_x = m_local_x[cx] + dx;
     float local_y = (cy + 0.5) * m_pixel_size + dy;
     const float *ltg = m_ltg + sensor * 16;
@@ -947,7 +881,6 @@ void PrPixelHitManager::buildHits() {
     const float gz = ltg[6] * local_x + ltg[7] * local_y + ltg[11];
 
     m_pool[m_nHits].setHit(LHCb::LHCbID(cid), gx, gy, gz, w, w, module);
-    m_serializer.addHit(&(m_pool[m_nHits]), module, cid, gx, gy, gz);
     m_nHits++;
   }
 }
