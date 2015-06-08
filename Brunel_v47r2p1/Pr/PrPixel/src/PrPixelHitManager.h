@@ -15,8 +15,6 @@
 #include "PrPixelHit.h"
 #include "PrPixelUtils.h"
 
-#include "PrPixelTypes.h"
-
 #include <utility>
 
 namespace LHCb {

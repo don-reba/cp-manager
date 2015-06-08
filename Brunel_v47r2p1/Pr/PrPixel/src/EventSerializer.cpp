@@ -1,7 +1,7 @@
 #include "EventSerializer.h"
-#include "PrPixelTypes.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
@@ -13,6 +13,20 @@ using namespace std;
 
 using Data = EventSerializer::Data;
 
+//----------------------------
+// Serialized track structure.
+//----------------------------
+
+const size_t MAX_TRACK_SIZE = 24;
+struct GpuTrack {
+  uint32_t hitsNum;
+  uint32_t hits[MAX_TRACK_SIZE];
+};
+
+//----------------------------
+// EventSerializer definition.
+//----------------------------
+
 EventSerializer::EventSerializer() : m_hasData(false) {
 }
 
@@ -22,12 +36,12 @@ Data EventSerializer::serializeEvent(PrPixelHit * hits, size_t hitCount) {
 
   const uint32_t sensorCount = static_cast<uint32_t>(countModules(hits, hitCount));
 
-  const size_t sensorCountSize     = sizeof(int);
-  const size_t hitCountSize        = sizeof(int);
-  const size_t sensorZsSize        = sensorCount * sizeof(int);
-  const size_t sensorHitStartsSize = sensorCount * sizeof(int);
-  const size_t sensorHitsNumsSize  = sensorCount * sizeof(int);
-  const size_t hitIDsSize          = hitCount    * sizeof(int);
+  const size_t sensorCountSize     = sizeof(int32_t);
+  const size_t hitCountSize        = sizeof(int32_t);
+  const size_t sensorZsSize        = sensorCount * sizeof(int32_t);
+  const size_t sensorHitStartsSize = sensorCount * sizeof(int32_t);
+  const size_t sensorHitsNumsSize  = sensorCount * sizeof(int32_t);
+  const size_t hitIDsSize          = hitCount    * sizeof(int32_t);
   const size_t hitXsSize           = hitCount    * sizeof(float);
   const size_t hitYsSize           = hitCount    * sizeof(float);
   const size_t hitZsSize           = hitCount    * sizeof(float);
@@ -86,6 +100,15 @@ Data EventSerializer::serializeEvent(PrPixelHit * hits, size_t hitCount) {
   return buffer;
 }
 
+vector<PrPixelHit*> mapHits(
+    const GpuTrack                & track,
+    const EventSerializer::HitMap & hitMap) {
+  vector<PrPixelHit*> hits;
+  for (size_t i = 0; i != track.hitsNum; ++i)
+    hits.push_back(hitMap.at(track.hits[i]));
+  return hits;
+}
+
 vector<PrPixelTrack> EventSerializer::deserializeTracks(const Data & data) const {
   if (!m_hasData)
     throw runtime_error("deserialization using an empty serializer");
@@ -107,13 +130,15 @@ vector<PrPixelTrack> EventSerializer::deserializeTracks(const Data & data) const
   //print(gpuTracks, count);
 
   for (size_t i = 0; i != count; ++i) {
-    int hitsNum = gpuTracks[i].hitsNum;
-    if (hitsNum < 0 || hitsNum > MAX_TRACK_SIZE) {
+    const GpuTrack & t = gpuTracks[i];
+
+    if (t.hitsNum > MAX_TRACK_SIZE) {
       ostringstream msg;
-      msg << "invalid track hitsNum: " << hitsNum;
+      ostringstream() << "invalid track hitsNum: " << t.hitsNum;
       throw runtime_error(msg.str());
     }
-    tracks.push_back(PrPixelTrack(gpuTracks[i], m_hits));
+
+    tracks.push_back(PrPixelTrack(mapHits(t, m_hits)));
   }
 
   return tracks;

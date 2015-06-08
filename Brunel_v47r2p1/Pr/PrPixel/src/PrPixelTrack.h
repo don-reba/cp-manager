@@ -6,8 +6,6 @@
 #include "PrPixelHit.h"
 
 #include <iostream>
-#include <map>
-#include "PrPixelTypes.h"
 
 namespace LHCb {
 class State;
@@ -26,13 +24,7 @@ class PrPixelTrack {
   /// Standard constructor
   PrPixelTrack();
   // Creates a track from indexed data
-  PrPixelTrack(
-      const GpuTrack                   & track,
-      const std::map<int, PrPixelHit*> & indexedHits,
-      const std::vector<int>           & eventHitIDs);
-  PrPixelTrack(
-      const GpuTrack                 & track,
-      const std::vector<PrPixelHit*> & hitMap);
+  PrPixelTrack(std::vector<PrPixelHit*> && hits);
 
   /// Destructor
   virtual ~PrPixelTrack() {}
@@ -44,7 +36,7 @@ class PrPixelTrack {
   }
 
   /// Return the list of hits on this track.
-  PrPixelHits &hits() { return m_hits; }
+  PrPixelHits & hits() { return m_hits; }
   /// Add a given hit to this track
   void addHit(PrPixelHit *hit) { m_hits.push_back(hit); }
 

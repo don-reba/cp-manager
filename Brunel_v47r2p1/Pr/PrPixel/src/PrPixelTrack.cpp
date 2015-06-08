@@ -23,27 +23,8 @@ PrPixelTrack::PrPixelTrack()
   v_sign_mask = _mm_set1_ps(-0.f); // -0.f = 1 << 31
 }
 
-PrPixelTrack::PrPixelTrack(
-    const GpuTrack                   & track,
-    const std::map<int, PrPixelHit*> & indexedHits,
-    const std::vector<int>           & eventHitIDs)
-    : m_tx(0.0f), m_ty(0.0f), m_x0(0.0f), m_y0(0.0f) {
-  for (int i = 0; i != track.hitsNum; ++i) {
-    // Treat if the indexedHits and eventHitIDs contain indeed those IDs
-    assert(eventHitIDs.find(track.hits[i]) != eventHitIDs.end());
-    const auto eid = eventHitIDs.at(track.hits[i]);
-
-    assert(indexedHits.find(eid) != indexedHits.end());
-    m_hits.push_back(indexedHits.at(eid));
-  }
-}
-
-PrPixelTrack::PrPixelTrack(
-    const GpuTrack                 & track,
-    const std::vector<PrPixelHit*> & hitMap)
-    : m_tx(0.0f), m_ty(0.0f), m_x0(0.0f), m_y0(0.0f) {
-  for (int i = 0; i != track.hitsNum; ++i)
-    m_hits.push_back(hitMap.at(track.hits[i]));
+PrPixelTrack::PrPixelTrack(std::vector<PrPixelHit*> && hits)
+    : m_hits(hits), m_tx(0.0f), m_ty(0.0f), m_x0(0.0f), m_y0(0.0f) {
 }
 
 //=========================================================================
