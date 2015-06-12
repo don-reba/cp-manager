@@ -34,6 +34,7 @@ class App : public IApp {
       PerfLog    & perfLog,
       DataLog    & dataLog,
       const char * adminPath,
+      size_t       batchSize,
       const ConnectionInfo & connection);
 
     void run();
@@ -58,9 +59,9 @@ class App : public IApp {
     LocalSocketServerConnector  m_adminConnector;
     std::shared_ptr<IConnector> m_mainConnector;
 
-    ThreadedServer m_adminServer;
-    ThreadedServer m_mainServer;
+    ThreadedServer m_adminHost;
+    ThreadedServer m_mainHost;
 
-    MainServer  m_main;
-    AdminServer m_admin;
+    MainServer  m_mainServer;
+    AdminServer m_adminServer;
 };

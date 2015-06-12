@@ -2,9 +2,9 @@
 
 #include "GpuIpc/LocalSocketClient.h"
 #include "GpuIpc/Protocol.h"
-#include "Timer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -14,6 +14,7 @@
 using namespace boost;
 using namespace boost::filesystem;
 using namespace std;
+using namespace std::chrono;
 
 void readStream(ifstream & stream, void * data, size_t size) {
   stream.read(reinterpret_cast<char *>(data), size);
@@ -50,8 +51,7 @@ try {
       m_paths.pop_back();
     }
 
-    Timer timer;
-    timer.start();
+    auto s = steady_clock::now();
 
     string handlerName;
     vector<uint8_t> recordedInput;
@@ -82,8 +82,13 @@ try {
     if (!result.empty())
       m_protocol->readData(result.data(), resultSize);
 
-    timer.stop();
-    m_perfLog.addRecord(time(0), timer.secondsElapsed());
+    auto f = steady_clock::now();
+
+    // record performance log
+    {
+      scoped_lock lock(m_mutex);
+      m_perfLog.addRecord(time(0), duration_cast<duration<double>>(f - s).count());
+    }
 
     // verify output
     if (m_verifyOutput) {

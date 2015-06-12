@@ -1,12 +1,13 @@
 #pragma once
 
-#include "BlockingBatchQueue.h"
+#include "IBlockingQueue.h"
 #include "DataPacket.h"
 #include "GpuIpc/IProcessor.h"
 
 #include "GpuHandler/IGpuHandler.h"
 
 #include <map>
+#include <memory>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -24,11 +25,11 @@ private:
 
   typedef std::map<std::string, IGpuHandler*> HandlerMap;
 
-  typedef BlockingBatchQueue<DataPacket*> Queue;
+  typedef IBlockingQueue<DataPacket*> IQueue;
 
 public: // interface
 
-  MainServer(PerfLog & perfLog, DataLog & dataLog);
+  MainServer(PerfLog & perfLog, DataLog & dataLog, size_t batchSize);
   ~MainServer();
 
   void start();
@@ -62,7 +63,7 @@ private:
   PerfLog & m_perfLog;
   DataLog & m_dataLog;
 
-  Queue m_dataQueue;
+  std::unique_ptr<IQueue> m_dataQueue;
 
   boost::thread m_processingThread;
 
