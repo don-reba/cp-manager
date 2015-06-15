@@ -43,14 +43,6 @@ class PrPixelTracking : public GaudiAlgorithm {
   virtual StatusCode execute();     ///< Algorithm execution
 
  private:
-  /// Search for tracks starting from pair of hits on adjacent sensors
-  void searchByPair();
-  /// Extrapolate a seed track and try to add further hits.
-  void extendTrack(const PrPixelHit *h1, const PrPixelHit *h2);
-  /// Try to add a matching hit on a given module.
-  PrPixelHit *bestHit(PrPixelModule* module, const float xTol, 
-                      const float maxScatter,
-                      const PrPixelHit* h1, const PrPixelHit* h2) const;
   /// Produce LHCb::Track list understandable to other LHCb applications.
   void makeLHCbTracks();
 

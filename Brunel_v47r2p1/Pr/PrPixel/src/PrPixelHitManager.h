@@ -13,11 +13,9 @@
 #include "VPDet/DeVP.h"
 // Local
 #include "PrPixelHit.h"
-#include "PrPixelModule.h"
 #include "PrPixelUtils.h"
 
-#include "PrPixelTypes.h"
-#include "PrPixelSerialization.h"
+#include <utility>
 
 namespace LHCb {
 class RawEvent;
@@ -57,14 +55,10 @@ class PrPixelHitManager : public GaudiTool, public IIncidentListener {
 
   void handle(const Incident &incident);
 
-  PrPixelHits &hits(const unsigned int n) const { return m_modules[n]->hits(); }
-  PrPixelModule *module(const unsigned int n) const { return m_modules[n]; }
-
-  unsigned int firstModule() const { return m_firstModule; }
-  unsigned int lastModule() const { return m_lastModule; }
-
   /// Return the number of hits in the pool.
   unsigned int nbHits() const { return m_nHits; }
+  /// Return a pointer to the hit pool, containing nbHits() elemenents.
+  PrPixelHit * hitPool() { return m_pool.data(); }
   /// Return the number of hits associated to a track.
   unsigned int nbHitsUsed() const {
     unsigned int nUsed = 0;
@@ -94,9 +88,6 @@ class PrPixelHitManager : public GaudiTool, public IIncidentListener {
   /// Store offline (all) clusters on TES.
   void storeOfflineClusters();
 
-  // Datatypes for GPU connectivity
-  PrPixelSerialization m_serializer;
-  
  private:
   /// Cache Super Pixel patterns for isolated Super Pixel clustering.
   void cacheSPPatterns();
@@ -107,18 +98,11 @@ class PrPixelHitManager : public GaudiTool, public IIncidentListener {
   // List of hits: here are the hits stored
   std::vector<PrPixelHit> m_pool;
   /// Next free place in the hit list
-  std::vector<PrPixelHit>::iterator m_nextInPool;    
+  std::vector<PrPixelHit>::iterator m_nextInPool;
   /// Number of hits handed to the tracking in this event.
   unsigned int m_nHits;
   /// Number of clusters in this event.
   unsigned int m_nClusters;
-  /// List of pointers to modules (which contain pointers to their hits)
-  std::vector<PrPixelModule *> m_modules;
-  std::vector<PrPixelModule> m_module_pool;
-
-  /// Indices of first and last module
-  unsigned int m_firstModule;
-  unsigned int m_lastModule;
 
   /// Max. number of hits per event
   unsigned int m_maxSize;

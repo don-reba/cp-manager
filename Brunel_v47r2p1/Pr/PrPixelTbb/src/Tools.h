@@ -17,12 +17,12 @@ public:
 
   Debug() : _mode (NO_DEBUG){}
 
-  void setMode(verbosity mode){
+  void setMode(verbosity mode) {
     _mode = mode;
   }
 
   template <class T>
-  Debug& operator<<(T t){
+  Debug& operator<<(T t) {
     if(_mode==DEBUG) cout << t;
     return (*this);
   }

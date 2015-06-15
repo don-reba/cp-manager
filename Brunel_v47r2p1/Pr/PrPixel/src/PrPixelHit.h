@@ -64,7 +64,7 @@ class PrPixelHit {
   int module() const { return m_module; }
   bool isUsed() const { return m_isUsed; }
   void setUsed(const bool flag) { m_isUsed = flag; }
-  
+
   /// Pointer to x,y,z,wx
   const float* p_x() const { return &m_x; }
 
@@ -111,10 +111,10 @@ class PrPixelHit {
   float m_z;
   /// Weight (1 / error) in X
   float m_wxerr;
-  /// Weight (1 / error) in Y 
+  /// Weight (1 / error) in Y
   float m_wyerr;
   /// Module number
-  unsigned int m_module;
+  int m_module;
   /// Channel ID
   LHCb::LHCbID m_id;
   /// Already used by (associated to) a track?

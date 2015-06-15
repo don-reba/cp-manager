@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TOOLS
+#define TOOLS 1
 
 #include "cuda_runtime.h"
 
@@ -6,6 +7,8 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
+#include <map>
+#include <cmath>
 #include <stdint.h>
 
 #define cudaCheck(stmt) {                                    \
@@ -28,3 +31,8 @@ std::string toString(T t) {
 
 void setHPointersFromInput(const uint8_t * input, size_t size);
 void mergeSolutions(const std::vector<std::vector<char> >& solutions, std::vector<char>& output);
+
+std::map<std::string, float> calcResults(std::vector<float>& times);
+float float_max();
+
+#endif

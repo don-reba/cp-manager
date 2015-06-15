@@ -1,5 +1,4 @@
-#ifndef PRPIXELTRACK_H
-#define PRPIXELTRACK_H 1
+#pragma once
 
 // LHCb
 #include "Event/StateVector.h"
@@ -7,8 +6,6 @@
 #include "PrPixelHit.h"
 
 #include <iostream>
-#include <map>
-#include "PrPixelTypes.h"
 
 namespace LHCb {
 class State;
@@ -27,10 +24,7 @@ class PrPixelTrack {
   /// Standard constructor
   PrPixelTrack();
   // Creates a track from indexed data
-  PrPixelTrack(
-      const GpuTrack                    & t,
-      const std::map<int, PrPixelHit*>  & indexedHits,
-      const std::vector<int>            & eventHitIDs);
+  PrPixelTrack(std::vector<PrPixelHit*> && hits);
 
   /// Destructor
   virtual ~PrPixelTrack() {}
@@ -42,7 +36,7 @@ class PrPixelTrack {
   }
 
   /// Return the list of hits on this track.
-  PrPixelHits &hits() { return m_hits; }
+  PrPixelHits & hits() { return m_hits; }
   /// Add a given hit to this track
   void addHit(PrPixelHit *hit) { m_hits.push_back(hit); }
 
@@ -100,7 +94,7 @@ class PrPixelTrack {
 
   /// Perform a straight-line fit.
   void fit();
- 
+
   /// Fit with a K-filter with scattering. Return the chi2
   float fitKalman(LHCb::State &state, int direction,
                    float noisePerLayer) const;
@@ -124,5 +118,3 @@ class PrPixelTrack {
 };
 
 typedef std::vector<PrPixelTrack> PrPixelTracks;  // vector of tracks
-
-#endif  // PRPIXELTRACK_H

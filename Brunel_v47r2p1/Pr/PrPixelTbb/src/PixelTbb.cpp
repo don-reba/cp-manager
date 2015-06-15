@@ -46,7 +46,7 @@ std::vector<std::vector<GpuTrack> > parallel_tracks_vector;
 std::vector<std::vector<int> > hits;
 
 template <class T>
-static std::string toString(T t){
+static std::string toString(T t) {
   std::stringstream ss;
   std::string s;
   ss << t;
@@ -54,7 +54,7 @@ static std::string toString(T t){
   return s;
 }
 
-void printContentsDump(){
+void printContentsDump() {
   debug << "Sensors: " << sens_num << ", hits: " << hits_num << endl
     << "First sensor_Zs: " << sensor_Zs[0] << ", " << sensor_Zs[1] << endl
     << "First sensor_hitStarts: " << sensor_hitStarts[0] << ", " << sensor_hitStarts[1] << endl
@@ -70,13 +70,13 @@ void printContentsDump(){
     << "First hit_Zs: " << hit_Zs[0] << ", " << hit_Zs[1] << endl;
 }
 
-void fill_hit_sensorNums(){
+void fill_hit_sensorNums() {
   debug << "Filling in hit_sensorNums... ";
 
   hit_sensorNums = (int*) malloc(hits_num * sizeof(int));
 
   int sensor_id = 0;
-  for (int i=0; i<hits_num; i++){
+  for (int i=0; i<hits_num; i++) {
     if ((sensor_id != sens_num - 1) && (sensor_hitStarts[sensor_id+1] == i))
       sensor_id++;
     hit_sensorNums[i] = sensor_id;
@@ -85,7 +85,7 @@ void fill_hit_sensorNums(){
   debug << "done" << endl;
 }
 
-void quicksort_the_thing(){
+void quicksort_the_thing() {
   debug << "Starting quicksort... ";
   for(int i=0; i<sens_num; i++)
     quickSort(hit_Xs, hit_Ys, hit_IDs, hit_Zs,
@@ -168,7 +168,7 @@ void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>
 
   // Allocate space for tracks vectors
   parallel_tracks_vector.clear();
-  for (int i=0; i<num_events; ++i){
+  for (int i=0; i<num_events; ++i) {
     vector<GpuTrack> t1;
     parallel_tracks_vector.push_back(t1);
   }
@@ -197,8 +197,8 @@ void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>
 
   debug << "Testing hits (first GpuTrack): " << endl;
   bool all_ok = 1;
-  for (size_t i = 0; i < hits[0].size(); i++){
-    if(hits[0][i] != parallel_tracks_vector[0][0].hits[i]){
+  for (size_t i = 0; i < hits[0].size(); i++) {
+    if(hits[0][i] != parallel_tracks_vector[0][0].hits[i]) {
       debug << "hit " << i << " differs: " << hits[0][i] << ", " << parallel_tracks_vector[0][0].hits[i] << endl;
       all_ok = 0;
     }
@@ -215,20 +215,20 @@ void pixel_tracker_implementation(const PixelEvent & data, std::vector<GpuTrack>
 
 
 
-void clean_vector(vector<vector<GpuTrack> >& _tracks_vector){
-  for(vector<vector<GpuTrack> >::iterator it = _tracks_vector.begin(); it != _tracks_vector.end(); it++){
+void clean_vector(vector<vector<GpuTrack> >& _tracks_vector) {
+  for(vector<vector<GpuTrack> >::iterator it = _tracks_vector.begin(); it != _tracks_vector.end(); it++) {
     (*it).clear();
   }
 }
 
-map<string, float> calcResults(vector<float> times){
+map<string, float> calcResults(vector<float> times) {
   // sqrt ( E( (X - m)2) )
   map<string, float> results;
   float deviation = 0.0, variance = 0.0, mean = 0.0, min = numeric_limits<float>::infinity(), max = 0.0;
 
   int n = 0;
   float seconds;
-  for(vector<float>::iterator it = times.begin(); it != times.end(); it++){
+  for(vector<float>::iterator it = times.begin(); it != times.end(); it++) {
     n++;
     seconds = (*it);
     mean = (mean * (n - 1) + seconds) / n;
@@ -250,22 +250,22 @@ map<string, float> calcResults(vector<float> times){
   return results;
 }
 
-bool compareTracks(vector<GpuTrack> tracks_1, vector<GpuTrack> tracks_2){
-  if(tracks_1.size() != tracks_2.size()){
+bool compareTracks(vector<GpuTrack> tracks_1, vector<GpuTrack> tracks_2) {
+  if(tracks_1.size() != tracks_2.size()) {
     debug << "x (tracks size)";
     return false;
   }
 
-  for(size_t i = 0; i < tracks_1.size(); ++i){
+  for(size_t i = 0; i < tracks_1.size(); ++i) {
     GpuTrack track_1 = tracks_1[i];
     GpuTrack track_2 = tracks_2[i];
-    if(track_1.hits.size() != track_2.hits.size()){
+    if(track_1.hits.size() != track_2.hits.size()) {
       debug << "x (hits size)";
       return false;
     }
 
-    for(size_t j = 0; j < track_1.hits.size(); ++j){
-      if(track_1.hits[j] != track_2.hits[j]){
+    for(size_t j = 0; j < track_1.hits.size(); ++j) {
+      if(track_1.hits[j] != track_2.hits[j]) {
         debug << "x (hits)";
         return false;
       }
@@ -275,16 +275,16 @@ bool compareTracks(vector<GpuTrack> tracks_1, vector<GpuTrack> tracks_2){
   return true;
 }
 
-void printResultTracks(vector<GpuTrack> tracks, int event_no, string track_folder_container){
+void printResultTracks(vector<GpuTrack> tracks, int event_no, string track_folder_container) {
   string track_filename = track_folder_container + "//tracks_" + toString<int>(event_no) + ".txt";
   ofstream track_file(track_filename.c_str());
   track_file << std::setprecision(3);
 
   int t_no = 0;
-  for (vector<GpuTrack>::iterator it = tracks.begin(); it != tracks.end(); it++){
+  for (vector<GpuTrack>::iterator it = tracks.begin(); it != tracks.end(); it++) {
     // info() << format( "Dist%8.3f chi%7.3f ", GpuTrack.distance( *itH ), GpuTrack.chi2( *itH ) );
     track_file << "GpuTrack " << t_no++ /*<< " chi2 " << chi2(&(*it))*/ << std::endl;
-    for (vector<int>::iterator ith = (*it).hits.begin(); ith != (*it).hits.end(); ith++){
+    for (vector<int>::iterator ith = (*it).hits.begin(); ith != (*it).hits.end(); ith++) {
       track_file << "hit " << hit_IDs[(*ith)] << " s " << hit_sensorNums[(*ith)] << " ("
         << hit_Xs[(*ith)] << ", " << hit_Ys[(*ith)] << ", " << hit_Zs[(*ith)] << ")" << endl;
     }

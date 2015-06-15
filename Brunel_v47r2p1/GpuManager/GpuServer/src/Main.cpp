@@ -111,7 +111,7 @@ try {
   }
 
   auto connectionInfo = makeConnectionInfo(cl.connectionType(), cl.localPath(), cl.host(), cl.port());
-  App app(logger, perfLog, dataLog, adminPath.c_str(), *connectionInfo);
+  App app(logger, perfLog, dataLog, adminPath.c_str(), cl.batchSize(), *connectionInfo);
   app.run();
 
   return EXIT_SUCCESS;

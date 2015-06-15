@@ -1,12 +1,14 @@
+#include "BlockingBatchQueue.h"
+#include "BlockingTupleQueue.h"
 #include "DataLog.h"
 #include "MainServer.h"
 #include "PerfLog.h"
-#include "Timer.h"
 
 #include "GpuIpc/IProtocol.h"
 #include "GpuHandler/IGpuHandler.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <ctime>
 #include <iostream>
@@ -18,30 +20,66 @@
 
 using namespace boost;
 using namespace std;
+using namespace std::chrono;
 
 //--------
 // helpers
 //--------
 
 template <typename T, size_t Size>
-size_t arraySize(const T (&)[Size])
-{
+constexpr size_t arraySize(const T (&)[Size]) {
   return Size;
+}
+
+IBlockingQueue<DataPacket*> * MakeDataQueue(size_t batchSize) {
+  using T = DataPacket*;
+  return batchSize > 0 ?
+    static_cast<IBlockingQueue<T>*>(new BlockingTupleQueue<T>(batchSize)) :
+    static_cast<IBlockingQueue<T>*>(new BlockingBatchQueue<T>());
 }
 
 //----------
 // interface
 //----------
 
-MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog) :
-    m_perfLog (perfLog),
-    m_dataLog (dataLog) {
+MainServer::MainServer(PerfLog & perfLog, DataLog & dataLog, size_t batchSize) :
+    m_perfLog   (perfLog),
+    m_dataLog   (dataLog),
+    m_dataQueue (MakeDataQueue(batchSize)) {
 }
 
 MainServer::~MainServer()
 {
   for (auto & i : m_handlers)
     delete i.second;
+}
+
+void MainServer::start() {
+    m_processingThread = thread(&MainServer::processQueue, this);
+}
+
+void MainServer::stop() {
+  m_dataQueue->interrupt();
+}
+
+void MainServer::loadHandler(const string & handlerName) {
+  IGpuHandler * handler = IGpuHandler::Factory::create(handlerName);
+  if (!handler) {
+    ostringstream msg;
+    msg << "could not load handler '" << handlerName << "'";
+    throw runtime_error(msg.str());
+  }
+  {
+    scoped_lock lock(m_mutex);
+
+    // handle repeated loading of the same handler
+    HandlerMap::const_iterator i = m_handlers.find(handlerName);
+    if (i != m_handlers.end())
+      delete i->second;
+
+    m_handlers[handlerName] = handler;
+  }
+  cout << "loaded handler '" << handlerName << "'\n";
 }
 
 //------------------------
@@ -69,12 +107,11 @@ void MainServer::process(IProtocol & protocol) {
   // call the handler
   Data output;
   DataPacket packet(handlerName, &input, &output);
-  m_dataQueue.push(&packet);
+  m_dataQueue->push(&packet);
 
-  Timer timer;
-  timer.start();
+  auto s = steady_clock::now();
   packet.Wait();
-  timer.stop();
+  auto f = steady_clock::now();
 
   // forward exceptions to client
   if (packet.ExceptionThrown()) {
@@ -88,35 +125,7 @@ void MainServer::process(IProtocol & protocol) {
   // return the output to client
   protocol.writeUInt32(output.size());
   protocol.writeData(&output[0], output.size());
-  protocol.writeDouble(timer.secondsElapsed());
-}
-
-void MainServer::start() {
-    m_processingThread = thread(&MainServer::processQueue, this);
-}
-
-void MainServer::stop() {
-  m_dataQueue.interrupt();
-}
-
-void MainServer::loadHandler(const string & handlerName) {
-  IGpuHandler * handler = IGpuHandler::Factory::create(handlerName);
-  if (!handler) {
-    ostringstream msg;
-    msg << "could not load handler '" << handlerName << "'";
-    throw runtime_error(msg.str());
-  }
-  {
-    scoped_lock lock(m_mutex);
-
-    // handle repeated loading of the same handler
-    HandlerMap::const_iterator i = m_handlers.find(handlerName);
-    if (i != m_handlers.end())
-      delete i->second;
-
-    m_handlers[handlerName] = handler;
-  }
-  cout << "loaded handler '" << handlerName << "'\n";
+  protocol.writeDouble(duration_cast<duration<double>>(f - s).count());
 }
 
 //------------------
@@ -170,7 +179,7 @@ try {
   while (true) {
     string              name;
     vector<DataPacket*> batch;
-    m_dataQueue.pop(name, batch);
+    m_dataQueue->pop(name, batch);
 
     IGpuHandler * handler = getHandlerByName(name);
 
@@ -182,13 +191,14 @@ try {
       output[i] = batch[i]->Output();
     }
 
-    Timer timer;
-
+    double secondsElapsed = 0.0;
     try {
       // execute handler
-      timer.start();
+      auto s = steady_clock::now();
       (*handler)(input, allocVector, &output);
-      timer.stop();
+      auto f = steady_clock::now();
+
+      secondsElapsed = duration_cast<duration<double>>(f - s).count();
     } catch (const std::exception & e) {
       // propagate the exception to all client in the batch
       for (size_t i = 0, size = batch.size(); i != size; ++i)
@@ -196,7 +206,6 @@ try {
     }
 
     // gather statistics
-    double secondsElapsed  = timer.secondsElapsed();
     size_t totalInputSize  = accumulate(input.begin(),  input.end(),  0u, addSize);
     size_t totalOutputSize = accumulate(output.begin(), output.end(), 0u, addSize);
     m_perfLog.addRecord(
@@ -204,12 +213,11 @@ try {
         totalInputSize, totalOutputSize, batch.size());
 
     // wake up the clients
+    // wait for them to finish before moving onto the next batch
     for (size_t i = 0, size = batch.size(); i != size; ++i)
       batch[i]->Signal();
-
-    // wait for them to finish before moving onto the next batch
   }
-} catch (const Queue::InterruptedError &) {
+} catch (const IQueue::InterruptedError &) {
   // it's ok
   // someone wants us to terminate quickly
 }

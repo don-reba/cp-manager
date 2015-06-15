@@ -23,3 +23,6 @@ document cuda_library PrPixelCuda \
 apply_pattern component_library library=PrPixelCuda
 
 macro_append includes " -I /cvmfs/lhcb.cern.ch/lib/lcg/releases/LCGCMT/LCGCMT_70root6/LCG_Settings/../../../LCG_70root6/Boost/1.55.0_python2.7/x86_64-slc6-gcc48-opt/include/boost-1_55"
+
+#macro_append cppflags " -g"
+#macro_append cudaflags " -G -g -O0"

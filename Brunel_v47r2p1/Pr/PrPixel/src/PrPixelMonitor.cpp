@@ -39,32 +39,6 @@ StatusCode PrPixelMonitor::initialize() {
 // Main execution
 //=============================================================================
 StatusCode PrPixelMonitor::execute() {
-
-  const unsigned int firstModule = m_hitManager->firstModule();
-  const unsigned int lastModule = m_hitManager->lastModule();
-  for (unsigned int i = firstModule; i < lastModule; ++i) {
-    for (auto hit : m_hitManager->hits(i)) {
-      const float x = hit->x();
-      const float y = hit->y();
-      const float z = hit->z();
-      const float r = sqrt(x * x + y * y);
-      if (!hit->isUsed()) {
-        plot3D(x, y, z, "UnusedHits3D", "Distribution of Unused Hits", 
-               -50., 50., -50., 50., -500., 800., 100, 100, 200);
-        plot2D(r, z, "UnusedHitsRZ", "Distribution of Unused Hits",
-               0., 60., -500., 800., 100, 100);
-        plot2D(x, y, "UnusedHitsXY", "Distribution of Unused Hits", 
-               -50., 50., -50., 50., 100, 100);
-      }
-      plot3D(x, y, z, "Hits3D", "Distribution of Hits", 
-             -50., 50., -50., 50., -500., 800., 100, 100, 200);
-      plot2D(r, z, "HitsRZ", "Distribution of Hits", 
-             0., 60., -500., 800., 100, 100);
-      plot2D(x, y, "HitsXY", "Distribution of Hits", 
-             -50., 50., -50., 50., 100, 100);
-    }
-  }
-
   const unsigned int nHits = m_hitManager->nbHits();
   const unsigned int nHitsUsed = m_hitManager->nbHitsUsed();
   plot(nHits, "HitsPerEvent", "Number of hits per event", 0.0, 8000.0, 80);
@@ -78,7 +52,7 @@ StatusCode PrPixelMonitor::execute() {
     warning() << "No tracks in " << LHCb::TrackLocation::Velo << endmsg;
     return StatusCode::FAILURE;
   }
-  plot(tracks->size(), "TracksPerEvent", "Number of tracks per event", 
+  plot(tracks->size(), "TracksPerEvent", "Number of tracks per event",
        0., 800., 80);
   LHCb::VPClusters* clusters = getIfExists<LHCb::VPClusters>(LHCb::VPClusterLocation::Default);
   if (!clusters) {
@@ -101,7 +75,7 @@ StatusCode PrPixelMonitor::execute() {
       plot(eta, "BwdEta", "Pseudorapidity of backward tracks", 1., 6., 50);
       plot(phi, "BwdPhi", "Phi-angle of backward tracks", -180., 180., 60);
       plot2D(eta, nHitsPerTrack, "BwdHitsPerTrackVsEta",
-             "Hits/track vs pseudorapidity of backward tracks", 
+             "Hits/track vs pseudorapidity of backward tracks",
              1., 6., 0.5, 15.5, 50, 15);
       plot2D(eta, chi2, "BwdChi2VsEta",
              "Chi2/DoF vs pseudorapidity of backward tracks",
@@ -116,7 +90,7 @@ StatusCode PrPixelMonitor::execute() {
       plot(eta, "FwdEta", "Pseudorapidity of forward tracks", 1., 6., 50);
       plot(phi, "FwdPhi", "Phi-angle of forward tracks", -180., 180., 60);
       plot2D(eta, nHitsPerTrack, "FwdHitsPerTrackVsEta",
-             "Hits/track vs pseudorapidity of forward tracks", 
+             "Hits/track vs pseudorapidity of forward tracks",
              1., 6., 0.5, 15.5, 50, 15);
       plot2D(eta, chi2, "FwdChi2VsEta",
              "Chi2/DoF vs pseudorapidity of forward tracks",
@@ -125,7 +99,7 @@ StatusCode PrPixelMonitor::execute() {
              "Chi2/DoF vs hits/forward track", 0.5, 15.5, 0., 10., 15, 20);
     }
     if (!clusters) continue;
-    // Calculate radius at first and last hit 
+    // Calculate radius at first and last hit
     // (assume that hits are sorted by module)
     const LHCb::VPChannelID id0 = track->lhcbIDs().front().vpID();
     const LHCb::VPChannelID id1 = track->lhcbIDs().back().vpID();
@@ -144,9 +118,9 @@ StatusCode PrPixelMonitor::execute() {
     plot(minR, "MinHitRadius", "Smallest hit radius [mm]", 0., 50., 100);
     plot(maxR, "MaxHitRadius", "Largest hit radius [mm]", 0., 50., 100);
   }
-  plot(nFwd, "FwdTracksPerEvent", "Number of forward tracks per event", 
+  plot(nFwd, "FwdTracksPerEvent", "Number of forward tracks per event",
        0., 400., 40);
-  plot(nBwd, "BwdTracksPerEvent", "Number of backward tracks per event", 
+  plot(nBwd, "BwdTracksPerEvent", "Number of backward tracks per event",
        0., 400., 40);
   return StatusCode::SUCCESS;
 

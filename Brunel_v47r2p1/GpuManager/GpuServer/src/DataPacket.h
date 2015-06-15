@@ -14,11 +14,11 @@ class DataPacket {
 
   public:
 
-    DataPacket(const std::string & name, const ::Data * data, ::Data * result);
+    DataPacket(const std::string & name, const Data * data, Data * result);
 
     const std::string & Name()    { return m_name;    }
-    const ::Data      * Input()   { return m_input;   }
-    ::Data            * Output()  { return m_output;  }
+    const Data      * Input()   { return m_input;   }
+    Data            * Output()  { return m_output;  }
 
     bool        ExceptionThrown()  { return m_exceptionThrown;  }
     std::string ExceptionMessage() { return m_exceptionMessage; }
@@ -31,8 +31,8 @@ class DataPacket {
   private:
 
     std::string    m_name;
-    const ::Data * m_input;
-    ::Data       * m_output;
+    const Data * m_input;
+    Data       * m_output;
 
     bool        m_exceptionThrown;
     std::string m_exceptionMessage;

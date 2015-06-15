@@ -1,3 +1,4 @@
+
 #include "GpuPixelSearchByTriplet.h"
 
 #include <algorithm>
@@ -18,9 +19,9 @@ int independent_execute(
   return gpuPixelSearchByTripletInvocation(converted_input, output);
 }
 
-void independent_post_execute(const std::vector<std::vector<uint8_t> > & output) {
+void independent_post_execute(const std::vector<Data> & output) {
     DEBUG << "post_execute invoked" << std::endl;
-    DEBUG << "Size of output: " << output.size() << " B" << std::endl;
+    DEBUG << "Size of output: " << output.size() << " entries" << std::endl;
 }
 
 int gpuPixelSearchByTriplet(
@@ -44,7 +45,7 @@ int gpuPixelSearchByTripletInvocation(
   DEBUG << "Invoking gpuPixelSearchByTriplet with " << input.size() << " events" << std::endl;
 
   // Execute maximum n number of events every time
-  const int maxEventsPerKernel = 1000;
+  const int maxEventsPerKernel = 4096;
 
   for (int i = 0, size = input.size(); i < size; i += maxEventsPerKernel) {
     const int eventsToProcess = std::min(size - i, maxEventsPerKernel);

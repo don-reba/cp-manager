@@ -16,7 +16,7 @@
 // void (*T)::Name()
 
 template <typename T>
-class BlockingBatchQueue : public IBlockingQueue<T>
+class BlockingTupleQueue : public IBlockingQueue<T>
 {
 private:
 
@@ -31,14 +31,16 @@ private:
   };
 
 public:
-  BlockingBatchQueue() : m_interrupted(false) {}
+
+  BlockingTupleQueue(size_t nToPop)
+    : m_interrupted(false), m_nToPop(nToPop) {}
 
   virtual void push(const T & item) {
     scoped_lock lock(m_mutex);
 
     m_queue.push_back(item);
 
-    if (m_queue.size() == 1)
+    if (m_queue.size() == m_nToPop)
     {
       lock.unlock();
       m_condition.notify_one();
@@ -48,7 +50,7 @@ public:
   virtual void pop(std::string & name, std::vector<T> & batch) {
     scoped_lock lock(m_mutex);
 
-    while (m_queue.empty() && !m_interrupted)
+    while (m_queue.size() < m_nToPop && !m_interrupted)
       m_condition.wait(lock);
     if (m_interrupted)
       throw typename IBlockingQueue<T>::InterruptedError();
@@ -56,9 +58,8 @@ public:
     name = m_queue.front()->Name();
 
     // move all items of this name from the queue and into the batch
-    typename Queue::iterator p = stable_partition(m_queue.begin(), m_queue.end(), NotHasName(name));
-    batch.assign(p, m_queue.end());
-    m_queue.erase(p, m_queue.end());
+    batch.assign(m_queue.end() - m_nToPop, m_queue.end());
+    m_queue.erase(m_queue.end() - m_nToPop, m_queue.end());
   }
 
   virtual void interrupt() {
@@ -74,6 +75,8 @@ private:
   Queue m_queue;
 
   bool m_interrupted;
+
+  const size_t m_nToPop;
 
   boost::condition_variable m_condition;
   boost::mutex              m_mutex;

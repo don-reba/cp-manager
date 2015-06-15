@@ -13,22 +13,23 @@ App::App(
     PerfLog    & perfLog,
     DataLog    & dataLog,
 		const char * adminPath,
+    size_t       batchSize,
     const ConnectionInfo & connection) :
     // initializers
     m_logger         (logger),
     m_adminConnector (adminPath),
     m_mainConnector  (createConnector(connection)),
-    m_adminServer    (m_adminConnector, &App::getProtocol, m_admin),
-    m_mainServer     (*m_mainConnector, &App::getProtocol, m_main),
-    m_main           (perfLog, dataLog),
-    m_admin          (*this) {
+    m_adminHost      (m_adminConnector, &App::getProtocol, m_adminServer),
+    m_mainHost       (*m_mainConnector, &App::getProtocol, m_mainServer),
+    m_mainServer     (perfLog, dataLog, batchSize),
+    m_adminServer    (*this) {
 }
 
 void App::run() {
-  shared_ptr<boost::thread> adminServer(m_adminServer.serve());
-  shared_ptr<boost::thread> mainServer(m_mainServer.serve());
+  shared_ptr<boost::thread> adminServer(m_adminHost.serve());
+  shared_ptr<boost::thread> mainServer(m_mainHost.serve());
 
-  m_main.start();
+  m_mainServer.start();
 
   m_logger.printMessage("GPU Manager server started");
 
@@ -38,7 +39,13 @@ void App::run() {
 
 void App::exit() {
   try {
-    m_adminServer.stop();
+    m_adminHost.stop();
+  } catch (const std::exception & e) {
+    m_logger.printError(e.what());
+  }
+
+  try {
+  m_mainHost.stop();
   } catch (const std::exception & e) {
     m_logger.printError(e.what());
   }
@@ -48,17 +55,11 @@ void App::exit() {
   } catch (const std::exception & e) {
     m_logger.printError(e.what());
   }
-
-  try {
-  m_main.stop();
-  } catch (const std::exception & e) {
-    m_logger.printError(e.what());
-  }
 }
 
 void App::loadHandler(const string & handlerName) {
   try {
-    m_main.loadHandler(handlerName);
+    m_mainServer.loadHandler(handlerName);
   } catch (const std::exception & e) {
     m_logger.printError(e.what());
   }
