@@ -3,12 +3,12 @@
 #include "DataLog.h"
 #include "MainServer.h"
 #include "PerfLog.h"
-#include "Timer.h"
 
 #include "GpuIpc/IProtocol.h"
 #include "GpuHandler/IGpuHandler.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <ctime>
 #include <iostream>
@@ -20,6 +20,7 @@
 
 using namespace boost;
 using namespace std;
+using namespace std::chrono;
 
 //--------
 // helpers
@@ -108,10 +109,9 @@ void MainServer::process(IProtocol & protocol) {
   DataPacket packet(handlerName, &input, &output);
   m_dataQueue->push(&packet);
 
-  Timer timer;
-  timer.start();
+  auto s = steady_clock::now();
   packet.Wait();
-  timer.stop();
+  auto f = steady_clock::now();
 
   // forward exceptions to client
   if (packet.ExceptionThrown()) {
@@ -125,7 +125,7 @@ void MainServer::process(IProtocol & protocol) {
   // return the output to client
   protocol.writeUInt32(output.size());
   protocol.writeData(&output[0], output.size());
-  protocol.writeDouble(timer.secondsElapsed());
+  protocol.writeDouble(duration_cast<duration<double>>(f - s).count());
 }
 
 //------------------
@@ -191,13 +191,14 @@ try {
       output[i] = batch[i]->Output();
     }
 
-    Timer timer;
-
+    double secondsElapsed = 0.0;
     try {
       // execute handler
-      timer.start();
+      auto s = steady_clock::now();
       (*handler)(input, allocVector, &output);
-      timer.stop();
+      auto f = steady_clock::now();
+
+      secondsElapsed = duration_cast<duration<double>>(f - s).count();
     } catch (const std::exception & e) {
       // propagate the exception to all client in the batch
       for (size_t i = 0, size = batch.size(); i != size; ++i)
@@ -205,7 +206,6 @@ try {
     }
 
     // gather statistics
-    double secondsElapsed  = timer.secondsElapsed();
     size_t totalInputSize  = accumulate(input.begin(),  input.end(),  0u, addSize);
     size_t totalOutputSize = accumulate(output.begin(), output.end(), 0u, addSize);
     m_perfLog.addRecord(
