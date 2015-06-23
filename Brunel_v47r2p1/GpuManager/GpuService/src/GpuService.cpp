@@ -18,9 +18,9 @@ DECLARE_SERVICE_FACTORY(GpuService)
 //-------------
 
 GpuService::GpuService(const std::string & name, ISvcLocator * sl) :
-    Service           (name, sl),
-    m_transport       (NULL),
-    m_protocol        (NULL),
+    base_class        (name, sl),
+    m_transport       (nullptr),
+    m_protocol        (nullptr),
     m_connectionType  ("local"),
     m_localSocketPath ("/tmp/GpuManager"),
     m_serverHost      ("localhost"),
@@ -81,44 +81,28 @@ void GpuService::submitData(
 // Service implementation
 //-----------------------
 
-StatusCode GpuService::queryInterface(const InterfaceID & riid, void ** ppvIF) {
-  if (riid == IGpuService::interfaceID()) {
-    *ppvIF = dynamic_cast<IGpuService*>(this);
-    return StatusCode::SUCCESS;
-  }
-  return Service::queryInterface(riid, ppvIF);
-}
-
 StatusCode GpuService::initialize() {
   StatusCode sc(Service::initialize());
   if (StatusCode::SUCCESS != sc)
     return sc;
 
-  MsgStream msg(msgSvc(), name());
-  msg << MSG::INFO << "GpuService::initialize()" << endmsg;
-
-  initIO();
+  acquireIO();
 
   return StatusCode::SUCCESS;
 }
 
 StatusCode GpuService::finalize() {
-  MsgStream msg(msgSvc(), name());
-  msg << MSG::INFO << "GpuService::finalize()" << endmsg;
-
-  cleanup();
-
-  return StatusCode::SUCCESS;
+  releaseIO();
+  return Service::finalize();
 }
 
-void GpuService::cleanup() {
-  if (m_protocol != NULL)
-    delete m_protocol;
-  if (m_transport != NULL)
-    delete m_transport;
-}
+//------------------
+// private functions
+//------------------
 
-void GpuService::initIO() {
+void GpuService::acquireIO() {
+  if (m_transport)
+    return;
   if (m_connectionType.value() == "local") {
     m_transport = new LocalSocketClient(m_localSocketPath.value().c_str());
     m_protocol  = new Protocol(*m_transport);
@@ -127,5 +111,16 @@ void GpuService::initIO() {
     m_protocol  = new Protocol(*m_transport);
   } else {
     throw runtime_error("Invalid connection type. Should be one of: local, tcp.");
+  }
+}
+
+void GpuService::releaseIO() {
+  if (m_protocol != nullptr) {
+    delete m_protocol;
+    m_protocol = nullptr;
+  }
+  if (m_transport != nullptr) {
+    delete m_transport;
+    m_transport = nullptr;
   }
 }
