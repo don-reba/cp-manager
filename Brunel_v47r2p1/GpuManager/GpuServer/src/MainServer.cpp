@@ -26,16 +26,31 @@ using namespace std::chrono;
 // helpers
 //--------
 
-template <typename T, size_t Size>
-constexpr size_t arraySize(const T (&)[Size]) {
-  return Size;
-}
+namespace {
+  template <typename T, size_t Size>
+  constexpr size_t arraySize(const T (&)[Size]) {
+    return Size;
+  }
 
-IBlockingQueue<DataPacket*> * MakeDataQueue(size_t batchSize) {
-  using T = DataPacket*;
-  return batchSize > 0 ?
-    static_cast<IBlockingQueue<T>*>(new BlockingTupleQueue<T>(batchSize)) :
-    static_cast<IBlockingQueue<T>*>(new BlockingBatchQueue<T>());
+  IBlockingQueue<DataPacket*> * MakeDataQueue(size_t batchSize) {
+    using T = DataPacket*;
+    return batchSize > 0 ?
+      static_cast<IBlockingQueue<T>*>(new BlockingTupleQueue<T>(batchSize)) :
+      static_cast<IBlockingQueue<T>*>(new BlockingBatchQueue<T>());
+  }
+
+  uint8_t * allocVector(
+      size_t index,
+      size_t size,
+      IGpuHandler::AllocParam param) {
+    if (size == 0)
+      return nullptr;
+    using Batch = vector<Data*>;
+    Batch * batch = reinterpret_cast<Batch*>(param);
+    Data * data = batch->at(index);
+    data->resize(size);
+    return data->data();
+  }
 }
 
 //----------
@@ -96,12 +111,14 @@ void MainServer::process(IProtocol & protocol) {
   Data input(size);
   protocol.readData(&input[0], size);
 
-  HandlerMap::const_iterator i = m_handlers.find(handlerName);
-  if (i == m_handlers.end()) {
-    // when a handler is not found, inform the client
-    protocol.writeUInt32(FAIL_FLAG);
-    protocol.writeString(createInvalidHandlerMsg(handlerName));
-    return;
+  { // check whether the handler is loaded
+    scoped_lock lock(m_mutex);
+    if (m_handlers.find(handlerName) == m_handlers.end()) {
+      // when the handler is not found, inform the client
+      protocol.writeUInt32(FAIL_FLAG);
+      protocol.writeString(createInvalidHandlerMsg(handlerName));
+      return;
+    }
   }
 
   // call the handler
@@ -132,37 +149,20 @@ void MainServer::process(IProtocol & protocol) {
 // Private functions
 //------------------
 
-size_t MainServer::addSize(size_t total, const Data * data) {
-  return total + data->size();
-}
-
-uint8_t * MainServer::allocVector(
-    size_t index,
-    size_t size,
-    IGpuHandler::AllocParam param) {
-  if (size == 0)
-    return nullptr;
-  typedef vector<Data*> Batch;
-  Batch * batch = reinterpret_cast<Batch*>(param);
-  Data * data = batch->at(index);
-  data->resize(size);
-  return &data->at(0);
-}
-
 string MainServer::createInvalidHandlerMsg(const string & handler) const {
-    ostringstream msg;
-    msg << "invalid handler name: " << handler << "; ";
-    msg << "valid handlers: ";
-    bool first = true;
-    for (const auto & i : m_handlers) {
-      if (first)
-        first = false;
-      else
-        msg << ", ";
-      msg << i.first;
-    }
-    msg << ".";
-    return msg.str();
+  ostringstream msg;
+  msg << "invalid handler name: " << handler << "; ";
+  msg << "valid handlers: ";
+  bool first = true;
+  for (const auto & i : m_handlers) {
+    if (first)
+      first = false;
+    else
+      msg << ", ";
+    msg << i.first;
+  }
+  msg << ".";
+  return msg.str();
 }
 
 IGpuHandler * MainServer::getHandlerByName(const std::string & name) {
@@ -206,6 +206,7 @@ try {
     }
 
     // gather statistics
+    auto addSize = [](size_t total, const Data * data) { return total + data->size(); };
     size_t totalInputSize  = accumulate(input.begin(),  input.end(),  0u, addSize);
     size_t totalOutputSize = accumulate(output.begin(), output.end(), 0u, addSize);
     m_perfLog.addRecord(

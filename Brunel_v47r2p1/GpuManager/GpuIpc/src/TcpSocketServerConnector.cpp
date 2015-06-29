@@ -3,7 +3,6 @@
  * by Alexey Badalov and Marco Corvo
  */
 
-#include "IOException.h"
 #include "SocketServer.h"
 #include "TcpSocketServerConnector.h"
 #include "SystemException.h"
@@ -14,7 +13,7 @@
 #include <stdexcept>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <iostream>
+#include <unistd.h>
 
 //-----------------
 // public interface
@@ -46,9 +45,8 @@ TcpSocketServerConnector::TcpSocketServerConnector(int port, const std::string& 
 }
 
 TcpSocketServerConnector::~TcpSocketServerConnector() {
-  if (m_socket != -1) {
+  if (m_socket != -1)
     ::close(m_socket);
-  }
 }
 
 //--------------------------
@@ -58,7 +56,7 @@ TcpSocketServerConnector::~TcpSocketServerConnector() {
 std::shared_ptr<ITransport> TcpSocketServerConnector::accept() {
   int accepted = ::accept(m_socket, NULL, NULL);
   if (-1 == accepted)
-    throw IOException("Could not accept incoming connection.");
+    throw SystemException("Could not accept incoming connection.");
   return std::make_shared<SocketServer>(accepted);
 }
 

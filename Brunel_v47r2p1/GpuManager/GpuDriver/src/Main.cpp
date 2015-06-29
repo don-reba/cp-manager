@@ -2,8 +2,6 @@
 #include "DataSender.h"
 #include "PerfLog.h"
 
-#include "GpuIpc/IProtocol.h"
-
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>

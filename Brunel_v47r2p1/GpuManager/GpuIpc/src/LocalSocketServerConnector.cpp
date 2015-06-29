@@ -1,4 +1,3 @@
-#include "IOException.h"
 #include "SocketServer.h"
 #include "LocalSocketServerConnector.h"
 #include "SystemException.h"
@@ -7,6 +6,7 @@
 #include <stdexcept>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 //-----------------
 // public interface
@@ -51,10 +51,10 @@ LocalSocketServerConnector::~LocalSocketServerConnector() {
 std::shared_ptr<ITransport> LocalSocketServerConnector::accept() {
   int accepted = ::accept(m_socket, NULL, NULL);
   if (-1 == accepted)
-    throw IOException("Could not accept incoming connection.");
+    throw SystemException("Could not accept incoming connection.");
   return std::make_shared<SocketServer>(accepted);
 }
 
 void LocalSocketServerConnector::close() {
-  shutdown(m_socket, SHUT_RDWR);
+  ::shutdown(m_socket, SHUT_RDWR);
 }

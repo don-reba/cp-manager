@@ -4,8 +4,6 @@
 
 #include <memory>
 
-#include <boost/shared_ptr.hpp>
-
 /// Helper interface used by the server to handle incoming connections.
 class IConnector {
   public:

@@ -9,8 +9,16 @@
 using namespace std;
 using namespace boost::filesystem;
 
-void writeStream(ofstream & stream, const void * data, size_t size) {
-  stream.write(reinterpret_cast<const char *>(data), size);
+namespace {
+  void writeStream(ofstream & stream, const void * data, size_t size) {
+    stream.write(reinterpret_cast<const char *>(data), size);
+  }
+
+  string makePath(const string & dir, int counter) {
+    ostringstream path;
+    path << dir << path::preferred_separator << counter << ".dat";
+    return path.str();
+  }
 }
 
 DataLog::DataLog(bool enabled, const string & dir) :
@@ -46,8 +54,3 @@ void DataLog::addRecord(
   writeStream(stream, output.data(), outputSize);
 }
 
-string DataLog::makePath(const string & dir, int counter) {
-  ostringstream path;
-  path << dir << path::preferred_separator << counter << ".dat";
-  return path.str();
-}

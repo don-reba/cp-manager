@@ -4,12 +4,15 @@
 #include "GpuIpc/Protocol.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdint.h>
+#include <thread>
 
 using namespace boost;
 using namespace boost::filesystem;
@@ -28,18 +31,19 @@ DataSender::DataSender(
     mutex                  & pathsMutex,
     bool                     verifyOutput,
     PerfLog                & perfLog) :
-    m_index        (index),
+    m_verifyOutput (verifyOutput),
+    m_servicePath  (servicePath),
     m_paths        (paths),
     m_diffMessages (diffMessages),
-    m_mutex        (pathsMutex),
-    m_verifyOutput (verifyOutput),
     m_perfLog      (perfLog),
-    m_transport (new LocalSocketClient(servicePath)),
-    m_protocol  (new Protocol(*m_transport)) {
+    m_mutex        (pathsMutex) {
 }
 
 void DataSender::operator() ()
 try {
+  LocalSocketClient transport (m_servicePath.c_str());
+  Protocol          protocol  (transport);
+
   for (;;) {
     // load and send the next item from the paths collection
     string path;
@@ -59,28 +63,28 @@ try {
     readData(path.c_str(), handlerName, recordedInput, recordedOutput);
 
     // send the name of the addressee
-    m_protocol->writeString(handlerName);
+    protocol.writeString(handlerName);
 
     // send recorded input
-    m_protocol->writeUInt32(recordedInput.size());
+    protocol.writeUInt32(recordedInput.size());
     if (!recordedInput.empty())
-      m_protocol->writeData(recordedInput.data(), recordedInput.size());
+      protocol.writeData(recordedInput.data(), recordedInput.size());
 
     // receive the result and handle errors
-    const size_t resultSize = m_protocol->readUInt32();
+    const size_t resultSize = protocol.readUInt32();
 
     const size_t FAIL_FLAG = 0xFFFFFFFF;
     if (resultSize == FAIL_FLAG) {
-      string message = m_protocol->readString();
+      string message = protocol.readString();
       ostringstream msg;
-      msg << m_index << ": " << path << " | " << handlerName << " | error: " << message << "\n";
+      msg << path << " | " << handlerName << " | error: " << message << "\n";
       cerr << msg.str();
       return;
     }
 
     vector<uint8_t> result(resultSize);
     if (!result.empty())
-      m_protocol->readData(result.data(), resultSize);
+      protocol.readData(result.data(), resultSize);
 
     auto f = steady_clock::now();
 
@@ -100,7 +104,7 @@ try {
     }
 
     // receive performance information ­ seconds elapsed
-    m_protocol->readDouble();
+    protocol.readDouble();
   }
 } catch (const std::exception & e) {
   cout << "Unrecoverable error: " << e.what() << endl;
@@ -137,6 +141,11 @@ void DataSender::readData(
     vector<uint8_t> & input,
     vector<uint8_t> & output) {
   ifstream stream(path, ios_base::binary);
+  if (!stream) {
+    ostringstream message;
+    message << "File '" << path << "' could not be opened.";
+    throw runtime_error(message.str());
+  }
 
   uint32_t handlerSize;
   readStream(stream, &handlerSize, 4);

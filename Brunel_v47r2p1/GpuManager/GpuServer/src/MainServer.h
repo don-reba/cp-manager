@@ -23,9 +23,9 @@ class PerfLog;
 class MainServer : public IProcessor {
 private:
 
-  typedef std::map<std::string, IGpuHandler*> HandlerMap;
-
-  typedef IBlockingQueue<DataPacket*> IQueue;
+  using HandlerMap  = std::map<std::string, IGpuHandler*>;
+  using IQueue      = IBlockingQueue<DataPacket*>;
+  using scoped_lock = boost::mutex::scoped_lock;
 
 public: // interface
 
@@ -43,13 +43,6 @@ public: // IProcess implementation
 
 private: // private functions
 
-  static size_t addSize(size_t total, const Data * data);
-
-  static uint8_t * allocVector(
-      std::size_t             index,
-      std::size_t             size,
-      IGpuHandler::AllocParam param);
-
   std::string createInvalidHandlerMsg(const std::string & handler) const;
 
   IGpuHandler * getHandlerByName(const std::string & name);
@@ -57,6 +50,12 @@ private: // private functions
   void processQueue();
 
 private:
+
+  // about thread safety:
+  //  - m_handlers is protected by m_mutex
+  //  - m_perfLog is only accessed serially
+  //  - m_dataLog is thread-safe
+  //  - m_dataQueue is thread-safe
 
   HandlerMap m_handlers;
 
@@ -67,6 +66,5 @@ private:
 
   boost::thread m_processingThread;
 
-  typedef boost::mutex::scoped_lock scoped_lock;
   boost::mutex m_mutex;
 };

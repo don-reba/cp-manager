@@ -2,16 +2,11 @@
 
 #include "PerfLog.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 
 #include <boost/filesystem.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
-
-class ITransport;
-class IProtocol;
 
 class DataSender {
   public:
@@ -58,14 +53,11 @@ class DataSender {
 
   private:
 
-    int                        m_index;
+    const bool        m_verifyOutput;
+    const std::string m_servicePath;
+
     directory_entry_vector   & m_paths;
     std::vector<DiffMessage> & m_diffMessages;
-    boost::mutex             & m_mutex;
-    bool                       m_verifyOutput;
     PerfLog                  & m_perfLog;
-
-    // pointers are used to make sure DataSender could be copied
-    std::shared_ptr<ITransport> m_transport;
-    std::shared_ptr<IProtocol>  m_protocol;
+    boost::mutex             & m_mutex;
 };

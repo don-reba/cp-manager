@@ -5,14 +5,20 @@
 
 /// Serious exception, recording errno.
 class SystemException : public std::runtime_error {
-  public:
+public:
 
-    /// Construct an instance of SystemException with the given message.
-    explicit SystemException(const std::string & message);
+  /// Construct an instance of SystemException with the given message.
+  explicit SystemException(const std::string & message);
 
-    virtual ~SystemException() throw();
+  /// Construct an instance of SystemException with the given message and error ID.
+  SystemException(const std::string & message, int error);
 
-  private:
+  virtual ~SystemException() noexcept;
 
-    static std::string makeMessage(int error, const std::string & message);
+  /// Return the errno corresponding to the error.
+  int error() const noexcept;
+
+private:
+
+  int m_error;
 };

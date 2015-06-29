@@ -1,4 +1,6 @@
 #include "LocalSocketClient.h"
+
+#include "EofException.h"
 #include "SystemException.h"
 
 #include <cstring>
@@ -43,28 +45,21 @@ LocalSocketClient::~LocalSocketClient() {
 void LocalSocketClient::readBytes(void * data, size_t size) {
   size_t total = 0u;
   while (total < size) {
-    size_t received = read(m_socket, static_cast<uint8_t*>(data) + total, size - total);
-    if (received == static_cast<size_t>(-1)) {
-      std::stringstream msg;
-      msg << "Read error; " << total << " bytes received.";
-      throw std::runtime_error(msg.str().c_str());
-    }
-    total += received;
-  }
-  if (total > size) {
-    std::stringstream msg;
-    msg << "Asked for " << size << " bytes; received " << total << ".";
-    throw std::runtime_error(msg.str().c_str());
+    int received = read(m_socket, static_cast<uint8_t*>(data) + total, size - total);
+    if (received == 0)
+      throw EofException();
+    if (received < 0)
+      throw SystemException("Read error.");
+    total += static_cast<size_t>(received);
   }
 }
 
 void LocalSocketClient::writeBytes(const void * data, size_t size) {
-  size_t sent = write(m_socket, data, size);
-  if (sent == static_cast<size_t>(-1))
-    throw SystemException("Write error.");
-  if (sent != size) {
-    std::stringstream msg;
-    msg << "Asked for " << size << " bytes; sent " << sent << ".";
-    throw std::runtime_error(msg.str().c_str());
+  size_t total = 0u;
+  while (total < size) {
+    int sent = write(m_socket, (uint8_t*)data + total, size - total);
+    if (sent < 0)
+      throw SystemException("Write error.");
+    total += static_cast<size_t>(sent);
   }
 }

@@ -6,22 +6,22 @@
 
 /// Transport over a socket.
 class SocketServer : public ITransport {
-  public: // public interface
+public: // public interface
 
-    /// Construct a server instance for a given socket handle.
-    SocketServer(int socket);
+  /// Construct a server instance for a given socket handle.
+  SocketServer(int socket);
 
-    virtual ~SocketServer();
+  virtual ~SocketServer();
 
-  public: // ITransport implementation
+public: // ITransport implementation
 
-    /// Read a block of bytes.
-    virtual void readBytes(void * data, size_t size);
+  /// Read a block of bytes.
+  virtual void readBytes(void * data, size_t size);
 
-    /// Write a block of bytes.
-    virtual void writeBytes(const void * data, size_t size);
+  /// Write a block of bytes.
+  virtual void writeBytes(const void * data, size_t size);
 
-  private: // data
+private: // data
 
-    int m_socket;
+  int m_socket;
 };

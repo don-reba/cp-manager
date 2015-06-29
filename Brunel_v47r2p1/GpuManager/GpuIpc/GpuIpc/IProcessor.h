@@ -2,7 +2,7 @@
 
 #include "IProtocol.h"
 
-/// Stateless request processor.
+/// Request processor. Must be thread-safe.
 class IProcessor {
   public:
     /// Process a request.
