@@ -45,7 +45,7 @@ LocalSocketClient::~LocalSocketClient() {
 void LocalSocketClient::readBytes(void * data, size_t size) {
   size_t total = 0u;
   while (total < size) {
-    int received = read(m_socket, static_cast<uint8_t*>(data) + total, size - total);
+    ssize_t received = read(m_socket, static_cast<uint8_t*>(data) + total, size - total);
     if (received == 0)
       throw EofException();
     if (received < 0)
@@ -57,7 +57,7 @@ void LocalSocketClient::readBytes(void * data, size_t size) {
 void LocalSocketClient::writeBytes(const void * data, size_t size) {
   size_t total = 0u;
   while (total < size) {
-    int sent = write(m_socket, (uint8_t*)data + total, size - total);
+    ssize_t sent = write(m_socket, (uint8_t*)data + total, size - total);
     if (sent < 0)
       throw SystemException("Write error.");
     total += static_cast<size_t>(sent);

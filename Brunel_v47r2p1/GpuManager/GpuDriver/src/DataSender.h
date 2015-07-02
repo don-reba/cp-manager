@@ -51,13 +51,19 @@ class DataSender {
       std::vector<uint8_t> & input,
       std::vector<uint8_t> & output);
 
+    // helper for debugging purposes
+    void print(const char * msg) const;
+
   private:
 
     const bool        m_verifyOutput;
     const std::string m_servicePath;
 
+    int                        m_index;
     directory_entry_vector   & m_paths;
     std::vector<DiffMessage> & m_diffMessages;
     PerfLog                  & m_perfLog;
     boost::mutex             & m_mutex;
+
+    int m_iteration;
 };

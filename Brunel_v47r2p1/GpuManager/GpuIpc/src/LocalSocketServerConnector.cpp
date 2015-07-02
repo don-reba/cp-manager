@@ -19,8 +19,8 @@ LocalSocketServerConnector::LocalSocketServerConnector(const char * path) :
   if (m_socket == -1)
     throw SystemException("Could not create socket.");
 
-  int opt = 1;
-  ::setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+  const int resuseaddr = 1;
+  ::setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &resuseaddr, sizeof(resuseaddr));
 
   sockaddr_un address = { 0, { 0 } };
   address.sun_family = AF_UNIX;

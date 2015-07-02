@@ -91,7 +91,8 @@ ThreadedServer::ConnectionHandler::ConnectionHandler(
 
 void ThreadedServer::ConnectionHandler::operator () () {
   try {
-    m_processor.process(*m_protocol);
+    for (;;) // until an exception is thrown
+      m_processor.process(*m_protocol);
   } catch (const EofException &) {
     // connection closed, no need for alarm
   } catch (const std::exception & e) {

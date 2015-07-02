@@ -19,8 +19,17 @@ using namespace boost::filesystem;
 using namespace std;
 using namespace std::chrono;
 
-void readStream(ifstream & stream, void * data, size_t size) {
-  stream.read(reinterpret_cast<char *>(data), size);
+namespace {
+  void readStream(ifstream & stream, void * data, size_t size) {
+    stream.read(reinterpret_cast<char *>(data), size);
+  }
+}
+
+void DataSender::print(const char * msg) const {
+  ostringstream str;
+  str << m_index << "-" << m_iteration << ": "<< msg << "\n";
+  cout << str.str();
+  cout.flush();
 }
 
 DataSender::DataSender(
@@ -33,6 +42,7 @@ DataSender::DataSender(
     PerfLog                & perfLog) :
     m_verifyOutput (verifyOutput),
     m_servicePath  (servicePath),
+    m_index        (index),
     m_paths        (paths),
     m_diffMessages (diffMessages),
     m_perfLog      (perfLog),
@@ -44,13 +54,13 @@ try {
   LocalSocketClient transport (m_servicePath.c_str());
   Protocol          protocol  (transport);
 
-  for (;;) {
+  for (m_iteration = 0;; ++m_iteration) {
     // load and send the next item from the paths collection
     string path;
     {
       scoped_lock lock(m_mutex);
       if (m_paths.empty())
-        return;
+        break;
       path = m_paths.back().path().string();
       m_paths.pop_back();
     }
