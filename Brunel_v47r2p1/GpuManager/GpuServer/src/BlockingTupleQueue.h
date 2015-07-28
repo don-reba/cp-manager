@@ -40,8 +40,7 @@ public:
 
     m_queue.push_back(item);
 
-    if (m_queue.size() == m_nToPop)
-    {
+    if (m_queue.size() % m_nToPop == 0) {
       lock.unlock();
       m_condition.notify_one();
     }

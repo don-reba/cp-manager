@@ -34,15 +34,11 @@ public:
   BlockingBatchQueue() : m_interrupted(false) {}
 
   virtual void push(const T & item) {
-    scoped_lock lock(m_mutex);
-
-    m_queue.push_back(item);
-
-    if (m_queue.size() == 1)
     {
-      lock.unlock();
-      m_condition.notify_one();
+      scoped_lock lock(m_mutex);
+      m_queue.push_back(item);
     }
+    m_condition.notify_one();
   }
 
   virtual void pop(std::string & name, std::vector<T> & batch) {
