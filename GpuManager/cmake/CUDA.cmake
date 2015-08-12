@@ -27,7 +27,7 @@ macro(gaudi_add_cuda_module library)
     ${srcs}
     ${cmake_options}
     SHARED
-    OPTIONS ${options} --compiler-bindir ${CMAKE_CXX_COMPILER} -std=c++11 --gpu-architecture sm_30)
+    OPTIONS ${options} -std=c++11)
 
   # Add a library including CUDA's object files
 
