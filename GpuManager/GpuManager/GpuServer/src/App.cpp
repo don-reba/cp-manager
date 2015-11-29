@@ -12,7 +12,7 @@ App::App(
     Logger     & logger,
     PerfLog    & perfLog,
     DataLog    & dataLog,
-		const char * adminPath,
+    const char * adminPath,
     size_t       batchSize,
     const ConnectionInfo & connection) :
     // initializers
@@ -70,15 +70,15 @@ shared_ptr<IProtocol> App::getProtocol(ITransport & transport) {
 }
 
 shared_ptr<IConnector> App::createConnector(const ConnectionInfo & connection) {
-	switch (connection.type()) {
-		case ConnectionInfo::Local: {
-			auto info = reinterpret_cast<const LocalConnectionInfo &>(connection);
-			return make_shared<LocalSocketServerConnector>(info.path());
-		}
-		case ConnectionInfo::Tcp: {
-			auto info = reinterpret_cast<const TcpConnectionInfo &>(connection);
-			return make_shared<TcpSocketServerConnector>(info.port(), info.host());
-		}
-	}
-	throw runtime_error("Unexpected connection type.");
+  switch (connection.type()) {
+    case ConnectionInfo::Local: {
+      auto info = reinterpret_cast<const LocalConnectionInfo &>(connection);
+      return make_shared<LocalSocketServerConnector>(info.path());
+    }
+    case ConnectionInfo::Tcp: {
+      auto info = reinterpret_cast<const TcpConnectionInfo &>(connection);
+      return make_shared<TcpSocketServerConnector>(info.port(), info.host());
+    }
+  }
+  throw runtime_error("Unexpected connection type.");
 }
