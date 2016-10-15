@@ -2,9 +2,9 @@
 
 . init.sh
 
-gpuserver --load PrPixelCudaHandler
+cpserver --load PrPixelCudaHandler
 sleep 0.1
 
 gaudirun.py Brunel-Default.py
 
-gpuserver --exit
+cpserver --exit

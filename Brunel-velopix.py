@@ -5,8 +5,8 @@
 #   gaudirun.py Brunel-basic-velopix.py
 ##############################################################################
 
-from Configurables import GpuService
-GpuService().SocketPath = "/tmp/GpuManager"
+from Configurables import CpService
+CpService().SocketPath = "/tmp/CpManager"
 
 from Brunel.Configuration import *
 from Configurables import PrChecker, TrackEffChecker, PrPixelTracking
