@@ -17,7 +17,7 @@ class CommandLine {
     const char * localPath()      const { return m_localPath.c_str();     }
     const char * host()           const { return m_host.c_str();          }
     int          port()           const { return m_port;                  }
-    size_t       batchSize()      const { return m_batchSize;        }
+    size_t       batchSize()      const { return m_batchSize;             }
 
   private:
     bool        m_daemonize;

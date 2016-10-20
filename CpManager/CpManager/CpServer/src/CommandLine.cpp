@@ -11,10 +11,10 @@ using namespace std;
 CommandLine::CommandLine(const char * localPath, const char * tcpHost, int tcpPort) :
     m_daemonize  (false),
     m_exit       (false),
-		m_connection ("local"),
+    m_connection ("local"),
     m_localPath  (localPath),
-		m_host       (tcpHost),
-		m_port       (tcpPort) {
+    m_host       (tcpHost),
+    m_port       (tcpPort) {
 }
 
 bool CommandLine::parse(int argc, char * argv[]) {
